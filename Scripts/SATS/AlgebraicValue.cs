@@ -26,7 +26,7 @@ namespace SpacetimeDB.SATS
         public string AsString() => (string)value;
         public List<AlgebraicValue> AsArray() => (List<AlgebraicValue>)value;
         public Dictionary<AlgebraicValue, AlgebraicValue> AsMap() => (Dictionary<AlgebraicValue, AlgebraicValue>)value;
-        
+
         public static BuiltinValue CreateBool(bool value) => new BuiltinValue { value = value };
         public static BuiltinValue CreateI8(sbyte value) => new BuiltinValue { value = value };
         public static BuiltinValue CreateU8(byte value) => new BuiltinValue { value = value };
@@ -199,18 +199,18 @@ namespace SpacetimeDB.SATS
 
                     return CreateArray(arrayResult);
                 case BuiltinType.Type.Map:
-                {
-                    var len = reader.ReadUInt32();
-                    var mapResult = new Dictionary<AlgebraicValue, AlgebraicValue>();
-                    for (var x = 0; x < len; x++)
                     {
-                        var key = AlgebraicValue.Deserialize(type.mapType.keyType, reader);
-                        var value = AlgebraicValue.Deserialize(type.mapType.valueType, reader);
-                        mapResult.Add(key, value);
-                    }
+                        var len = reader.ReadUInt32();
+                        var mapResult = new Dictionary<AlgebraicValue, AlgebraicValue>();
+                        for (var x = 0; x < len; x++)
+                        {
+                            var key = AlgebraicValue.Deserialize(type.mapType.keyType, reader);
+                            var value = AlgebraicValue.Deserialize(type.mapType.valueType, reader);
+                            mapResult.Add(key, value);
+                        }
 
-                    return CreateMap(mapResult);
-                }
+                        return CreateMap(mapResult);
+                    }
                 default:
                     throw new NotImplementedException();
             }
@@ -368,7 +368,7 @@ namespace SpacetimeDB.SATS
 
             for (var i = 0; i < type.elements.Count; i++)
             {
-                if(!AlgebraicValue.Compare(type.elements[i].algebraicType, v1.elements[i], v2.elements[i]))
+                if (!AlgebraicValue.Compare(type.elements[i].algebraicType, v1.elements[i], v2.elements[i]))
                 {
                     return false;
                 }
@@ -443,7 +443,7 @@ namespace SpacetimeDB.SATS
                     throw new NotImplementedException();
             }
         }
-        
+
         public static AlgebraicValue Deserialize(AlgebraicType type, BinaryReader reader)
         {
             switch (type.type)

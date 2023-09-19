@@ -33,6 +33,32 @@ To connect to SpacetimeDB, you need to call the `Connect` method on the `Spaceti
 - `moduleAddress`: The address of the module to connect to. This is the same address that you use to connect to the SpacetimeDB web interface.
 - `sslEnabled`: Whether to use SSL to connect to SpacetimeDB. This is the same value that you use to connect to the SpacetimeDB web interface.
 
+Example:
+
+```csharp
+using SpacetimeDB;
+
+SpacetimeDBClient.instance.Connect(TOKEN, HOST, DBNAME, SSL_ENABLED);
+```
+
+### AuthToken
+
+The `AuthToken` class is an optional helper class that can be used to store the local client's authentication token locally in the Unity PlayerPrefs.
+
+Example:
+
+```csharp
+using SpacetimeDB;
+
+// called when we receive the client identity from SpacetimeDB
+SpacetimeDBClient.instance.onIdentityReceived += (token, identity) => {
+    AuthToken.SaveToken(token);
+    local_identity = identity;
+};
+
+SpacetimeDBClient.instance.Connect(AuthToken.Token, hostName, moduleAddress, sslEnabled);
+```
+
 ### Subscribing to tables
 
 To subscribe to a table, you need to call the `Subscribe` method on the `SpacetimeDBClient` class. The `Subscribe` method takes a list of queries as a parameter. The queries are the same queries that you use to subscribe to tables in the SpacetimeDB web interface.
@@ -100,3 +126,5 @@ using SpacetimeDB.Types;
 
 Reducer.MovePlayer(new StdbVector2(0.0f, 0.0f), new StdbVector2(1.0f, 1.0f));
 ```
+
+

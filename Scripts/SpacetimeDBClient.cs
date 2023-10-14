@@ -822,6 +822,8 @@ namespace SpacetimeDB
             return results;
         }
 
+        public bool IsConnected() => webSocket != null && webSocket.IsConnected;
+
         public void Update()
         {
             webSocket.Update();

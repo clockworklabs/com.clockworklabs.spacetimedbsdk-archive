@@ -1,8 +1,8 @@
 {
   "name": "com.clockworklabs.spacetimedbsdk",
   "displayName": "SpacetimeDB SDK",
-  "version": "0.7.0",
-  "description": "The SpacetimeDB SDK is a software development kit (SDK) designed to simplify the interaction with SpacetimeDB server modules.",
+  "version": "0.7.2",
+  "description": "The SpacetimeDB Client SDK is a software development kit (SDK) designed to interact with and manipulate SpacetimeDB modules..",
   "keywords": [],
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.0.1"
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/clockworklabs/SpacetimeDBCSharpSDK"
+    "url": "https://github.com/clockworklabs/com.clockworklabs.spacetimedbsdk"
   },
   "license": ""
 }

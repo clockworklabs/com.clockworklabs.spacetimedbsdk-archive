@@ -51,7 +51,7 @@ Example:
 using SpacetimeDB;
 
 // called when we receive the client identity from SpacetimeDB
-SpacetimeDBClient.instance.onIdentityReceived += (token, identity) => {
+SpacetimeDBClient.instance.onIdentityReceived += (token, identity, address) => {
     AuthToken.SaveToken(token);
     local_identity = identity;
 };

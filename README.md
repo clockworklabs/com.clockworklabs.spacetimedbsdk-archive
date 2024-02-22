@@ -1,4 +1,4 @@
-# SpacetimeDB SDK for Unity 3D Engine
+# SpacetimeDB SDK for Unity Engine
 
 ## Overview
 
@@ -12,17 +12,21 @@ There is also a comprehensive Unity tutorial available in the [Unity Tutorial](h
 
 ## Installation
 
-The SDK is available as a [Unity Package](https://docs.unity3d.com/Manual/Packages.html). To install it, follow these steps:
+### Unity Demo
+
+Download the [.unitypackage release](https://github.com/clockworklabs/SpacetimeDBUnityTutorial/releases) of our [Unity Part 1 tutorial](https://spacetimedb.com/docs/unity/part-1) demo that includes this SDK as a package manfiest requirement.
+
+### Standalone
 
 1. Open the package manager window in Unity.
-2. Click the plus button in the top left corner and select "Add package from git URL".
+2. Click the "(+)" button in the top-left corner and select "Add package from git URL".
 3. Paste the following URL: `https://github.com/clockworklabs/com.clockworklabs.spacetimedbsdk.git`
 
 ## Usage
 
 ### NetworkManager
 
-The Unity SDK for SpacetimeDB requires that there is a `NetworkManager` component attached ot a GameObject in the scene. The NetworkManager component is responsible for connecting to SpacetimeDB and managing the connection. The NetworkManager component is a singleton and there can only be one instance of it in the scene.
+The Unity SDK for SpacetimeDB requires that there is a `NetworkManager` component attached to a GameObject in the scene. The NetworkManager component is responsible for connecting to SpacetimeDB and managing the connection. The NetworkManager component is a singleton and there can only be one instance of it in the scene.
 
 ### Connecting to SpacetimeDB
 
@@ -126,5 +130,3 @@ using SpacetimeDB.Types;
 
 Reducer.MovePlayer(new StdbVector2(0.0f, 0.0f), new StdbVector2(1.0f, 1.0f));
 ```
-
-

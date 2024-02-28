@@ -10,7 +10,7 @@ namespace SpacetimeDB.Editor
         public List<SpacetimeServer> Servers { get; private set; }
         public bool HasServer => Servers?.Count > 0;
         public bool HasServersButNoDefault => HasServer && 
-            Servers.Exists(id => id.IsDefault);
+            !Servers.Exists(id => id.IsDefault);
         
         
         public GetServersResult(SpacetimeCliResult cliResult)

@@ -9,12 +9,12 @@ using static SpacetimeDB.Editor.PublisherMeta;
 namespace SpacetimeDB.Editor
 {
     /// Handles direct UI callbacks, sending async Tasks to PublisherWindowActions.
-    /// Subscribed to @ PublisherWindowInit.setOnActionEvents.
+    /// Subscribed to @ PublisherWindow.setOnActionEvents.
     /// Set @ setOnActionEvents(), unset at unsetActionEvents().
     /// This is essentially the middleware between UI and logic.
     public partial class PublisherWindow
     {
-        #region Init from PublisherWindowInit.cs CreateGUI()
+        #region Init from PublisherWindow.cs CreateGUI()
         /// Curry sync Actions from UI => to async Tasks
         private void setOnActionEvents()
         {
@@ -82,7 +82,7 @@ namespace SpacetimeDB.Editor
 
         /// Cleanup when the UI is out-of-scope
         private void OnDisable() => unsetOnActionEvents();
-        #endregion // Init from PublisherWindowInit.cs CreateGUI()
+        #endregion // Init from PublisherWindow.cs CreateGUI()
         
         
         #region Direct UI Callbacks

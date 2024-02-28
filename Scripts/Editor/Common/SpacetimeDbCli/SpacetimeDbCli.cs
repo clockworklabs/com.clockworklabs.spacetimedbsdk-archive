@@ -7,12 +7,12 @@ using Debug = UnityEngine.Debug;
 
 namespace SpacetimeDB.Editor
 {
-    /// CLI action helper for PublisherWindowInit.
+    /// Common CLI action helper for UI Builder windows.
     /// Vanilla: Do the action -> return the result -> no more.
     public static class SpacetimeDbCli
     {
         #region Static Options
-        private const CliLogLevel LOG_LEVEL = CliLogLevel.Info;
+        private const CliLogLevel CLI_LOG_LEVEL = CliLogLevel.Info;
         
         public enum CliLogLevel
         {
@@ -26,7 +26,7 @@ namespace SpacetimeDB.Editor
         /// Install the SpacetimeDB CLI | https://spacetimedb.com/install 
         public static async Task<SpacetimeCliResult> InstallSpacetimeCliAsync()
         {
-            if (LOG_LEVEL == CliLogLevel.Info)
+            if (CLI_LOG_LEVEL == CliLogLevel.Info)
                 Debug.Log("Installing SpacetimeDB CLI tool...");
             
             SpacetimeCliResult result; 
@@ -50,7 +50,7 @@ namespace SpacetimeDB.Editor
                     throw new NotImplementedException("Unsupported OS");
             }
             
-            if (LOG_LEVEL == CliLogLevel.Info)
+            if (CLI_LOG_LEVEL == CliLogLevel.Info)
                 Debug.Log($"Installed spacetimeDB CLI tool | {PublisherMeta.DOCS_URL}");
             
             return result;
@@ -63,7 +63,7 @@ namespace SpacetimeDB.Editor
         /// as the CLI "command" and some arg prefixes for compatibility.
         /// Usage: Pass an argSuffix, such as "spacetime version",
         ///        along with an optional cancel token
-        private static async Task<SpacetimeCliResult> runCliCommandAsync(
+        public static async Task<SpacetimeCliResult> runCliCommandAsync(
             string argSuffix, 
             CancellationToken cancelToken = default)
         {
@@ -86,7 +86,7 @@ namespace SpacetimeDB.Editor
                 process.StartInfo.CreateNoWindow = true;
                 
                 // Input Logs
-                if (LOG_LEVEL == CliLogLevel.Info)
+                if (CLI_LOG_LEVEL == CliLogLevel.Info)
                 {
                     Debug.Log("CLI Input: \n```\n<color=yellow>" +
                         $"{terminal} {fullParsedArgs}</color>\n```\n");
@@ -133,7 +133,7 @@ namespace SpacetimeDB.Editor
             return new SpacetimeCliResult(output, error);
         }
 
-        private static void terminateProcessSafely(Process process)
+        public static void terminateProcessSafely(Process process)
         {
             try
             {
@@ -151,10 +151,10 @@ namespace SpacetimeDB.Editor
             }
         }
 
-        private static void logCliResults(SpacetimeCliResult cliResult)
+        public static void logCliResults(SpacetimeCliResult cliResult)
         {
             bool hasOutput = !string.IsNullOrEmpty(cliResult.CliOutput);
-            bool hasLogLevelInfoNoErr = LOG_LEVEL == CliLogLevel.Info && !cliResult.HasCliErr;
+            bool hasLogLevelInfoNoErr = CLI_LOG_LEVEL == CliLogLevel.Info && !cliResult.HasCliErr;
             string prettyOutput = $"\n```\n<color=yellow>{cliResult.CliOutput}</color>\n```\n";
             
             if (hasOutput && hasLogLevelInfoNoErr)
@@ -171,7 +171,7 @@ namespace SpacetimeDB.Editor
             }
         }
         
-        private static string getCommandPrefix()
+        public static string getCommandPrefix()
         {
             switch (Application.platform)
             {
@@ -189,7 +189,7 @@ namespace SpacetimeDB.Editor
         }
 
         /// Return either "cmd.exe" || "/bin/bash"
-        private static string getTerminalPrefix()
+        public static string getTerminalPrefix()
         {
             switch (Application.platform)
             {
@@ -216,54 +216,10 @@ namespace SpacetimeDB.Editor
 
             // Info Logs
             bool isSpacetimeCliInstalled = !cliResult.HasCliErr;
-            if (LOG_LEVEL == CliLogLevel.Info)
+            if (CLI_LOG_LEVEL == CliLogLevel.Info)
                 Debug.Log($"{nameof(isSpacetimeCliInstalled)}=={isSpacetimeCliInstalled}");
 
             return cliResult;
-        }
-        
-        /// Uses the `spacetime publish` CLI command, appending +args from UI elements
-        public static async Task<PublishServerModuleResult> PublishServerModuleAsync(
-            PublishRequest publishRequest,
-            CancellationToken cancelToken)
-        {
-            string argSuffix = $"spacetime publish {publishRequest}";
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix, cancelToken);
-            PublishServerModuleResult publishResult = new(cliResult);
-            return onPublishServerModuleDone(publishResult);
-        }
-        
-        /// Uses the `npm install -g wasm-opt` CLI command
-        public static async Task<SpacetimeCliResult> InstallWasmOptPkgAsync()
-        {
-            const string argSuffix = "npm install -g wasm-opt";
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            return onInstallWasmOptPkgDone(cliResult);
-        }
-
-        private static SpacetimeCliResult onInstallWasmOptPkgDone(SpacetimeCliResult cliResult)
-        {
-            // Success results in !CliError and "changed {numPkgs} packages in {numSecs}s
-            return cliResult;
-        }
-
-        private static PublishServerModuleResult onPublishServerModuleDone(PublishServerModuleResult publishResult)
-        {
-            // Check for general CLI errs (that may contain false-positives for `spacetime publish`)
-            bool hasGeneralCliErr = !publishResult.HasCliErr;
-            if (LOG_LEVEL == CliLogLevel.Info)
-                Debug.Log($"{nameof(hasGeneralCliErr)}=={hasGeneralCliErr}");
-
-            if (publishResult.HasPublishErr)
-            {
-                // This may not necessarily be a major or breaking issue.
-                // For example, !optimized builds will show as an "error" rather than warning.
-                Debug.LogError($"Server module publish issue found | {publishResult}"); // json
-            }
-            else if (LOG_LEVEL == CliLogLevel.Info)
-                Debug.Log($"Server module publish ({publishResult.PublishType}) success | {publishResult}"); // json
-            
-            return publishResult;
         }
         
         /// Uses the `spacetime identity list` CLI command
@@ -280,41 +236,6 @@ namespace SpacetimeDB.Editor
             SpacetimeCliResult cliResult = await runCliCommandAsync("spacetime server list");
             GetServersResult getServersResult = new(cliResult);
             return getServersResult;
-        }
-        
-        /// Uses the `spacetime identity new` CLI command, then set as default.
-        public static async Task<AddIdentityResult> AddIdentityAsync(AddIdentityRequest addIdentityRequest)
-        {
-            string argSuffix = $"spacetime identity new {addIdentityRequest}"; // Forced set as default
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            AddIdentityResult addIdentityResult = new(cliResult);
-            return addIdentityResult;
-        }
-        
-        /// Uses the `spacetime server add` CLI command, then set as default.
-        public static async Task<AddServerResult> AddServerAsync(AddServerRequest addServerRequest)
-        {
-            // Forced set as default. Forced --no-fingerprint for local.
-            string argSuffix = $"spacetime server add {addServerRequest}";
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            AddServerResult addServerResult = new(cliResult);
-            return addServerResult;
-        }
-        
-        /// Uses the `spacetime identity set-default` CLI command
-        public static async Task<SpacetimeCliResult> SetDefaultIdentityAsync(string identityNicknameOrDbAddress)
-        {
-            string argSuffix = $"spacetime identity set-default {identityNicknameOrDbAddress}";
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            return cliResult;
-        } 
-
-        /// Uses the `spacetime server new` CLI command
-        public static async Task<SpacetimeCliResult> SetDefaultServerAsync(string serverNicknameOrHost)
-        {
-            string argSuffix = $"spacetime server set-default {serverNicknameOrHost}";
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            return cliResult;
         }
         #endregion // High Level CLI Actions
     }

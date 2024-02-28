@@ -176,7 +176,8 @@ namespace SpacetimeDB.Editor
                 this.StyledFriendlyErrorMessage = PublisherMeta.GetStyledStr(
                     PublisherMeta.StringStyle.Error,
                     "<b>Failed:</b> Database update rejected\n" +
-                    "Permission denied - unexpected identity<>module name match");
+                    "Permission denied - Identity<>Server<>Nickname mismatch.\n" +
+                    "(Identites and Module Nicknames are bound per-server)");
                 return;
             }
         }

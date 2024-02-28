@@ -12,7 +12,7 @@ namespace SpacetimeDB.Editor
     /// PublisherWindowCallbacks should handle try/catch (except for init chains).
     public partial class PublisherWindow
     {
-        #region Init from PublisherWindowInit.CreateGUI
+        #region Init from PublisherWindow.CreateGUI
         /// Installs CLI tool, shows identity dropdown, gets identities.
         /// Initially called by PublisherWindow @ CreateGUI.
         private async Task initDynamicEventsFromPublisherWindow()
@@ -129,7 +129,7 @@ namespace SpacetimeDB.Editor
             // Success
             await onGetServersSetDropdownSuccess(getServersResult);
         }
-        #endregion // Init from PublisherWindowInit.CreateGUI
+        #endregion // Init from PublisherWindow.CreateGUI
         
         
         /// Success:
@@ -261,11 +261,11 @@ namespace SpacetimeDB.Editor
             
             // Run CLI cmd: Add `local` server (forces `--no-fingerprint` so it doesn't need to be running now)
             addServerRequest = new("local", "http://127.0.0.1:3000");
-            _ = await SpacetimeDbCli.AddServerAsync(addServerRequest);
+            _ = await SpacetimeDbPublisherCli.AddServerAsync(addServerRequest);
             
             // Run CLI cmd: Add `testnet` server (becomes default)
             addServerRequest = new("testnet", "https://testnet.spacetimedb.com");
-            _ = await SpacetimeDbCli.AddServerAsync(addServerRequest);
+            _ = await SpacetimeDbPublisherCli.AddServerAsync(addServerRequest);
             
             // Success - try again
             _ = getServersSetDropdown();
@@ -313,7 +313,7 @@ namespace SpacetimeDB.Editor
             foreach (SpacetimeIdentity identity in identities)
                 Debug.Log($"Found identity: {identity}");
             
-            // Setting will trigger the onIdentitySelectedDropdownChangedAsync event @ PublisherWindowInit
+            // Setting will trigger the onIdentitySelectedDropdownChangedAsync event @ PublisherWindow
             foreach (SpacetimeIdentity identity in identities)
             {
                 identitySelectedDropdown.choices.Add(identity.Nickname);
@@ -374,7 +374,7 @@ namespace SpacetimeDB.Editor
             foreach (SpacetimeServer server in servers)
                 Debug.Log($"Found server: {server}");
             
-            // Setting will trigger the onIdentitySelectedDropdownChangedAsync event @ PublisherWindowInit
+            // Setting will trigger the onIdentitySelectedDropdownChangedAsync event @ PublisherWindow
             for (int i = 0; i < servers.Count; i++)
             {
                 SpacetimeServer server = servers[i];
@@ -399,7 +399,7 @@ namespace SpacetimeDB.Editor
             
                 // We need a default server set
                 string nickname = servers[0].Nickname;
-                await SpacetimeDbCli.SetDefaultServerAsync(nickname);
+                await SpacetimeDbPublisherCli.SetDefaultServerAsync(nickname);
             }
 
             // Process result -> Update UI
@@ -452,7 +452,7 @@ namespace SpacetimeDB.Editor
                 publishModulePathTxt.value);
             
             // Run CLI cmd [can cancel]
-            PublishServerModuleResult publishResult = await SpacetimeDbCli.PublishServerModuleAsync(
+            PublishServerModuleResult publishResult = await SpacetimeDbPublisherCli.PublishServerModuleAsync(
                 publishRequest,
                 _cts.Token);
 
@@ -559,8 +559,13 @@ namespace SpacetimeDB.Editor
             publishStatusLabel.style.display = DisplayStyle.Flex;
 
             if (style != StringStyle.Error)
-                return;
+                return; // Not an error
             
+            // Error: Hide cancel btn, cancel token, show/enable pub btn
+            publishCancelBtn.style.display = DisplayStyle.None;
+            _cts?.Dispose();
+            
+            publishBtn.style.display = DisplayStyle.Flex;
             publishBtn.SetEnabled(true);
         }
         
@@ -606,7 +611,7 @@ namespace SpacetimeDB.Editor
             setinstallWasmOptPackageViaNpmUi();
             
             // Run CLI cmd
-            SpacetimeCliResult cliResult = await SpacetimeDbCli.InstallWasmOptPkgAsync();
+            SpacetimeCliResult cliResult = await SpacetimeDbPublisherCli.InstallWasmOptPkgAsync();
 
             // Process result -> Update UI
             bool isSuccess = !cliResult.HasCliErr;
@@ -636,7 +641,7 @@ namespace SpacetimeDB.Editor
             AddIdentityRequest addIdentityRequestRequest = new(nickname, email);
             
             // Run CLI cmd
-            AddIdentityResult addIdentityResult = await SpacetimeDbCli.AddIdentityAsync(addIdentityRequestRequest);
+            AddIdentityResult addIdentityResult = await SpacetimeDbPublisherCli.AddIdentityAsync(addIdentityRequestRequest);
             SpacetimeIdentity identity = new(nickname, isDefault:true);
 
             // Process result -> Update UI
@@ -671,7 +676,7 @@ namespace SpacetimeDB.Editor
             AddServerRequest request = new(nickname, host);
 
             // Run the CLI cmd
-            AddServerResult addServerResult = await SpacetimeDbCli.AddServerAsync(request);
+            AddServerResult addServerResult = await SpacetimeDbPublisherCli.AddServerAsync(request);
             
             // Process result -> Update UI
             SpacetimeServer serverAdded = new(nickname, host, isDefault:true);
@@ -707,7 +712,7 @@ namespace SpacetimeDB.Editor
                 return;
             
             // Run CLI cmd
-            SpacetimeCliResult cliResult = await SpacetimeDbCli.SetDefaultIdentityAsync(idNicknameOrDbAddress);
+            SpacetimeCliResult cliResult = await SpacetimeDbPublisherCli.SetDefaultIdentityAsync(idNicknameOrDbAddress);
 
             // Process result -> Update UI
             bool isSuccess = !cliResult.HasCliErr;
@@ -796,7 +801,7 @@ namespace SpacetimeDB.Editor
             toggleFoldoutRipple(FoldoutGroupType.Identity, show:false);
 
             // Run CLI cmd
-            SpacetimeCliResult cliResult = await SpacetimeDbCli.SetDefaultServerAsync(nicknameOrHost);
+            SpacetimeCliResult cliResult = await SpacetimeDbPublisherCli.SetDefaultServerAsync(nicknameOrHost);
             
             // Process result -> Update UI
             bool isSuccess = !cliResult.HasCliErr;

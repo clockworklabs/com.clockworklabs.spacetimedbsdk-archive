@@ -1,0 +1,36 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="project://database/Packages/com.clockworklabs.spacetimedbsdk/Scripts/Editor/SpacetimeReducer/ReducerWindowComponents.uss?fileID=7433441132597879392&amp;guid=7d17dab44c372b74fb5d4083325465af&amp;type=3#ReducerWindowComponents" />
+    <Style src="project://database/Packages/com.clockworklabs.spacetimedbsdk/Scripts/Editor/Common/CommonStyles.uss?fileID=7433441132597879392&amp;guid=570ec260e68b747499bb24f7d084aa3b&amp;type=3#CommonStyles" />
+    <ui:VisualElement name="root" style="flex-grow: 1; background-color: rgba(12, 12, 12, 0.78);">
+        <ui:VisualElement name="header" style="height: 66px; width: auto;">
+            <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="topBannerBtn" tooltip="Open Docs" style="background-image: url(&quot;project://database/Packages/com.clockworklabs.spacetimedbsdk/Scripts/Editor/Common/Sprites/spacetime-logo-full.png?fileID=2800000&amp;guid=8e8298ff06b7be441bce715299b63855&amp;type=3#spacetime-logo-full&quot;); background-color: rgba(88, 88, 88, 0); flex-shrink: 1; flex-grow: 1; -unity-background-scale-mode: scale-to-fit;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="spacer15" style="height: 15px;" />
+        <ui:ScrollView name="bodyScrollView">
+            <ui:Foldout text="&lt;b&gt;Setup&lt;/b&gt;" name="setupFoldout" value="true">
+                <ui:TextField picking-mode="Ignore" label="Server" name="serverTxt" readonly="true" />
+                <ui:TextField picking-mode="Ignore" label="Identity" name="identityTxt" readonly="true" />
+            </ui:Foldout>
+            <ui:VisualElement name="spacer10" style="height: 10px;" />
+            <ui:Foldout text="&lt;b&gt;Reducers&lt;/b&gt;" name="reducersFoldout" value="true">
+                <ui:ScrollView name="reducersScrollView" style="max-height: 200px;">
+                    <ui:TreeView name="reducersTreeView" show-alternating-row-backgrounds="All" auto-expand="true" show-border="false" />
+                    <ui:Label tabindex="-1" text="&lt;color=#FFEA30&gt;Loading...&lt;/color&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="reducersLoadingLabel" style="-unity-text-align: upper-center;" />
+                </ui:ScrollView>
+            </ui:Foldout>
+            <ui:VisualElement name="spacer10" style="height: 10px;" />
+            <ui:Foldout text="&lt;b&gt;Actions&lt;/b&gt;" name="actionsFoldout" value="true">
+                <ui:GroupBox name="actionsGroupBox">
+                    <ui:TextField picking-mode="Ignore" name="actionTxt" readonly="false" />
+                    <ui:Label tabindex="-1" text="{actionsSyntaxHintLabel}" parse-escape-sequences="true" display-tooltip-when-elided="true" name="actionsSyntaxHintLabel" style="-unity-text-align: upper-left;" />
+                    <ui:VisualElement name="spacer10" style="height: 10px;" />
+                    <ui:Button text="&lt;b&gt;Run&lt;/b&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="actionsRunBtn" style="height: 50px;" />
+                </ui:GroupBox>
+            </ui:Foldout>
+        </ui:ScrollView>
+        <ui:VisualElement name="errorCover" focusable="false" style="flex-grow: 1; background-color: rgb(22, 22, 22); position: absolute; width: 100%; height: 100%; top: 80px; display: none;">
+            <ui:Label tabindex="-1" text="&lt;color=#FDBE01&gt;&lt;b&gt;VisualElement Integrity Failed:&lt;/b&gt; See Logs\n(Perhaps a USS #id was renamed?)&lt;/color&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="errorCoverTxt" style="font-size: 15px; -unity-text-align: upper-center;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:GroupBox />
+</ui:UXML>

@@ -8,6 +8,7 @@ namespace SpacetimeDB.Editor
 {
     /// CLI action middleware between PublisherWindow and SpacetimeDbCli 
     /// Vanilla: Do the action -> return the result -> no more.
+    /// (!) Didn't find what you were looking for here? Check `SpacetimeDbCli.cs`
     public static class SpacetimeDbPublisherCli
     {
         #region Static Options
@@ -94,22 +95,6 @@ namespace SpacetimeDB.Editor
                 Debug.Log($"Server module publish ({publishResult.PublishType}) success | {publishResult}"); // json
             
             return publishResult;
-        }
-        
-        /// Uses the `spacetime identity list` CLI command
-        public static async Task<GetIdentitiesResult> GetIdentitiesAsync() 
-        {
-            SpacetimeCliResult cliResult = await SpacetimeDbCli.runCliCommandAsync("spacetime identity list");
-            GetIdentitiesResult getIdentitiesResult = new(cliResult);
-            return getIdentitiesResult;
-        }
-        
-        /// Uses the `spacetime identity list` CLI command
-        public static async Task<GetServersResult> GetServersAsync() 
-        {
-            SpacetimeCliResult cliResult = await SpacetimeDbCli.runCliCommandAsync("spacetime server list");
-            GetServersResult getServersResult = new(cliResult);
-            return getServersResult;
         }
         
         /// Uses the `spacetime identity new` CLI command, then set as default.

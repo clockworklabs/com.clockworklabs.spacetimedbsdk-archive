@@ -88,7 +88,8 @@ namespace SpacetimeDB.Editor
 
         /// Add style to the UI window; subscribe to click actions.
         /// High-level event chain handler.
-        /// (!) Persistent vals will NOT load immediately here; await them at setOnActionEvents
+        /// (!) Persistent vals loaded from a ViewDataKey prop will NOT
+        ///     load immediately here; await them elsewhere.
         public async void CreateGUI()
         {
             // Init styles, bind fields to ui, sub to events
@@ -121,13 +122,13 @@ namespace SpacetimeDB.Editor
             // Sanity check, before applying styles (since these are all loaded via implicit paths)
             // Ensure all elements and styles were found
             Assert.IsNotNull(visualTree, "Failed to load PublisherWindow: " +
-                $"Expected {nameof(rootVisualElement)}");
+                $"Expected {nameof(visualTree)} (UXML) to be at: {PathToUxml}");
             
-            Assert.IsNotNull(visualTree, "Failed to load PublisherWindow: " +
-                $"Expected {nameof(visualTree)} (UXML) to be at: '{PathToUxml}'");
-            
-            Assert.IsNotNull(visualTree, "Failed to load PublisherWindow: " +
+            Assert.IsNotNull(commonStyles, "Failed to load PublisherWindow: " +
                 $"Expected {nameof(commonStyles)} (USS) to be at: '{SpacetimeMeta.PathToCommonUss}'");
+            
+            Assert.IsNotNull(publisherStyles, "Failed to load PublisherWindow: " +
+                $"Expected {nameof(publisherStyles)} (USS) to be at: '{PathToUss}'");
             
             // Clone the visual tree (UXML)
             visualTree.CloneTree(rootVisualElement);

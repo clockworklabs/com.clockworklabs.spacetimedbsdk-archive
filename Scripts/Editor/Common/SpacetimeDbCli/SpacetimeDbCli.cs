@@ -9,6 +9,7 @@ namespace SpacetimeDB.Editor
 {
     /// Common CLI action helper for UI Builder windows.
     /// Vanilla: Do the action -> return the result -> no more.
+    /// (!) Looking for more actions? See `SpacetimeDbPublisherCli.cs`
     public static class SpacetimeDbCli
     {
         #region Static Options
@@ -220,6 +221,22 @@ namespace SpacetimeDB.Editor
                 Debug.Log($"{nameof(isSpacetimeCliInstalled)}=={isSpacetimeCliInstalled}");
 
             return cliResult;
+        }
+        
+        /// Uses the `spacetime identity list` CLI command
+        public static async Task<GetIdentitiesResult> GetIdentitiesAsync() 
+        {
+            SpacetimeCliResult cliResult = await runCliCommandAsync("spacetime identity list");
+            GetIdentitiesResult getIdentitiesResult = new(cliResult);
+            return getIdentitiesResult;
+        }
+        
+        /// Uses the `spacetime identity list` CLI command
+        public static async Task<GetServersResult> GetServersAsync() 
+        {
+            SpacetimeCliResult cliResult = await runCliCommandAsync("spacetime server list");
+            GetServersResult getServersResult = new(cliResult);
+            return getServersResult;
         }
         #endregion // High Level CLI Actions
     }

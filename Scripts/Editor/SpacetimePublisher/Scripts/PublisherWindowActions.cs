@@ -116,7 +116,7 @@ namespace SpacetimeDB.Editor
         private async Task getServersSetDropdown()
         {
             // Run CLI cmd
-            GetServersResult getServersResult = await SpacetimeDbPublisherCli.GetServersAsync();
+            GetServersResult getServersResult = await SpacetimeDbCli.GetServersAsync();
             
             // Process result -> Update UI
             bool isSuccess = getServersResult.HasServer;
@@ -156,7 +156,7 @@ namespace SpacetimeDB.Editor
             }
             
             // Run CLI cmd
-            GetIdentitiesResult getIdentitiesResult = await SpacetimeDbPublisherCli.GetIdentitiesAsync();
+            GetIdentitiesResult getIdentitiesResult = await SpacetimeDbCli.GetIdentitiesAsync();
             
             // Process result -> Update UI
             bool isSuccess = getIdentitiesResult.HasIdentity;

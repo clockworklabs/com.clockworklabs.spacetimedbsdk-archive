@@ -113,15 +113,28 @@ namespace SpacetimeDB.Editor
 
         private void initVisualTreeStyles()
         {
+            // Load visual elements and stylesheets
             VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(PathToUxml);
-            Assert.IsNotNull(visualTree, $"Failed to load PublisherWindow: " +
-                $"Expected {nameof(visualTree)} to be at {PathToUxml}");
+            StyleSheet commonStyles = AssetDatabase.LoadAssetAtPath<StyleSheet>(SpacetimeMeta.PathToCommonUss);
+            StyleSheet publisherStyles = AssetDatabase.LoadAssetAtPath<StyleSheet>(PathToUss);
             
+            // Sanity check, before applying styles (since these are all loaded via implicit paths)
+            // Ensure all elements and styles were found
+            Assert.IsNotNull(visualTree, "Failed to load PublisherWindow: " +
+                $"Expected {nameof(rootVisualElement)}");
+            
+            Assert.IsNotNull(visualTree, "Failed to load PublisherWindow: " +
+                $"Expected {nameof(visualTree)} (UXML) to be at: '{PathToUxml}'");
+            
+            Assert.IsNotNull(visualTree, "Failed to load PublisherWindow: " +
+                $"Expected {nameof(commonStyles)} (USS) to be at: '{SpacetimeMeta.PathToCommonUss}'");
+            
+            // Clone the visual tree (UXML)
             visualTree.CloneTree(rootVisualElement);
-
-            // Apply style via USS
-            StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(PathToUss);
-            rootVisualElement.styleSheets.Add(styleSheet);
+            
+            // apply style (USS)
+            rootVisualElement.styleSheets.Add(commonStyles);
+            rootVisualElement.styleSheets.Add(publisherStyles);
         }
 
         /// All VisualElement field names should match their #newIdentity in camelCase

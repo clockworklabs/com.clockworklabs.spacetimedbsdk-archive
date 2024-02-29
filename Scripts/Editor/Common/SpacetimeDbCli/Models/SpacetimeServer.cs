@@ -1,5 +1,3 @@
-using System.Security.Authentication;
-
 namespace SpacetimeDB.Editor
 {
     /// SpacetimeDB CLI Server { Nickname, Host, IsDefault }

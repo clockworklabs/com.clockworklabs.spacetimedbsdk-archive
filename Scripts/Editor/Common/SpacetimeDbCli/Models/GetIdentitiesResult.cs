@@ -16,18 +16,13 @@ namespace SpacetimeDB.Editor
         public GetIdentitiesResult(SpacetimeCliResult cliResult)
             : base(cliResult.CliOutput, cliResult.CliError)
         {
-            // Example raw list result below. Read from bottom-up.
-            // Ignore the top hashes (TODO: What are top hashes?)
+            // Example raw list result below. Notice how the top hash has no associated Nickname.
             // ###########################################################################################
             /*
              DEFAULT  IDENTITY                                                          NAME            
                       1111111111111111111111111111111111111111111111111111111111111111                  
-                      2222222222222222222222222222222222222222222222222222222222222222                  
-                      3333333333333333333333333333333333333333333333333333333333333333                  
-                      4444444444444444444444444444444444444444444444444444444444444444                  
-                      5555555555555555555555555555555555555555555555555555555555555555                  
-                      6666666666666666666666666666666666666666666666666666666666666666  Nickname1 
-                 ***  7777777777777777777777777777777777777777777777777777777777777777  Nickname2
+                      2222222222222222222222222222222222222222222222222222222222222222  Nickname2
+                      3333333333333333333333333333333333333333333333333333333333333333  Nickname3       
              */
             // ###########################################################################################
             
@@ -36,10 +31,7 @@ namespace SpacetimeDB.Editor
             
             // Split the input string into lines considering the escaped newline characters
             string[] lines = CliOutput.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries); 
-
-            // Corrected regex pattern to ensure it captures the nickname following the hash and spaces
-            // This pattern assumes the nickname is the last element in the line after the hash
-            const string pattern = @"(?:\*\*\*\s+)?\b[a-fA-F0-9]{64}\s+(.+)$";
+            const string pattern = @"(?:\*\*\*\s+)?\b[a-fA-F0-9]{64}\s+(.+)$"; // Captures nicknames
 
             foreach (string line in lines)
             {

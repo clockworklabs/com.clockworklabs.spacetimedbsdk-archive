@@ -1,5 +1,3 @@
-using Newtonsoft.Json;
-
 namespace SpacetimeDB.Editor
 {
     /// Info passed from the UI to CLI during the CLI `spacetime publish

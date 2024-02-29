@@ -1,5 +1,3 @@
-using System;
-using UnityEngine;
 using System.Threading;
 using System.Threading.Tasks;
 using Debug = UnityEngine.Debug;
@@ -15,51 +13,15 @@ namespace SpacetimeDB.Editor
         #endregion // Static Options
 
         
-        #region Init
-        /// Install the SpacetimeDB CLI | https://spacetimedb.com/install 
-        public static async Task<SpacetimeCliResult> InstallSpacetimeCliAsync()
-        {
-            if (PUBLISHER_CLI_LOG_LEVEL == SpacetimeDbCli.CliLogLevel.Info)
-                Debug.Log("Installing SpacetimeDB CLI tool...");
-            
-            SpacetimeCliResult result; 
-            
-            switch (Application.platform)
-            {
-                case RuntimePlatform.WindowsEditor:
-                    result = await SpacetimeDbCli.runCliCommandAsync("powershell -Command \"iwr " +
-                        "https://windows.spacetimedb.com -UseBasicParsing | iex\"\n");
-                    break;
-                
-                case RuntimePlatform.OSXEditor:
-                    result = await SpacetimeDbCli.runCliCommandAsync("brew install clockworklabs/tap/spacetime");
-                    break;
-                
-                case RuntimePlatform.LinuxEditor:
-                    result = await SpacetimeDbCli.runCliCommandAsync("curl -sSf https://install.spacetimedb.com | sh");
-                    break;
-                
-                default:
-                    throw new NotImplementedException("Unsupported OS");
-            }
-            
-            if (PUBLISHER_CLI_LOG_LEVEL == SpacetimeDbCli.CliLogLevel.Info)
-                Debug.Log($"Installed spacetimeDB CLI tool | {PublisherMeta.DOCS_URL}");
-            
-            return result;
-        }
-        #endregion // Init
-        
-        
         #region High Level CLI Actions
         /// Uses the `spacetime publish` CLI command, appending +args from UI elements
-        public static async Task<PublishServerModuleResult> PublishServerModuleAsync(
+        public static async Task<PublishResult> PublishServerModuleAsync(
             PublishRequest publishRequest,
             CancellationToken cancelToken)
         {
             string argSuffix = $"spacetime publish {publishRequest}";
             SpacetimeCliResult cliResult = await SpacetimeDbCli.runCliCommandAsync(argSuffix, cancelToken);
-            PublishServerModuleResult publishResult = new(cliResult);
+            PublishResult publishResult = new(cliResult);
             return onPublishServerModuleDone(publishResult);
         }
         
@@ -77,7 +39,7 @@ namespace SpacetimeDB.Editor
             return cliResult;
         }
 
-        private static PublishServerModuleResult onPublishServerModuleDone(PublishServerModuleResult publishResult)
+        private static PublishResult onPublishServerModuleDone(PublishResult publishResult)
         {
             // Check for general CLI errs (that may contain false-positives for `spacetime publish`)
             bool hasGeneralCliErr = !publishResult.HasCliErr;

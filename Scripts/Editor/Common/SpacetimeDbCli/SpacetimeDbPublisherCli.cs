@@ -12,17 +12,17 @@ namespace SpacetimeDB.Editor
         #region Static Options
         private const SpacetimeDbCli.CliLogLevel PUBLISHER_CLI_LOG_LEVEL = SpacetimeDbCli.CliLogLevel.Info;
         #endregion // Static Options
-        
+
         
         #region High Level CLI Actions
         /// Uses the `spacetime publish` CLI command, appending +args from UI elements
-        public static async Task<PublishServerModuleResult> PublishServerModuleAsync(
+        public static async Task<PublishResult> PublishServerModuleAsync(
             PublishRequest publishRequest,
             CancellationToken cancelToken)
         {
             string argSuffix = $"spacetime publish {publishRequest}";
             SpacetimeCliResult cliResult = await SpacetimeDbCli.runCliCommandAsync(argSuffix, cancelToken);
-            PublishServerModuleResult publishResult = new(cliResult);
+            PublishResult publishResult = new(cliResult);
             return onPublishServerModuleDone(publishResult);
         }
         
@@ -31,10 +31,16 @@ namespace SpacetimeDB.Editor
         {
             const string argSuffix = "npm install -g wasm-opt";
             SpacetimeCliResult cliResult = await SpacetimeDbCli.runCliCommandAsync(argSuffix);
+            return onInstallWasmOptPkgDone(cliResult);
+        }
+
+        private static SpacetimeCliResult onInstallWasmOptPkgDone(SpacetimeCliResult cliResult)
+        {
+            // Success results in !CliError and "changed {numPkgs} packages in {numSecs}s
             return cliResult;
         }
 
-        private static PublishServerModuleResult onPublishServerModuleDone(PublishServerModuleResult publishResult)
+        private static PublishResult onPublishServerModuleDone(PublishResult publishResult)
         {
             // Check for general CLI errs (that may contain false-positives for `spacetime publish`)
             bool hasGeneralCliErr = !publishResult.HasCliErr;

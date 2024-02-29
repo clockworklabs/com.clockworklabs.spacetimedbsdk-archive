@@ -1,6 +1,6 @@
 namespace SpacetimeDB.Editor
 {
-    /// Result from SpacetimeDbCli.AddIdentityAsync
+    /// Result from SpacetimeDbPublisherCli.AddIdentityAsync
     public class AddIdentityResult : SpacetimeCliResult
     {
         #region Errors

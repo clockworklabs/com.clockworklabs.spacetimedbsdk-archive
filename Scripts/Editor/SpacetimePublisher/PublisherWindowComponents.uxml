@@ -1,7 +1,4 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
-    <ui:Template name="serverFoldout" src="project://database/Packages/com.clockworklabs.spacetimedbsdk/Scripts/Editor/Common/Components/serverFoldout.uxml?fileID=9197481963319205126&amp;guid=7394215e5ae9c28459edb6def337f94d&amp;type=3#serverFoldout" />
-    <ui:Template name="installCliGroupBox" src="project://database/Packages/com.clockworklabs.spacetimedbsdk/Scripts/Editor/Common/Components/installCliGroupBox.uxml?fileID=9197481963319205126&amp;guid=109a2801c38e5c0429c71c3e55eeb7e9&amp;type=3#installCliGroupBox" />
-    <ui:Template name="identityFoldout" src="project://database/Packages/com.clockworklabs.spacetimedbsdk/Scripts/Editor/Common/Components/identityFoldout.uxml?fileID=9197481963319205126&amp;guid=bb9f88bf25ea84147a00629ace81ed8b&amp;type=3#identityFoldout" />
     <Style src="project://database/Packages/com.clockworklabs.spacetimedbsdk/Scripts/Editor/SpacetimePublisher/PublisherWindowStyles.uss?fileID=7433441132597879392&amp;guid=20c9b745db07f9e46bb5d740ec005974&amp;type=3#PublisherWindowStyles" />
     <Style src="project://database/Packages/com.clockworklabs.spacetimedbsdk/Scripts/Editor/Common/CommonStyles.uss?fileID=7433441132597879392&amp;guid=570ec260e68b747499bb24f7d084aa3b&amp;type=3#CommonStyles" />
     <ui:VisualElement name="root" style="flex-grow: 1; background-color: rgba(12, 12, 12, 0.78);">

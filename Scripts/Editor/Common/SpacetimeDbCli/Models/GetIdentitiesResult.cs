@@ -31,10 +31,7 @@ namespace SpacetimeDB.Editor
             
             // Split the input string into lines considering the escaped newline characters
             string[] lines = CliOutput.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries); 
-
-            // Corrected regex pattern to ensure it captures the nickname following the hash and spaces
-            // This pattern assumes the nickname is the last element in the line after the hash
-            const string pattern = @"(?:\*\*\*\s+)?\b[a-fA-F0-9]{64}\s+(.+)$";
+            const string pattern = @"(?:\*\*\*\s+)?\b[a-fA-F0-9]{64}\s+(.+)$"; // Captures nicknames
 
             foreach (string line in lines)
             {

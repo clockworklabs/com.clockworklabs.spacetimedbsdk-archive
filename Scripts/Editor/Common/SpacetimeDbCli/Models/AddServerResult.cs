@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace SpacetimeDB.Editor
 {
     public class AddServerResult : SpacetimeCliResult

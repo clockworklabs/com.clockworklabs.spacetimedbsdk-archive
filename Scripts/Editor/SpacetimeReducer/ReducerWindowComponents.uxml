@@ -10,7 +10,7 @@
             <ui:Foldout text="&lt;b&gt;Setup&lt;/b&gt;" name="setupFoldout" value="true">
                 <ui:TextField picking-mode="Ignore" label="Server" name="serverTxt" readonly="true" />
                 <ui:TextField picking-mode="Ignore" label="Identity" name="identityTxt" readonly="true" />
-                <ui:TextField picking-mode="Ignore" label="Module" name="moduleTxt" readonly="true" />
+                <ui:TextField picking-mode="Ignore" label="Module" name="moduleTxt" readonly="false" />
             </ui:Foldout>
             <ui:VisualElement name="spacer10" style="height: 10px;" />
             <ui:Foldout text="&lt;b&gt;Reducers&lt;/b&gt;" name="reducersFoldout" value="true">

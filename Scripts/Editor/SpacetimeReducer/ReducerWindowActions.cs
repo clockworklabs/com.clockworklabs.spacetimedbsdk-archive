@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.UIElements;
 
 namespace SpacetimeDB.Editor
@@ -18,7 +20,11 @@ namespace SpacetimeDB.Editor
             await ensureCliInstalledAsync();
             await setSelectedServerTxtAsync();
             await setSelectedIdentityTxtAsync();
-            await setSelectedModuleTxtAsync();
+            
+            //// TODO: If `spacetime list` ever returns db names (not just addresses),
+            //// TODO: Auto list them in dropdown
+            // await setSelectedModuleTxtAsync();
+            
             await setReducersTreeViewAsync();
 
             // Load entities into TreeView
@@ -28,34 +34,17 @@ namespace SpacetimeDB.Editor
             throw new NotImplementedException("TODO: Show Actions foldout");
         }
 
-        private async Task setSelectedModuleTxtAsync()
-        {
-            // await SpacetimeDbCli.GetDbAddresses();
-            //
-            // bool isSuccess = !getIdentitiesResult.HasIdentity || getIdentitiesResult.HasIdentitiesButNoDefault;
-            // if (!isSuccess)
-            // {
-            //     showErrorWrapper("<b>Failed to get identities:</b>\n" +
-            //         "Setup via top menu `Window/SpacetimeDB/Publisher`");
-            //     return;
-            // }
-            //
-            // // Success
-            // SpacetimeIdentity defaultIdentity = getIdentitiesResult.Identities
-            //     .First(id => id.IsDefault);
-            // identityTxt.value = defaultIdentity.Nickname;
-        }
-
         /// Loads reducer names into #reducersTreeView -> Enable
         /// Doc | https://docs.unity3d.com/2022.3/Documentation/Manual/UIE-uxml-element-TreeView.html
         private async Task setReducersTreeViewAsync()
         {
-            GetEntityStructureResult entityStructureResult = await SpacetimeDbCli.GetEntityStructure();
+            string moduleName = moduleTxt.value;
+            GetEntityStructureResult entityStructureResult = await SpacetimeDbCli.GetEntityStructure(moduleName);
+            
             bool isSuccess = entityStructureResult is { HasEntityStructure: true };
             if (!isSuccess)
             {
-                showErrorWrapper("<b>Failed to get reducers:</b>\n" +
-                    "Setup via top menu `Window/SpacetimeDB/Publisher`");
+                Debug.Log("Warning: Searched for reducers; found none");
                 return;
             }
             
@@ -93,7 +82,7 @@ namespace SpacetimeDB.Editor
         {
             GetServersResult getServersResult = await SpacetimeDbCli.GetServersAsync();
             
-            bool isSuccess = !getServersResult.HasServer || getServersResult.HasServersButNoDefault;
+            bool isSuccess = getServersResult.HasServer && !getServersResult.HasServersButNoDefault;
             if (!isSuccess)
             {
                 showErrorWrapper("<b>Failed to get servers:</b>\n" +
@@ -112,7 +101,7 @@ namespace SpacetimeDB.Editor
         {
             GetIdentitiesResult getIdentitiesResult = await SpacetimeDbCli.GetIdentitiesAsync();
 
-            bool isSuccess = !getIdentitiesResult.HasIdentity || getIdentitiesResult.HasIdentitiesButNoDefault;
+            bool isSuccess = getIdentitiesResult.HasIdentity && !getIdentitiesResult.HasIdentitiesButNoDefault;
             if (!isSuccess)
             {
                 showErrorWrapper("<b>Failed to get identities:</b>\n" +

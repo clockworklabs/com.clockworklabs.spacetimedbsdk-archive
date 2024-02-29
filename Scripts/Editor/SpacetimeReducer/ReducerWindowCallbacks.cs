@@ -20,7 +20,8 @@ namespace SpacetimeDB.Editor
         {
             topBannerBtn.clicked += onTopBannerBtnClick; // Launches Module docs website
             actionsRunBtn.clicked += onActionsRunBtnClick; // Run the reducer via CLI
-            reducersTreeView.selectionChanged += onReducersTreeViewSelectionChanged;
+            refreshReducersBtn.clicked += onRefreshReducersBtnClickAsync; // Refresh reducers tree view live from cli
+            reducersTreeView.selectionChanged += onReducersTreeViewSelectionChanged; // Selected a reducer from tree
         }
 
         /// Cleanup: This should parity the opposite of setOnActionEvents()
@@ -28,6 +29,7 @@ namespace SpacetimeDB.Editor
         {
             topBannerBtn.clicked -= onTopBannerBtnClick;
             actionsRunBtn.clicked -= onActionsRunBtnClick;
+            refreshReducersBtn.clicked -= onRefreshReducersBtnClickAsync; // Refresh reducers tree view live from cli
             reducersTreeView.selectionChanged -= onReducersTreeViewSelectionChanged;
         }
 
@@ -46,6 +48,9 @@ namespace SpacetimeDB.Editor
             throw new NotImplementedException("TODO: onReducersTreeViewSelectionChanged");
         }
 
+        private async void onRefreshReducersBtnClickAsync() =>
+            await setReducersTreeViewAsync();
+        
         private void onActionsRunBtnClick() => 
             throw new NotImplementedException("TODO: onActionsRunBtnClick");
         #endregion // Direct UI Callbacks

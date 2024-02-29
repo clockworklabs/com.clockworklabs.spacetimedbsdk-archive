@@ -250,12 +250,14 @@ namespace SpacetimeDB.Editor
             return getDbAddressesResult;
         }
         
-        /// [Slow] Uses the `spacetime describe [--as-identity {identity}]` CLI command
-        public static async Task<GetEntityStructureResult> GetEntityStructure(string asIdentity = null)
+        /// [Slow] Uses the `spacetime describe {moduleName} [--as-identity {identity}]` CLI command
+        public static async Task<GetEntityStructureResult> GetEntityStructure(
+            string moduleName,
+            string asIdentity = null)
         {
             // Append ` --as-identity {identity}`?
             string asIdentitySuffix = string.IsNullOrEmpty(asIdentity) ? "" : $" --as-identity {asIdentity}";
-            string argSuffix = $"spacetime describe{asIdentitySuffix}";
+            string argSuffix = $"spacetime describe {moduleName}{asIdentitySuffix}";
             
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
             GetEntityStructureResult getEntityStructureResult = new(cliResult);

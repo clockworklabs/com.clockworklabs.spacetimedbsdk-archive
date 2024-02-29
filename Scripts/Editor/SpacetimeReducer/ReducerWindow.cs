@@ -30,6 +30,7 @@ namespace SpacetimeDB.Editor
         private TextField identityTxt;
         private TextField moduleTxt;
 
+        private Button refreshReducersBtn;
         private TreeView reducersTreeView;
         private Label reducersLoadingLabel;
         
@@ -109,6 +110,7 @@ namespace SpacetimeDB.Editor
             identityTxt = rootVisualElement.Q<TextField>(nameof(identityTxt));
             moduleTxt = rootVisualElement.Q<TextField>(nameof(moduleTxt));
             
+            refreshReducersBtn = rootVisualElement.Q<Button>(nameof(refreshReducersBtn));
             reducersTreeView = rootVisualElement.Q<TreeView>(nameof(reducersTreeView));
             reducersLoadingLabel = rootVisualElement.Q<Label>(nameof(reducersLoadingLabel));
             
@@ -130,6 +132,7 @@ namespace SpacetimeDB.Editor
                 Assert.IsNotNull(identityTxt, $"Expected `#{nameof(identityTxt)}`");
                 Assert.IsNotNull(moduleTxt, $"Expected `#{nameof(moduleTxt)}`");
                 
+                Assert.IsNotNull(refreshReducersBtn, $"Expected `#{nameof(refreshReducersBtn)}`");
                 Assert.IsNotNull(reducersTreeView, $"Expected `#{nameof(reducersTreeView)}`");
                 Assert.IsNotNull(reducersLoadingLabel, $"Expected `#{nameof(reducersLoadingLabel)}`");
                 

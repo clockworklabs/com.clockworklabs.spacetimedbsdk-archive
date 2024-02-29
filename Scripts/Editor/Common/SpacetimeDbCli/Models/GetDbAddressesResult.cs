@@ -4,37 +4,39 @@ using System.Text.RegularExpressions;
 
 namespace SpacetimeDB.Editor
 {
-    /// Result of `spacetime identity list`
-    public class GetIdentitiesResult : SpacetimeCliResult
+    /// Result of `spacetime describe {identity}`
+    /// (!) This only shows the db_addresses (hash); not nicknames.
+    public class GetDbAddressesResult : SpacetimeCliResult
     {
-        public List<SpacetimeIdentity> Identities { get; }
-        public bool HasIdentity => Identities?.Count > 0;
-        public bool HasIdentitiesButNoDefault => HasIdentity && 
-            !Identities.Exists(id => id.IsDefault);
+        public List<string> DbAddresses { get; }
+        public bool HasDbAddresses => DbAddresses?.Count > 0;
         
         
-        public GetIdentitiesResult(SpacetimeCliResult cliResult)
+        public GetDbAddressesResult(SpacetimeCliResult cliResult)
             : base(cliResult.CliOutput, cliResult.CliError)
         {
-            // Example raw list result below. Notice the 1st has no Name attached.
+            // Example raw list result below, where {identity} is replaced.
             // ###########################################################################################
             /*
-             DEFAULT  IDENTITY                                                          NAME            
-                      1111111111111111111111111111111111111111111111111111111111111111                  
-                      2222222222222222222222222222222222222222222222222222222222222222 Nickname2                 
-                      3333333333333333333333333333333333333333333333333333333333333333 Nickname3                
-             */
+                Associated database addresses for {identity}:
+
+                 db_address
+                ----------------------------------
+                 7028275a6501ad4d87af00beedc1f531
+                 59d1b0b1648398ac5d4f0319cb599382
+                 f99ab6d262916b5f5fc0c35c126acdda
+            */
             // ###########################################################################################
             
-            // Initialize the list to store nicknames
-            this.Identities = new List<SpacetimeIdentity>();
+            // Initialize the list to store addresses
+            this.DbAddresses = new List<string>();
             
             // Split the input string into lines considering the escaped newline characters
             string[] lines = CliOutput.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries); 
 
             // Corrected regex pattern to ensure it captures the nickname following the hash and spaces
             // This pattern assumes the nickname is the last element in the line after the hash
-            const string pattern = @"(?:\*\*\*\s+)?\b[a-fA-F0-9]{64}\s+(.+)$";
+            const string pattern = @"\b[a-fA-F0-9]{32}\b";
 
             foreach (string line in lines)
             {

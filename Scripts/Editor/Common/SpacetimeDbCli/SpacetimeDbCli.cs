@@ -213,20 +213,16 @@ namespace SpacetimeDB.Editor
         /// isInstalled = !cliResult.HasCliError 
         public static async Task<SpacetimeCliResult> GetIsSpacetimeCliInstalledAsync()
         {
-            SpacetimeCliResult cliResult = await runCliCommandAsync("spacetime version");
-
-            // Info Logs
-            bool isSpacetimeCliInstalled = !cliResult.HasCliErr;
-            if (CLI_LOG_LEVEL == CliLogLevel.Info)
-                Debug.Log($"{nameof(isSpacetimeCliInstalled)}=={isSpacetimeCliInstalled}");
-
+            string argSuffix = "spacetime version";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
             return cliResult;
         }
         
         /// Uses the `spacetime identity list` CLI command
-        public static async Task<GetIdentitiesResult> GetIdentitiesAsync() 
+        public static async Task<GetIdentitiesResult> GetIdentitiesAsync()
         {
-            SpacetimeCliResult cliResult = await runCliCommandAsync("spacetime identity list");
+            string argSuffix = "spacetime identity list";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
             GetIdentitiesResult getIdentitiesResult = new(cliResult);
             return getIdentitiesResult;
         }
@@ -234,10 +230,42 @@ namespace SpacetimeDB.Editor
         /// Uses the `spacetime identity list` CLI command
         public static async Task<GetServersResult> GetServersAsync() 
         {
-            SpacetimeCliResult cliResult = await runCliCommandAsync("spacetime server list");
+            string argSuffix = "spacetime server list";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
             GetServersResult getServersResult = new(cliResult);
             return getServersResult;
         }
         #endregion // High Level CLI Actions
+
+
+        /// Uses the `spacetime list {identity}` CLI command.
+        /// (!) This only returns the addresses.
+        ///     For nicknames, see the chained call: TODO
+        public static async Task<GetIdentitiesResult> GetDbAddresses(string identity)
+        {
+            string argSuffix = $"spacetime list {identity}";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
+            GetDbAddressesResult getIdentitiesResult = new(cliResult);
+            return getIdentitiesResult;
+        }
+        
+        /// Chain call to `spacetime list {identity}` => returns 
+        /// Then for each, `spacetime nickname {address}` 
+        public static async Task<GetIdentitiesResult> ListDbAddressesWithNicknames(string identity)
+        {
+            string argSuffix = $"spacetime list {identity}";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
+            GetIdentitiesResult getIdentitiesResult = new(cliResult);
+            return getIdentitiesResult;
+        } 
+        
+        /// Uses the `spacetime describe` CLI command
+        public static async Task<GetEntityStructureResult> GetEntityStructure()
+        {
+            const string argSuffix = "spacetime describe";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
+            GetEntityStructureResult getEntityStructureResult = new(cliResult);
+            return getEntityStructureResult;
+        }
     }
 }

@@ -14,11 +14,21 @@ namespace SpacetimeDB.Editor
     /// (!) Errors involving cli installation, identity and servers will refer to Publisher window.
     public partial class ReducerWindow : EditorWindow
     {
+        #region Window State
+        private EntityStructure _entityStructure; // For reducersTreeView, set @ setReducersTreeViewAsync()
+        #endregion // Window State
+        
+        
         #region UI Visual Elements
+        // ##################################################################
+        // Use `camelCase` naming conventions to utilize nameof and match UI.
+        // This is due to implicit bindings, making it less error-prone.
+        // ##################################################################
         private Button topBannerBtn;
 
         private TextField serverTxt;
         private TextField identityTxt;
+        private TextField moduleTxt;
 
         private TreeView reducersTreeView;
         private Label reducersLoadingLabel;
@@ -97,6 +107,7 @@ namespace SpacetimeDB.Editor
             
             serverTxt = rootVisualElement.Q<TextField>(nameof(serverTxt));
             identityTxt = rootVisualElement.Q<TextField>(nameof(identityTxt));
+            moduleTxt = rootVisualElement.Q<TextField>(nameof(moduleTxt));
             
             reducersTreeView = rootVisualElement.Q<TreeView>(nameof(reducersTreeView));
             reducersLoadingLabel = rootVisualElement.Q<Label>(nameof(reducersLoadingLabel));
@@ -117,6 +128,7 @@ namespace SpacetimeDB.Editor
                 
                 Assert.IsNotNull(serverTxt, $"Expected `#{nameof(serverTxt)}`");
                 Assert.IsNotNull(identityTxt, $"Expected `#{nameof(identityTxt)}`");
+                Assert.IsNotNull(moduleTxt, $"Expected `#{nameof(moduleTxt)}`");
                 
                 Assert.IsNotNull(reducersTreeView, $"Expected `#{nameof(reducersTreeView)}`");
                 Assert.IsNotNull(reducersLoadingLabel, $"Expected `#{nameof(reducersLoadingLabel)}`");

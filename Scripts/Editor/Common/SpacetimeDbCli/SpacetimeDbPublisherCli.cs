@@ -1,5 +1,3 @@
-using System;
-using UnityEngine;
 using System.Threading;
 using System.Threading.Tasks;
 using Debug = UnityEngine.Debug;
@@ -14,42 +12,6 @@ namespace SpacetimeDB.Editor
         #region Static Options
         private const SpacetimeDbCli.CliLogLevel PUBLISHER_CLI_LOG_LEVEL = SpacetimeDbCli.CliLogLevel.Info;
         #endregion // Static Options
-
-        
-        #region Init
-        /// Install the SpacetimeDB CLI | https://spacetimedb.com/install 
-        public static async Task<SpacetimeCliResult> InstallSpacetimeCliAsync()
-        {
-            if (PUBLISHER_CLI_LOG_LEVEL == SpacetimeDbCli.CliLogLevel.Info)
-                Debug.Log("Installing SpacetimeDB CLI tool...");
-            
-            SpacetimeCliResult result; 
-            
-            switch (Application.platform)
-            {
-                case RuntimePlatform.WindowsEditor:
-                    result = await SpacetimeDbCli.runCliCommandAsync("powershell -Command \"iwr " +
-                        "https://windows.spacetimedb.com -UseBasicParsing | iex\"\n");
-                    break;
-                
-                case RuntimePlatform.OSXEditor:
-                    result = await SpacetimeDbCli.runCliCommandAsync("brew install clockworklabs/tap/spacetime");
-                    break;
-                
-                case RuntimePlatform.LinuxEditor:
-                    result = await SpacetimeDbCli.runCliCommandAsync("curl -sSf https://install.spacetimedb.com | sh");
-                    break;
-                
-                default:
-                    throw new NotImplementedException("Unsupported OS");
-            }
-            
-            if (PUBLISHER_CLI_LOG_LEVEL == SpacetimeDbCli.CliLogLevel.Info)
-                Debug.Log($"Installed spacetimeDB CLI tool | {PublisherMeta.DOCS_URL}");
-            
-            return result;
-        }
-        #endregion // Init
         
         
         #region High Level CLI Actions
@@ -69,12 +31,6 @@ namespace SpacetimeDB.Editor
         {
             const string argSuffix = "npm install -g wasm-opt";
             SpacetimeCliResult cliResult = await SpacetimeDbCli.runCliCommandAsync(argSuffix);
-            return onInstallWasmOptPkgDone(cliResult);
-        }
-
-        private static SpacetimeCliResult onInstallWasmOptPkgDone(SpacetimeCliResult cliResult)
-        {
-            // Success results in !CliError and "changed {numPkgs} packages in {numSecs}s
             return cliResult;
         }
 

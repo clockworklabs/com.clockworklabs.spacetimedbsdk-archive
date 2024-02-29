@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using UnityEngine;
 using UnityEngine.UIElements;
-using static SpacetimeDB.Editor.ReducerMeta;
 
 namespace SpacetimeDB.Editor
 {
@@ -18,8 +15,122 @@ namespace SpacetimeDB.Editor
         /// Initially called by ReducerWindow @ CreateGUI.
         private async Task initDynamicEventsFromReducerWindow()
         {
+            await ensureCliInstalledAsync();
+            await setSelectedServerTxtAsync();
+            await setSelectedIdentityTxtAsync();
+            await setSelectedModuleTxtAsync();
+            await setReducersTreeViewAsync();
+
+            // Load entities into TreeView
+            throw new NotImplementedException("TODO: Load entities into TreeView");
+
+            // Show Actions foldout
+            throw new NotImplementedException("TODO: Show Actions foldout");
+        }
+
+        private async Task setSelectedModuleTxtAsync()
+        {
+            await SpacetimeDbCli.GetDbAddresses();
+            //
+            // bool isSuccess = !getIdentitiesResult.HasIdentity || getIdentitiesResult.HasIdentitiesButNoDefault;
+            // if (!isSuccess)
+            // {
+            //     showErrorWrapper("<b>Failed to get identities:</b>\n" +
+            //         "Setup via top menu `Window/SpacetimeDB/Publisher`");
+            //     return;
+            // }
+            //
+            // // Success
+            // SpacetimeIdentity defaultIdentity = getIdentitiesResult.Identities
+            //     .First(id => id.IsDefault);
+            // identityTxt.value = defaultIdentity.Nickname;
+        }
+
+        /// Loads reducer names into #reducersTreeView -> Enable
+        /// Doc | https://docs.unity3d.com/2022.3/Documentation/Manual/UIE-uxml-element-TreeView.html
+        private async Task setReducersTreeViewAsync()
+        {
+            GetEntityStructureResult entityStructureResult = await SpacetimeDbCli.GetEntityStructure();
+            bool isSuccess = entityStructureResult is { HasEntityStructure: true };
+            if (!isSuccess)
+            {
+                showErrorWrapper("<b>Failed to get reducers:</b>\n" +
+                    "Setup via top menu `Window/SpacetimeDB/Publisher`");
+                return;
+            }
+            
+            // Success: Load entity names into reducer tree view - cache _entityStructure state
+            // TODO: +with friendly styled syntax hint children
+            _entityStructure = entityStructureResult.EntityStructure;
+            reducersTreeView.makeItem = () => new Label(); // Creates a new Label for each item
+            reducersTreeView.bindItem = bindReducersTreeViewItem;
+
+            // Enable the TreeView
+            reducersTreeView.SetEnabled(true);
+        }
+
+        /// Must use the Index (not the ID) with GetItemDataForIndex (of T)
+        private void bindReducersTreeViewItem(VisualElement element, int index)
+        {
+            Label label = element as Label;
+            bool isValid = 
+                label is not null && 
+                index >= 0 && 
+                index < _entityStructure.ReducersInfo.Count;
+            
+            if (!isValid)
+                return;
+            
+            ReducerInfo reducerInfo = _entityStructure.ReducersInfo[index];
+            if (reducerInfo is null)
+                return;
+
+            // Set TreeViewItem element
+            label.text = reducerInfo.GetReducerName();
+        }
+
+        private async Task setSelectedServerTxtAsync()
+        {
+            GetServersResult getServersResult = await SpacetimeDbCli.GetServersAsync();
+            
+            bool isSuccess = !getServersResult.HasServer || getServersResult.HasServersButNoDefault;
+            if (!isSuccess)
+            {
+                showErrorWrapper("<b>Failed to get servers:</b>\n" +
+                    "Setup via top menu `Window/SpacetimeDB/Publisher`");
+                return;
+            }
+            
+            // Success
+            SpacetimeServer defaultServer = getServersResult.Servers
+                .First(server => server.IsDefault);
+            serverTxt.value = defaultServer.Nickname;
+        }
+
+        /// Load selected identities => set readonly identity txt
+        private async Task setSelectedIdentityTxtAsync()
+        {
+            GetIdentitiesResult getIdentitiesResult = await SpacetimeDbCli.GetIdentitiesAsync();
+
+            bool isSuccess = !getIdentitiesResult.HasIdentity || getIdentitiesResult.HasIdentitiesButNoDefault;
+            if (!isSuccess)
+            {
+                showErrorWrapper("<b>Failed to get identities:</b>\n" +
+                    "Setup via top menu `Window/SpacetimeDB/Publisher`");
+                return;
+            }
+
+            // Success
+            SpacetimeIdentity defaultIdentity = getIdentitiesResult.Identities
+                .First(id => id.IsDefault);
+            identityTxt.value = defaultIdentity.Nickname;
+        }
+
+        private async Task ensureCliInstalledAsync()
+        {
             // Ensure CLI installed -> Show err (refer to PublisherWindow), if not
             SpacetimeCliResult isSpacetimeDbCliInstalledResult = await SpacetimeDbCli.GetIsSpacetimeCliInstalledAsync();
+
             bool isCliInstalled = !isSpacetimeDbCliInstalledResult.HasCliErr;
             if (!isCliInstalled)
             {
@@ -28,35 +139,9 @@ namespace SpacetimeDB.Editor
                 return;
             }
             
-            // Load selected server+identity
-            GetIdentitiesResult getIdentitiesResult = await SpacetimeDbCli.GetIdentitiesAsync();
-            if (!getIdentitiesResult.HasIdentity || getIdentitiesResult.HasIdentitiesButNoDefault)
-            {
-                showErrorWrapper("<b>Failed to get identities:</b>\n" +
-                    "Setup via top menu `Window/SpacetimeDB/Publisher`");
-                return;
-            }
-
-            SpacetimeIdentity defaultIdentity = getIdentitiesResult.Identities
-                .First(id => id.IsDefault);
-            identityTxt.value = defaultIdentity.Nickname;
-            
-            GetServersResult getServersResult = await SpacetimeDbCli.GetServersAsync();
-            if (!getServersResult.HasServer || getServersResult.HasServersButNoDefault)
-            {
-                showErrorWrapper("<b>Failed to get servers:</b>\n" +
-                    "Setup via top menu `Window/SpacetimeDB/Publisher`");
-                return;
-            }
-            
-            SpacetimeServer defaultServer = getServersResult.Servers
-                .First(server => server.IsDefault);
-            serverTxt.value = defaultServer.Nickname;
-
-            // Load reducers
-            // Show Actions foldout
+            // Success: Do nothing!
         }
-        
+
         /// Initially called by ReducerWindow @ CreateGUI
         /// - Set to the initial state as if no inputs were set.
         /// - This exists so we can show all ui elements simultaneously in the
@@ -82,7 +167,8 @@ namespace SpacetimeDB.Editor
 
         /// Wraps the entire body in an error message, generally when there's
         /// a cli/server/identity error that should be configured @ PublisherWindow (not here).
-        /// Wraps text in error style color
+        /// Wraps text in error style color.
+        /// Throws.
         private void showErrorWrapper(string friendlyError)
         {
             throw new NotImplementedException($"TODO: Hide body -> show err: {friendlyError}");

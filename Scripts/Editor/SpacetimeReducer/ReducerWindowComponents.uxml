@@ -1,5 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
-    <Style src="project://database/Packages/com.clockworklabs.spacetimedbsdk/Scripts/Editor/SpacetimeReducer/ReducerWindowComponents.uss?fileID=7433441132597879392&amp;guid=7d17dab44c372b74fb5d4083325465af&amp;type=3#ReducerWindowComponents" />
+    <Style src="project://database/Packages/com.clockworklabs.spacetimedbsdk/Scripts/Editor/SpacetimeReducer/ReducerWindowStyles.uss?fileID=7433441132597879392&amp;guid=7d17dab44c372b74fb5d4083325465af&amp;type=3#ReducerWindowStyles" />
     <Style src="project://database/Packages/com.clockworklabs.spacetimedbsdk/Scripts/Editor/Common/CommonStyles.uss?fileID=7433441132597879392&amp;guid=570ec260e68b747499bb24f7d084aa3b&amp;type=3#CommonStyles" />
     <ui:VisualElement name="root" style="flex-grow: 1; background-color: rgba(12, 12, 12, 0.78);">
         <ui:VisualElement name="header" style="height: 66px; width: auto;">
@@ -10,6 +10,7 @@
             <ui:Foldout text="&lt;b&gt;Setup&lt;/b&gt;" name="setupFoldout" value="true">
                 <ui:TextField picking-mode="Ignore" label="Server" name="serverTxt" readonly="true" />
                 <ui:TextField picking-mode="Ignore" label="Identity" name="identityTxt" readonly="true" />
+                <ui:TextField picking-mode="Ignore" label="Module" name="moduleTxt" readonly="true" />
             </ui:Foldout>
             <ui:VisualElement name="spacer10" style="height: 10px;" />
             <ui:Foldout text="&lt;b&gt;Reducers&lt;/b&gt;" name="reducersFoldout" value="true">

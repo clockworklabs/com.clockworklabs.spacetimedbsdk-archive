@@ -3,6 +3,7 @@ namespace SpacetimeDB.Editor
     /// Result from SpacetimeDbCli.runCliCommandAsync
     public class SpacetimeCliResult
     {
+        /// Raw, unparsed CLI output
         public string CliOutput { get; private set; }
         
         /// This is the official error thrown by the CLI; it may not necessarily

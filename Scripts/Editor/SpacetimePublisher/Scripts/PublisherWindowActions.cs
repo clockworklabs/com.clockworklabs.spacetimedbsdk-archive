@@ -452,7 +452,7 @@ namespace SpacetimeDB.Editor
                 publishModulePathTxt.value);
             
             // Run CLI cmd [can cancel]
-            PublishServerModuleResult publishResult = await SpacetimeDbPublisherCli.PublishServerModuleAsync(
+            PublishResult publishResult = await SpacetimeDbPublisherCli.PublishAsync(
                 publishRequest,
                 _cts.Token);
 
@@ -465,21 +465,21 @@ namespace SpacetimeDB.Editor
         }
         
         /// Critical err - show label
-        private void onPublishFail(PublishServerModuleResult publishResult)
+        private void onPublishFail(PublishResult publishResult)
         {
             updatePublishStatus(StringStyle.Error, publishResult.StyledFriendlyErrorMessage 
                 ?? publishResult.CliError);
         }
         
         /// There may be a false-positive wasm-opt err here; in which case, we'd still run success 
-        private void onPublishSuccess(PublishServerModuleResult publishResult)
+        private void onPublishSuccess(PublishResult publishResult)
         {
             // Success - reset UI back to normal
             setPublishReadyStatus();
             setPublishResultGroupUi(publishResult);
         }
 
-        private void setPublishResultGroupUi(PublishServerModuleResult publishResult)
+        private void setPublishResultGroupUi(PublishResult publishResult)
         {
             // Load the result data
             publishResultDateTimeTxt.value = $"{publishResult.PublishedAt:G} (Local)";

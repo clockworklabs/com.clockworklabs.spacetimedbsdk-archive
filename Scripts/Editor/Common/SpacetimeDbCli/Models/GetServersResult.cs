@@ -31,7 +31,7 @@ namespace SpacetimeDB.Editor
             // Split the input string into lines considering the escaped newline characters
             string[] lines = CliOutput.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries); 
 
-            // Regex pattern to capture hostName, protocol (ignored in this context), nickname, and isDefault
+            // Captures hostName, protocol (ignored in this context), nickname, and isDefault
             const string pattern = @"^\s*(\*{3})?\s*([^\s]+)\s+[^\s]+\s+([^\s]+)";
 
             foreach (string line in lines)

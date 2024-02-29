@@ -1,5 +1,3 @@
-using UnityEngine;
-
 /// Static metadata for SpacetimeDB editor scripts
 public static class SpacetimeMeta
 {

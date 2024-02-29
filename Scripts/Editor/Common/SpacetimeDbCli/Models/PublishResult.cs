@@ -6,7 +6,7 @@ using UnityEngine;
 namespace SpacetimeDB.Editor
 {
     /// Extends SpacetimeCliResult to catch specific `spacetime publish` results
-    public class PublishServerModuleResult : SpacetimeCliResult
+    public class PublishResult : SpacetimeCliResult
     {
         #region Success
         /// The errors may have false-positive warnings; this is the true success checker
@@ -65,7 +65,7 @@ namespace SpacetimeDB.Editor
         #endregion // Errs
 
 
-        public PublishServerModuleResult(SpacetimeCliResult cliResult)
+        public PublishResult(SpacetimeCliResult cliResult)
             : base(cliResult.CliOutput, cliResult.CliError)
         {
             bool hasOutputErr = CliOutput.Contains("Error:");
@@ -233,7 +233,7 @@ namespace SpacetimeDB.Editor
 
         /// Returns a json summary
         public override string ToString() => 
-            $"{nameof(PublishServerModuleResult)}: " +
+            $"{nameof(PublishResult)}: " +
             $"{JsonConvert.SerializeObject(this, Formatting.Indented)}";
     }
 }

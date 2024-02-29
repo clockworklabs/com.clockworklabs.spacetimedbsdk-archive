@@ -7,7 +7,7 @@ namespace SpacetimeDB.Editor
     /// Result of `spacetime identity list`
     public class GetIdentitiesResult : SpacetimeCliResult
     {
-        public List<SpacetimeIdentity> Identities { get; }
+        public List<SpacetimeIdentity> Identities { get; private set; }
         public bool HasIdentity => Identities?.Count > 0;
         public bool HasIdentitiesButNoDefault => HasIdentity && 
             !Identities.Exists(id => id.IsDefault);
@@ -16,13 +16,13 @@ namespace SpacetimeDB.Editor
         public GetIdentitiesResult(SpacetimeCliResult cliResult)
             : base(cliResult.CliOutput, cliResult.CliError)
         {
-            // Example raw list result below. Notice the 1st has no Name attached.
+            // Example raw list result below. Notice how the top hash has no associated Nickname.
             // ###########################################################################################
             /*
              DEFAULT  IDENTITY                                                          NAME            
                       1111111111111111111111111111111111111111111111111111111111111111                  
-                      2222222222222222222222222222222222222222222222222222222222222222 Nickname2                 
-                      3333333333333333333333333333333333333333333333333333333333333333 Nickname3                
+                      2222222222222222222222222222222222222222222222222222222222222222  Nickname2
+                      3333333333333333333333333333333333333333333333333333333333333333  Nickname3       
              */
             // ###########################################################################################
             

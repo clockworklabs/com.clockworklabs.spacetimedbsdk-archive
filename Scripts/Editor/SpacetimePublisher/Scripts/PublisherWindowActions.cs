@@ -452,7 +452,7 @@ namespace SpacetimeDB.Editor
                 publishModulePathTxt.value);
             
             // Run CLI cmd [can cancel]
-            PublishResult publishResult = await SpacetimeDbPublisherCli.PublishServerModuleAsync(
+            PublishResult publishResult = await SpacetimeDbPublisherCli.PublishAsync(
                 publishRequest,
                 _cts.Token);
 

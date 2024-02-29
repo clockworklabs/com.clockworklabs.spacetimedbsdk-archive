@@ -30,7 +30,7 @@ namespace SpacetimeDB.Editor
 
         private async Task setSelectedModuleTxtAsync()
         {
-            await SpacetimeDbCli.GetDbAddresses();
+            // await SpacetimeDbCli.GetDbAddresses();
             //
             // bool isSuccess = !getIdentitiesResult.HasIdentity || getIdentitiesResult.HasIdentitiesButNoDefault;
             // if (!isSuccess)

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using System.Diagnostics;
 using System.Threading;
@@ -240,29 +241,22 @@ namespace SpacetimeDB.Editor
 
         /// Uses the `spacetime list {identity}` CLI command.
         /// (!) This only returns the addresses.
-        ///     For nicknames, see the chained call: TODO
-        public static async Task<GetIdentitiesResult> GetDbAddresses(string identity)
+        ///     For nicknames, see the chained call: GetDbAddressesWithNicknames
+        public static async Task<GetDbAddressesResult> GetDbAddresses(string identity)
         {
             string argSuffix = $"spacetime list {identity}";
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            GetDbAddressesResult getIdentitiesResult = new(cliResult);
-            return getIdentitiesResult;
+            GetDbAddressesResult getDbAddressesResult = new(cliResult);
+            return getDbAddressesResult;
         }
         
-        /// Chain call to `spacetime list {identity}` => returns 
-        /// Then for each, `spacetime nickname {address}` 
-        public static async Task<GetIdentitiesResult> ListDbAddressesWithNicknames(string identity)
+        /// [Slow] Uses the `spacetime describe [--as-identity {identity}]` CLI command
+        public static async Task<GetEntityStructureResult> GetEntityStructure(string asIdentity = null)
         {
-            string argSuffix = $"spacetime list {identity}";
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            GetIdentitiesResult getIdentitiesResult = new(cliResult);
-            return getIdentitiesResult;
-        } 
-        
-        /// Uses the `spacetime describe` CLI command
-        public static async Task<GetEntityStructureResult> GetEntityStructure()
-        {
-            const string argSuffix = "spacetime describe";
+            // Append ` --as-identity {identity}`?
+            string asIdentitySuffix = string.IsNullOrEmpty(asIdentity) ? "" : $" --as-identity {asIdentity}";
+            string argSuffix = $"spacetime describe{asIdentitySuffix}";
+            
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
             GetEntityStructureResult getEntityStructureResult = new(cliResult);
             return getEntityStructureResult;

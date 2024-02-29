@@ -41,23 +41,12 @@ namespace SpacetimeDB.Editor
             foreach (string line in lines)
             {
                 Match match = Regex.Match(line, pattern);
-                if (!match.Success || match.Groups.Count <= 1)
-                    continue;
-                
-                // Extract potential match
-                string potentialNickname = match.Groups[1].Value.Trim();
-                if (!string.IsNullOrWhiteSpace(potentialNickname))
-                    onIdentityFound(line, potentialNickname);
+                if (match.Success)
+                {
+                    // Add the matched hash to the list
+                    this.DbAddresses.Add(match.Value);
+                }
             }
-        }
-        
-        /// Set identityNicknames and isDefault
-        private void onIdentityFound(string line, string nickname)
-        {
-            // Determine if the newIdentity is marked as default by checking if the line contains ***
-            bool isDefault = line.Contains("***");
-            SpacetimeIdentity identity = new(nickname, isDefault);
-            Identities.Add(identity);
         }
     }
 }

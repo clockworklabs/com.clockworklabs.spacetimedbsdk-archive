@@ -1,8 +1,5 @@
-using System;
-using UnityEngine;
 using System.Threading;
 using System.Threading.Tasks;
-using Debug = UnityEngine.Debug;
 
 namespace SpacetimeDB.Editor
 {
@@ -10,90 +7,26 @@ namespace SpacetimeDB.Editor
     /// Vanilla: Do the action -> return the result -> no more.
     public static class SpacetimeDbPublisherCli
     {
-        #region Static Options
-        private const SpacetimeDbCli.CliLogLevel PUBLISHER_CLI_LOG_LEVEL = SpacetimeDbCli.CliLogLevel.Info;
-        #endregion // Static Options
-
-        
-        #region Init
-        /// Install the SpacetimeDB CLI | https://spacetimedb.com/install 
-        public static async Task<SpacetimeCliResult> InstallSpacetimeCliAsync()
-        {
-            if (PUBLISHER_CLI_LOG_LEVEL == SpacetimeDbCli.CliLogLevel.Info)
-                Debug.Log("Installing SpacetimeDB CLI tool...");
-            
-            SpacetimeCliResult result; 
-            
-            switch (Application.platform)
-            {
-                case RuntimePlatform.WindowsEditor:
-                    result = await SpacetimeDbCli.runCliCommandAsync("powershell -Command \"iwr " +
-                        "https://windows.spacetimedb.com -UseBasicParsing | iex\"\n");
-                    break;
-                
-                case RuntimePlatform.OSXEditor:
-                    result = await SpacetimeDbCli.runCliCommandAsync("brew install clockworklabs/tap/spacetime");
-                    break;
-                
-                case RuntimePlatform.LinuxEditor:
-                    result = await SpacetimeDbCli.runCliCommandAsync("curl -sSf https://install.spacetimedb.com | sh");
-                    break;
-                
-                default:
-                    throw new NotImplementedException("Unsupported OS");
-            }
-            
-            if (PUBLISHER_CLI_LOG_LEVEL == SpacetimeDbCli.CliLogLevel.Info)
-                Debug.Log($"Installed spacetimeDB CLI tool | {PublisherMeta.DOCS_URL}");
-            
-            return result;
-        }
-        #endregion // Init
-        
-        
         #region High Level CLI Actions
+        /// Publishes your SpacetimeDB server module
         /// Uses the `spacetime publish` CLI command, appending +args from UI elements
-        public static async Task<PublishServerModuleResult> PublishServerModuleAsync(
+        public static async Task<PublishResult> PublishAsync(
             PublishRequest publishRequest,
             CancellationToken cancelToken)
         {
             string argSuffix = $"spacetime publish {publishRequest}";
             SpacetimeCliResult cliResult = await SpacetimeDbCli.runCliCommandAsync(argSuffix, cancelToken);
-            PublishServerModuleResult publishResult = new(cliResult);
-            return onPublishServerModuleDone(publishResult);
+            PublishResult publishResult = new(cliResult);
+            return publishResult;
         }
         
         /// Uses the `npm install -g wasm-opt` CLI command
+        /// Success results from !CliError and "changed {numPkgs} packages in {numSecs}s" output
         public static async Task<SpacetimeCliResult> InstallWasmOptPkgAsync()
         {
             const string argSuffix = "npm install -g wasm-opt";
             SpacetimeCliResult cliResult = await SpacetimeDbCli.runCliCommandAsync(argSuffix);
-            return onInstallWasmOptPkgDone(cliResult);
-        }
-
-        private static SpacetimeCliResult onInstallWasmOptPkgDone(SpacetimeCliResult cliResult)
-        {
-            // Success results in !CliError and "changed {numPkgs} packages in {numSecs}s
             return cliResult;
-        }
-
-        private static PublishServerModuleResult onPublishServerModuleDone(PublishServerModuleResult publishResult)
-        {
-            // Check for general CLI errs (that may contain false-positives for `spacetime publish`)
-            bool hasGeneralCliErr = !publishResult.HasCliErr;
-            if (PUBLISHER_CLI_LOG_LEVEL == SpacetimeDbCli.CliLogLevel.Info)
-                Debug.Log($"{nameof(hasGeneralCliErr)}=={hasGeneralCliErr}");
-
-            if (publishResult.HasPublishErr)
-            {
-                // This may not necessarily be a major or breaking issue.
-                // For example, !optimized builds will show as an "error" rather than warning.
-                Debug.LogError($"Server module publish issue found | {publishResult}"); // json
-            }
-            else if (PUBLISHER_CLI_LOG_LEVEL == SpacetimeDbCli.CliLogLevel.Info)
-                Debug.Log($"Server module publish ({publishResult.PublishType}) success | {publishResult}"); // json
-            
-            return publishResult;
         }
         
         /// Uses the `spacetime identity new` CLI command, then set as default.

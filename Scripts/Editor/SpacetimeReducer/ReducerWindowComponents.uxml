@@ -17,17 +17,21 @@
                 <ui:Button text="Refresh" parse-escape-sequences="true" display-tooltip-when-elided="true" name="refreshReducersBtn" style="height: 25px;" />
                 <ui:ScrollView name="reducersScrollView" style="max-height: 200px;">
                     <ui:TreeView name="reducersTreeView" show-alternating-row-backgrounds="All" auto-expand="true" show-border="false" />
-                    <ui:Label tabindex="-1" text="&lt;color=#FFEA30&gt;Loading...&lt;/color&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="reducersLoadingLabel" style="-unity-text-align: upper-center;" />
                 </ui:ScrollView>
             </ui:Foldout>
             <ui:VisualElement name="spacer10" style="height: 10px;" />
             <ui:Foldout text="&lt;b&gt;Actions&lt;/b&gt;" name="actionsFoldout" value="true">
-                <ui:GroupBox name="actionsGroupBox">
-                    <ui:TextField picking-mode="Ignore" name="actionTxt" readonly="false" label="     Args" style="flex-direction: row; align-items: stretch; justify-content: center; align-self: stretch;" />
-                    <ui:Label tabindex="-1" text="{actionsSyntaxHintLabel}" parse-escape-sequences="true" display-tooltip-when-elided="true" name="actionsSyntaxHintLabel" style="-unity-text-align: upper-left;" />
+                <ui:GroupBox name="actionsGroupBox" style="margin-top: 0; padding-top: 0;">
+                    <ui:TextField picking-mode="Ignore" name="actionArgsTxt" readonly="false" label="Args" style="flex-direction: column; align-items: stretch; justify-content: center; align-self: stretch;" />
+                    <ui:Label tabindex="-1" text="&lt;color=#FDBE01&gt;{&lt;/color&gt;actionsSyntaxHintLabel&lt;color=#FDBE01&gt;}&lt;/color&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="actionsSyntaxHintLabel" style="-unity-text-align: upper-right; -unity-font-style: normal; -unity-font: url(&quot;project://database/Assets/UnityDefaultRuntimeTheme.tss?fileID=2230732570650464555&amp;guid=a65ef4ff44de5f34c955224bb125488b&amp;type=3#NotInter-Regular&quot;);" />
                     <ui:VisualElement name="spacer10" style="height: 10px;" />
-                    <ui:Button text="&lt;b&gt;Run&lt;/b&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="actionsRunBtn" style="height: 50px;" />
+                    <ui:Button text="&lt;b&gt;Call&lt;/b&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="actionsCallBtn" style="height: 50px;" />
                 </ui:GroupBox>
+                <ui:Foldout text="Result" name="actionsResultFoldout" value="true" style="-unity-font-style: normal;">
+                    <ui:ScrollView name="actionsResultScrollView" style="min-height: auto; min-width: auto; max-height: 200px;">
+                        <ui:Label tabindex="-1" text="{actionsResultLabel}" parse-escape-sequences="true" display-tooltip-when-elided="true" name="actionsResultLabel" style="-unity-text-align: upper-left; white-space: normal; text-overflow: ellipsis;" />
+                    </ui:ScrollView>
+                </ui:Foldout>
             </ui:Foldout>
         </ui:ScrollView>
         <ui:VisualElement name="errorCover" focusable="false" style="flex-grow: 1; background-color: rgb(22, 22, 22); position: absolute; width: 100%; height: 100%; top: 80px; display: none;">

@@ -16,33 +16,33 @@ namespace SpacetimeDB.Editor
         private void setOnActionEvents()
         {
             topBannerBtn.clicked += onTopBannerBtnClick; // Launches Module docs website
-            actionsRunBtn.clicked += onActionsRunBtnClick; // Run the reducer via CLI
-            actionTxt.RegisterValueChangedCallback(onActionTxtValueChanged); // Toggles the Run btn
+            actionsCallBtn.clicked += OnActionsCallBtnClickAsync; // Run the reducer via CLI
+            actionArgsTxt.RegisterValueChangedCallback(onActionTxtValueChanged); // Toggles the Run btn
             refreshReducersBtn.clicked += onRefreshReducersBtnClickAsync; // Refresh reducers tree view live from cli
-            
+
             reducersTreeView.bindItem = onBindReducersTreeViewItem; // No need to unsub // Populates the Adds _entityStructure nickname to element
             reducersTreeView.makeItem = onMakeReducersTreeViewItem; // No need to unsub // Creates a new VisualElement within the tree view on new item
-            reducersTreeView.selectedIndicesChanged += onReducerTreeViewIndicesChanged; // Selected multiple reducers from tree // TODO: Do we need this
+            reducersTreeView.selectedIndicesChanged += onReducerTreeViewIndicesChanged; // Selected multiple reducers from tree
             reducersTreeView.selectionChanged += onReducerTreeViewSelectionChanged; // Single reducer selected from tree
         }
 
         /// Cleanup: This should parity the opposite of setOnActionEvents()
         private void unsetOnActionEvents()
-        { 
+        {
             topBannerBtn.clicked -= onTopBannerBtnClick;
-            actionsRunBtn.clicked -= onActionsRunBtnClick;
-            refreshReducersBtn.clicked -= onRefreshReducersBtnClickAsync; // Refresh reducers tree view live from cli
-            
-            reducersTreeView.selectedIndicesChanged -= onReducerTreeViewIndicesChanged; // Selected multiple reducers from tree // TODO: Do we need this
-            reducersTreeView.selectionChanged -= onReducerTreeViewSelectionChanged; // Single reducer selected from tree
+            actionsCallBtn.clicked -= OnActionsCallBtnClickAsync;
+            refreshReducersBtn.clicked -= onRefreshReducersBtnClickAsync;
+
+            reducersTreeView.selectedIndicesChanged -= onReducerTreeViewIndicesChanged; // Selected multiple reducers from tree
+            reducersTreeView.selectionChanged -= onReducerTreeViewSelectionChanged;
         }
 
         /// Cleanup when the UI is out-of-scope
         private void OnDisable() => unsetOnActionEvents();
-        
+
         /// When a new item is added to a tree view, assign the VisualElement type
         private VisualElement onMakeReducersTreeViewItem() => new Label();
-        
+
         /// Populates a tree view item with an label element; also assigns the name
         private void onBindReducersTreeViewItem(VisualElement element, int index)
         {
@@ -50,36 +50,37 @@ namespace SpacetimeDB.Editor
             label.text = _entityStructure.ReducersInfo[index].GetReducerName();
         }
         #endregion // Init from ReducerWindow.cs CreateGUI()
-        
-        
+
+
         #region Direct UI Callbacks
         /// When the action text val changes, toggle the Run button
         /// Considers Entity Arity
         private void onActionTxtValueChanged(ChangeEvent<string> evt)
         {
             bool hasVal = !string.IsNullOrEmpty(evt.newValue);
+
             if (hasVal)
             {
-                actionsRunBtn.SetEnabled(hasVal);
+                actionsCallBtn.SetEnabled(hasVal);
                 return;
             }
-            
+
             // Has no val. First, is anything selected?
             int selectedIndex = reducersTreeView.selectedIndex;
+
             if (selectedIndex == -1)
             {
-                actionsRunBtn.SetEnabled(false); // Nothing selected
+                actionsCallBtn.SetEnabled(false); // Nothing selected
                 return;
             }
-            
+
             // We can enable if # of aria is 0
-            int numAria = _entityStructure.ReducersInfo[reducersTreeView.selectedIndex].ReducerEntity.Arity;
-            actionsRunBtn.SetEnabled(numAria == 0);
+            int numAria = getSelectedReducerArityCount();
+            actionsCallBtn.SetEnabled(numAria == 0);
         }
-        
+
         /// Open link to SpacetimeDB Module docs
-        private void onTopBannerBtnClick() =>
-            Application.OpenURL(TOP_BANNER_CLICK_LINK);
+        private void onTopBannerBtnClick() => Application.OpenURL(TOP_BANNER_CLICK_LINK);
 
         private async void onRefreshReducersBtnClickAsync()
         {
@@ -88,12 +89,29 @@ namespace SpacetimeDB.Editor
             {
                 return;
             }
-            
-            await setReducersTreeViewAsync();
+
+            try
+            {
+                await setReducersTreeViewAsync();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error: {e}");
+                throw;
+            }
         }
 
-        private void onActionsRunBtnClick() => 
-            throw new NotImplementedException("TODO: onActionsRunBtnClick");
+        private async void OnActionsCallBtnClickAsync()
+        {
+            try
+            {
+                await callReducerSetUiAsync();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error: {e}");
+            }
+        }
         #endregion // Direct UI Callbacks
     }
 }

@@ -32,12 +32,14 @@ namespace SpacetimeDB.Editor
 
         private Button refreshReducersBtn;
         private TreeView reducersTreeView;
-        private Label reducersLoadingLabel;
         
         private Foldout actionsFoldout;
-        private TextField actionTxt;
+        private TextField actionArgsTxt;
         private Label actionsSyntaxHintLabel;
-        private Button actionsRunBtn;
+        private Button actionsCallBtn;
+
+        private Foldout actionsResultFoldout;
+        private Label actionsResultLabel;
         #endregion // UI Visual Elements
         
         
@@ -112,12 +114,14 @@ namespace SpacetimeDB.Editor
             
             refreshReducersBtn = rootVisualElement.Q<Button>(nameof(refreshReducersBtn));
             reducersTreeView = rootVisualElement.Q<TreeView>(nameof(reducersTreeView));
-            reducersLoadingLabel = rootVisualElement.Q<Label>(nameof(reducersLoadingLabel));
             
             actionsFoldout = rootVisualElement.Q<Foldout>(nameof(actionsFoldout));
-            actionTxt = rootVisualElement.Q<TextField>(nameof(actionTxt));
+            actionArgsTxt = rootVisualElement.Q<TextField>(nameof(actionArgsTxt));
             actionsSyntaxHintLabel = rootVisualElement.Q<Label>(nameof(actionsSyntaxHintLabel));
-            actionsRunBtn = rootVisualElement.Q<Button>(nameof(actionsRunBtn));
+            actionsCallBtn = rootVisualElement.Q<Button>(nameof(actionsCallBtn));
+            
+            actionsResultFoldout = rootVisualElement.Q<Foldout>(nameof(actionsResultFoldout));
+            actionsResultLabel = rootVisualElement.Q<Label>(nameof(actionsResultLabel));
         }
 
         /// Changing implicit names can easily cause unexpected nulls
@@ -134,12 +138,14 @@ namespace SpacetimeDB.Editor
                 
                 Assert.IsNotNull(refreshReducersBtn, $"Expected `#{nameof(refreshReducersBtn)}`");
                 Assert.IsNotNull(reducersTreeView, $"Expected `#{nameof(reducersTreeView)}`");
-                Assert.IsNotNull(reducersLoadingLabel, $"Expected `#{nameof(reducersLoadingLabel)}`");
                 
                 Assert.IsNotNull(actionsFoldout, $"Expected `#{nameof(actionsFoldout)}`");
-                Assert.IsNotNull(actionTxt, $"Expected `#{nameof(actionTxt)}`");
+                Assert.IsNotNull(actionArgsTxt, $"Expected `#{nameof(actionArgsTxt)}`");
                 Assert.IsNotNull(actionsSyntaxHintLabel, $"Expected `#{nameof(actionsSyntaxHintLabel)}`");
-                Assert.IsNotNull(actionsRunBtn, $"Expected `#{nameof(actionsRunBtn)}`");
+                Assert.IsNotNull(actionsCallBtn, $"Expected `#{nameof(actionsCallBtn)}`");
+                
+                Assert.IsNotNull(actionsResultFoldout, $"Expected `#{nameof(actionsResultFoldout)}`");
+                Assert.IsNotNull(actionsResultLabel, $"Expected `#{nameof(actionsResultLabel)}`");
             }
             catch (Exception e)
             {

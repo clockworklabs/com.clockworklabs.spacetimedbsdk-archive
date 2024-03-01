@@ -41,13 +41,15 @@ namespace SpacetimeDB.Editor
             serverAddNewShowUiBtn.style.display = DisplayStyle.None;
             serverNewGroupBox.style.display = DisplayStyle.None;
             resetServerDropdown();
-            serverSelectedDropdown.value = GetStyledStr(StringStyle.Action, "Searching ...");
+            serverSelectedDropdown.value = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Action, "Searching ...");
             
             // Hide identity
             identityAddNewShowUiBtn.style.display = DisplayStyle.None;
             identityNewGroupBox.style.display = DisplayStyle.None;
             resetIdentityDropdown();
-            identitySelectedDropdown.value = GetStyledStr(StringStyle.Action, "Searching ..."); 
+            identitySelectedDropdown.value = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Action, "Searching ..."); 
             identityAddBtn.SetEnabled(false);
              
             // Hide publish
@@ -137,7 +139,7 @@ namespace SpacetimeDB.Editor
         /// - Refresh identities, since they are bound per-server
         private async Task onGetServersSetDropdownSuccess(GetServersResult getServersResult)
         {
-            await onGetSetServersSuccessEnsureDefault(getServersResult.Servers);
+            await onGetSetServersSuccessEnsureDefaultAsync(getServersResult.Servers);
             await getIdentitiesSetDropdown(); // Process and reveal the next UI group
         }
 
@@ -252,8 +254,8 @@ namespace SpacetimeDB.Editor
             Debug.Log("Regenerating default servers: [ local, testnet* ] *Becomes default");
             
             // UI
-            serverStatusLabel.text = GetStyledStr(
-                StringStyle.Action, 
+            serverStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Action, 
                 "<b>Regenerating default servers:</b>\n[ local, testnet* ]");
             serverStatusLabel.style.display = DisplayStyle.Flex;
 
@@ -368,7 +370,7 @@ namespace SpacetimeDB.Editor
 
         /// Set the selected server dropdown. If servers found but no default, [0] will be set.
         /// Also can be called by OnAddServerSuccess by passing a single server
-        private async Task onGetSetServersSuccessEnsureDefault(List<SpacetimeServer> servers)
+        private async Task onGetSetServersSuccessEnsureDefaultAsync(List<SpacetimeServer> servers)
         {
             // Logs for each found, with default shown
             foreach (SpacetimeServer server in servers)
@@ -436,8 +438,8 @@ namespace SpacetimeDB.Editor
         private void setPublishReadyStatus()
         {
             publishBtn.SetEnabled(true);
-            publishStatusLabel.text = GetStyledStr(
-                StringStyle.Success, 
+            publishStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Success, 
                 "Ready");
         }
         
@@ -467,7 +469,7 @@ namespace SpacetimeDB.Editor
         /// Critical err - show label
         private void onPublishFail(PublishResult publishResult)
         {
-            updatePublishStatus(StringStyle.Error, publishResult.StyledFriendlyErrorMessage 
+            updatePublishStatus(SpacetimeMeta.StringStyle.Error, publishResult.StyledFriendlyErrorMessage 
                 ?? publishResult.CliError);
         }
         
@@ -537,8 +539,8 @@ namespace SpacetimeDB.Editor
 
         private void onInstallSpacetimeDbCliFail(string friendlyFailMsg)
         {
-            installCliStatusLabel.text = GetStyledStr(
-                StringStyle.Error,
+            installCliStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error,
                 $"<b>Failed:</b> Could not install Spacetime CLI\n{friendlyFailMsg}");
             
             installCliStatusLabel.style.display = DisplayStyle.Flex;
@@ -553,12 +555,12 @@ namespace SpacetimeDB.Editor
         }
 
         /// Show a styled friendly string to UI. Errs will enable publishAsync btn.
-        private void updatePublishStatus(StringStyle style, string friendlyStr)
+        private void updatePublishStatus(SpacetimeMeta.StringStyle style, string friendlyStr)
         {
-            publishStatusLabel.text = GetStyledStr(style, friendlyStr);
+            publishStatusLabel.text = SpacetimeMeta.GetStyledStr(style, friendlyStr);
             publishStatusLabel.style.display = DisplayStyle.Flex;
 
-            if (style != StringStyle.Error)
+            if (style != SpacetimeMeta.StringStyle.Error)
                 return; // Not an error
             
             // Error: Hide cancel btn, cancel token, show/enable pub btn
@@ -596,7 +598,8 @@ namespace SpacetimeDB.Editor
             installWasmOptBtn.SetEnabled(false);
             
             // Show UI
-            installWasmOptBtn.text = GetStyledStr(StringStyle.Action, "Installing ...");
+            installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Action, "Installing ...");
             installCliProgressBar.style.display = DisplayStyle.Flex;
             
             _ = startProgressBarAsync(
@@ -625,7 +628,8 @@ namespace SpacetimeDB.Editor
         private void setAddIdentityUi(string nickname)
         {
             identityAddBtn.SetEnabled(false);
-            identityStatusLabel.text = GetStyledStr(StringStyle.Action, $"Adding {nickname} ...");
+            identityStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Action, $"Adding {nickname} ...");
             identityStatusLabel.style.display = DisplayStyle.Flex;
             publishStatusLabel.style.display = DisplayStyle.None;
             publishResultFoldout.style.display = DisplayStyle.None;
@@ -655,7 +659,8 @@ namespace SpacetimeDB.Editor
         {
             // UI: Disable btn + show installing status to id label
             serverAddBtn.SetEnabled(false);
-            serverStatusLabel.text = GetStyledStr(StringStyle.Action, $"Adding {nickname} ...");
+            serverStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Action, $"Adding {nickname} ...");
             serverStatusLabel.style.display = DisplayStyle.Flex;
             
             // Hide the other sections (while clearing out their labels), since we rely on servers
@@ -690,7 +695,7 @@ namespace SpacetimeDB.Editor
         private void onAddServerFail(SpacetimeServer serverAdded, AddServerResult addServerResult)
         {
             serverAddBtn.SetEnabled(true);
-            serverStatusLabel.text = GetStyledStr(StringStyle.Error, 
+            serverStatusLabel.text = SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Error, 
                 $"<b>Failed:</b> Couldn't add `{serverAdded.Nickname}` server</b>\n" +
                 addServerResult.StyledFriendlyErrorMessage);
                 
@@ -702,7 +707,7 @@ namespace SpacetimeDB.Editor
         private void onAddServerSuccess(SpacetimeServer server)
         {
             Debug.Log($"Add new server success: {server.Nickname}");
-            onGetSetServersSuccessEnsureDefault(new List<SpacetimeServer> { server });
+            _ = onGetSetServersSuccessEnsureDefaultAsync(new List<SpacetimeServer> { server });
         }
 
         private async Task setDefaultIdentityAsync(string idNicknameOrDbAddress)
@@ -814,8 +819,8 @@ namespace SpacetimeDB.Editor
         private void onChangeDefaultServerFail(SpacetimeCliResult cliResult)
         {
             serverSelectedDropdown.SetEnabled(true);
-            serverStatusLabel.text = GetStyledStr(
-                StringStyle.Error,
+            serverStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error,
                 $"<b>Failed:</b> Could not change servers\n{cliResult.CliError}");
         }
         

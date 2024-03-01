@@ -27,6 +27,14 @@ namespace SpacetimeDB.Editor
             // reducersTreeView.itemsChosen += onReducerTreeViewItemChosen; // Use this for double click action
             reducersTreeView.makeItem += onMakeReducersTreeViewItem; // Creates a new VisualElement within the tree view on new item
             reducersTreeView.selectedIndicesChanged += onReducerTreeViewIndicesChanged; // Selected multiple reducers from tree // TODO: Do we need this
+            reducersTreeView.selectionChanged += onReducerTreeViewSelectionChanged; // Single reducer selected from tree
+        }
+
+        /// Expects only 1 obj
+        private void onReducerTreeViewSelectionChanged(IEnumerable<object> obj)
+        {
+            
+            
         }
 
         /// Cleanup: This should parity the opposite of setOnActionEvents()

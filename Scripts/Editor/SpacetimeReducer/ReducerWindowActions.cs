@@ -92,9 +92,48 @@ namespace SpacetimeDB.Editor
         /// We only expect a single index
         private void onReducerTreeViewIndicesChanged(IEnumerable<int> selectedIndices)
         {
-            int selectedIndex = selectedIndices.First();
-            string selectedName = _entityStructure.ReducersInfo[selectedIndex].GetReducerName();
-            Debug.Log($"reducerTreeView selectedIndex: {selectedIndex} ({selectedName})");
+            // Get selected index, or fallback to -1
+            int selectedIndex = selectedIndices != null && selectedIndices.Any() 
+                ? selectedIndices.First()
+                : -1;
+
+            if (selectedIndex == -1)
+            {
+                // User pressed ESC
+                actionsFoldout.style.display = DisplayStyle.None;
+                return;
+            }
+
+            // Since we have a real selection, show the actions foldout + syntax hint + focus the arg input, if any
+            setAction(selectedIndex);
+        }
+
+        /// Show the actions foldout + syntax hint + focus the arg input, if any
+        private void setAction(int index)
+        {
+            int argsCount = _entityStructure.ReducersInfo[index].ReducerEntity.Arity;
+            List<string> styledSyntaxHints = _entityStructure.ReducersInfo[index].GetNormalizedStyledSyntaxHints();
+
+            if (argsCount > 0)
+            {
+                // Set txt + txt label -> enable
+                actionTxt.value = "";
+                actionTxt.style.display = DisplayStyle.Flex;
+                actionTxt.SetEnabled(true);
+                
+                // Set syntax hint label -> show
+                actionsSyntaxHintLabel.text = string.Join("  ", styledSyntaxHints);
+                actionsSyntaxHintLabel.style.display = DisplayStyle.Flex;    
+            }
+            else
+            {
+                // Disable txt, set label to sanity check no args
+                actionTxt.SetEnabled(false);
+                actionsSyntaxHintLabel.text = ""; // Just empty so we don't shift the UI
+            }
+            
+            actionsFoldout.style.display = DisplayStyle.Flex;
+            actionTxt.Focus(); // UX
         }
 
         private void bindReducersTreeViewItem(VisualElement element, int index)

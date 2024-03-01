@@ -38,8 +38,8 @@ namespace SpacetimeDB.Editor
             
             // Unknown error
             this.AddServerError = AddServerErrorType.Unknown;
-            this.StyledFriendlyErrorMessage = PublisherMeta.GetStyledStr(
-                PublisherMeta.StringStyle.Error, 
+            this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error, 
                 CliError);
         }
 
@@ -53,8 +53,8 @@ namespace SpacetimeDB.Editor
             
             this.HasAddServerError = true;
             this.AddServerError = AddServerErrorType.NicknameAlreadyInUse;
-            this.StyledFriendlyErrorMessage = PublisherMeta.GetStyledStr(
-                PublisherMeta.StringStyle.Error, 
+            this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error, 
                 "Nickname already in use");
             return true; // hasErr
         }
@@ -68,8 +68,8 @@ namespace SpacetimeDB.Editor
             
             this.HasAddServerError = true;
             this.AddServerError = AddServerErrorType.ServerNotRunning;
-            this.StyledFriendlyErrorMessage = PublisherMeta.GetStyledStr(
-                PublisherMeta.StringStyle.Error, 
+            this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error, 
                 "Failed to handshake; is the server running?");
             return true; // hasErr
         }

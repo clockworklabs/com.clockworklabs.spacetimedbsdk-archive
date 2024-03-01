@@ -38,8 +38,8 @@ namespace SpacetimeDB.Editor
             
             // Unknown error
             this.AddIdentityError = AddIdentityErrorType.Unknown;
-            this.StyledFriendlyErrorMessage = PublisherMeta.GetStyledStr(
-                PublisherMeta.StringStyle.Error, 
+            this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error, 
                 CliError);
         }
 
@@ -52,8 +52,8 @@ namespace SpacetimeDB.Editor
             
             this.HasAddIdentityError = true;
             this.AddIdentityError = AddIdentityErrorType.TimedOut;
-            this.StyledFriendlyErrorMessage = PublisherMeta.GetStyledStr(
-                PublisherMeta.StringStyle.Error, 
+            this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error, 
                 "Timed out");
             return true; // hasErr
         }
@@ -68,8 +68,8 @@ namespace SpacetimeDB.Editor
             
             this.HasAddIdentityError = true;
             this.AddIdentityError = AddIdentityErrorType.IdentityAlreadyExists;
-            this.StyledFriendlyErrorMessage = PublisherMeta.GetStyledStr(
-                PublisherMeta.StringStyle.Error, 
+            this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error, 
                 "Nickname already exists");
             return true; // hasErr
         }

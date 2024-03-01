@@ -22,6 +22,7 @@ namespace SpacetimeDB.Editor
         #region Child Classes
         public class Entity
         {
+            /// The number of args this reducer takes
             [JsonProperty("arity")]
             public int Arity { get; set; }
 

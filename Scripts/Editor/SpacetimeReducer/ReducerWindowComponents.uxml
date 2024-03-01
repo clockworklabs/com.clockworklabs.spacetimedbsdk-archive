@@ -23,7 +23,7 @@
             <ui:VisualElement name="spacer10" style="height: 10px;" />
             <ui:Foldout text="&lt;b&gt;Actions&lt;/b&gt;" name="actionsFoldout" value="true">
                 <ui:GroupBox name="actionsGroupBox">
-                    <ui:TextField picking-mode="Ignore" name="actionTxt" readonly="false" />
+                    <ui:TextField picking-mode="Ignore" name="actionTxt" readonly="false" label="     Args" style="flex-direction: row; align-items: stretch; justify-content: center; align-self: stretch;" />
                     <ui:Label tabindex="-1" text="{actionsSyntaxHintLabel}" parse-escape-sequences="true" display-tooltip-when-elided="true" name="actionsSyntaxHintLabel" style="-unity-text-align: upper-left;" />
                     <ui:VisualElement name="spacer10" style="height: 10px;" />
                     <ui:Button text="&lt;b&gt;Run&lt;/b&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="actionsRunBtn" style="height: 50px;" />

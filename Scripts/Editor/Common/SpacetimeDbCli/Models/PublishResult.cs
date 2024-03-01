@@ -131,8 +131,8 @@ namespace SpacetimeDB.Editor
             if (isServerNotRunning)
             {
                 this.PublishErrCode = PublishErrorCode.OS10061_ServerHostNotRunning;
-                this.StyledFriendlyErrorMessage = PublisherMeta.GetStyledStr(
-                    PublisherMeta.StringStyle.Error,
+                this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
+                    SpacetimeMeta.StringStyle.Error,
                     "<b>Failed:</b> Server host not running\n<align=left>" +
                     "(1) Open terminal\n" +
                     "(2) `spacetime start`\n" +
@@ -149,8 +149,8 @@ namespace SpacetimeDB.Editor
             if (isCancelled)
             {
                 this.PublishErrCode = PublishErrorCode.UnknownError;
-                this.StyledFriendlyErrorMessage = PublisherMeta.GetStyledStr(
-                    PublisherMeta.StringStyle.Error,
+                this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
+                    SpacetimeMeta.StringStyle.Error,
                     "Cancelled");
                 return;
             }
@@ -162,8 +162,8 @@ namespace SpacetimeDB.Editor
             if (hasErrWorkingProjDirNotFound)
             {
                 this.PublishErrCode = PublishErrorCode.MSB1003_InvalidProjectDir;
-                this.StyledFriendlyErrorMessage = PublisherMeta.GetStyledStr(
-                    PublisherMeta.StringStyle.Error,
+                this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
+                    SpacetimeMeta.StringStyle.Error,
                     "<b>Failed:</b> Invalid server module dir");
                 return;
             }
@@ -173,8 +173,8 @@ namespace SpacetimeDB.Editor
             if (hasErrPermissionDenied)
             {
                 this.PublishErrCode = PublishErrorCode.DBUpdateRejected_PermissionDenied;
-                this.StyledFriendlyErrorMessage = PublisherMeta.GetStyledStr(
-                    PublisherMeta.StringStyle.Error,
+                this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
+                    SpacetimeMeta.StringStyle.Error,
                     "<b>Failed:</b> Database update rejected\n" +
                     "Permission denied - Identity<>Server<>Nickname mismatch.\n" +
                     "(Identites and Module Nicknames are bound per-server)");

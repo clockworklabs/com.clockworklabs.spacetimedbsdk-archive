@@ -5,13 +5,6 @@ namespace SpacetimeDB.Editor
     /// Static metadata for PublisherWindow
     public static class PublisherMeta
     {
-        public enum StringStyle
-        {
-            Action,
-            Error,
-            Success,
-        }
-        
         public enum FoldoutGroupType
         {
             Server,
@@ -25,15 +18,5 @@ namespace SpacetimeDB.Editor
         public const string PUBLISHER_DIR_PATH = "Packages/" + SDK_PACKAGE_NAME + "/Scripts/Editor/SpacetimePublisher";
         public static string PathToUxml => $"{PUBLISHER_DIR_PATH}/PublisherWindowComponents.uxml";
         public static string PathToUss => $"{PUBLISHER_DIR_PATH}/PublisherWindowStyles.uss";
-        
-        public static string GetStyledStr(StringStyle style, string str)
-        {
-            return style switch
-            {
-                StringStyle.Action => $"<color={ACTION_COLOR_HEX}>{str}</color>",
-                StringStyle.Error => $"<color={ERROR_COLOR_HEX}>{str}</color>",
-                StringStyle.Success => $"<color={SUCCESS_COLOR_HEX}>{str}</color>",
-            };
-        }
     }
 }

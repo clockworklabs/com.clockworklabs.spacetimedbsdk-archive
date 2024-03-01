@@ -250,7 +250,8 @@ namespace SpacetimeDB.Editor
             {
                 // Show + UX: Focus the 1st field
                 serverNewGroupBox.style.display = DisplayStyle.Flex;
-                serverAddNewShowUiBtn.text = GetStyledStr(StringStyle.Success, "-"); // Show opposite, styled
+                serverAddNewShowUiBtn.text = SpacetimeMeta.GetStyledStr(
+                    SpacetimeMeta.StringStyle.Success, "-"); // Show opposite, styled
                 serverNicknameTxt.Focus();
                 serverNicknameTxt.SelectAll();
             }
@@ -270,7 +271,8 @@ namespace SpacetimeDB.Editor
             {
                 // Show + UX: Focus the 1st field
                 identityNewGroupBox.style.display = DisplayStyle.Flex;
-                identityAddNewShowUiBtn.text = GetStyledStr(StringStyle.Success, "-"); // Show opposite, styled
+                identityAddNewShowUiBtn.text = SpacetimeMeta.GetStyledStr(
+                    SpacetimeMeta.StringStyle.Success, "-"); // Show opposite, styled
                 identityNicknameTxt.Focus();
                 identityNicknameTxt.SelectAll();
             }
@@ -367,7 +369,8 @@ namespace SpacetimeDB.Editor
             publishCancelBtn.style.display = DisplayStyle.None;
 
             // Show UI: Canceled status, publish btn
-            publishStatusLabel.text = GetStyledStr(StringStyle.Error, "Canceled");
+            publishStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error, "Canceled");
             publishStatusLabel.style.display = DisplayStyle.Flex;
             publishBtn.style.display = DisplayStyle.Flex;
             
@@ -410,7 +413,8 @@ namespace SpacetimeDB.Editor
         private void onAddIdentityFail(SpacetimeIdentity identity, AddIdentityResult addIdentityResult)
         {
             identityAddBtn.SetEnabled(true);
-            identityStatusLabel.text = GetStyledStr(StringStyle.Error, 
+            identityStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error, 
                 $"<b>Failed:</b> Couldn't add identity `{identity.Nickname}`\n" +
                 addIdentityResult.StyledFriendlyErrorMessage);
                 
@@ -428,12 +432,14 @@ namespace SpacetimeDB.Editor
         /// Success: Show installed txt, keep button disabled, but don't actually check
         /// the optimization box since *this* publishAsync is not optimized: Next one will be
         private void onInstallWasmOptPackageViaNpmSuccess() =>
-            installWasmOptBtn.text = GetStyledStr(StringStyle.Success, "Installed");
+            installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Success, "Installed");
 
         private void onInstallWasmOptPackageViaNpmFail(SpacetimeCliResult cliResult)
         {
             installWasmOptBtn.SetEnabled(true);
-            installWasmOptBtn.text = GetStyledStr(StringStyle.Error, 
+            installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error, 
                 $"<b>Failed:</b> Couldn't install wasm-opt\n{cliResult.CliError}");
         }
     }

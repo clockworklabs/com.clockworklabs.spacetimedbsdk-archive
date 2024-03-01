@@ -439,8 +439,8 @@ namespace SpacetimeDB.Editor
         /// +Hides the cancel btn
         private void setPublishReadyStatus()
         {
-            publishStatusLabel.text = GetStyledStr(
-                StringStyle.Success, 
+            publishStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Success, 
                 "Ready");
             publishBtn.SetEnabled(true);
             publishBtn.style.display = DisplayStyle.Flex;

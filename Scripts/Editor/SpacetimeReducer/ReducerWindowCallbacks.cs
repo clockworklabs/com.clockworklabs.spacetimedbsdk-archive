@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
@@ -21,16 +22,24 @@ namespace SpacetimeDB.Editor
             topBannerBtn.clicked += onTopBannerBtnClick; // Launches Module docs website
             actionsRunBtn.clicked += onActionsRunBtnClick; // Run the reducer via CLI
             refreshReducersBtn.clicked += onRefreshReducersBtnClickAsync; // Refresh reducers tree view live from cli
-            reducersTreeView.selectionChanged += onReducersTreeViewSelectionChanged; // Selected a reducer from tree
+            
+            reducersTreeView.bindItem += bindReducersTreeViewItem; // Adds _entityStructure nickname to element
+            // reducersTreeView.itemsChosen += onReducerTreeViewItemChosen; // Use this for double click action
+            reducersTreeView.makeItem += onMakeReducersTreeViewItem; // Creates a new VisualElement within the tree view on new item
+            reducersTreeView.selectedIndicesChanged += onReducerTreeViewIndicesChanged; // Selected multiple reducers from tree // TODO: Do we need this
         }
 
         /// Cleanup: This should parity the opposite of setOnActionEvents()
         private void unsetOnActionEvents()
-        {
+        { 
             topBannerBtn.clicked -= onTopBannerBtnClick;
             actionsRunBtn.clicked -= onActionsRunBtnClick;
             refreshReducersBtn.clicked -= onRefreshReducersBtnClickAsync; // Refresh reducers tree view live from cli
-            reducersTreeView.selectionChanged -= onReducersTreeViewSelectionChanged;
+            
+            reducersTreeView.bindItem -= bindReducersTreeViewItem;
+            // reducersTreeView.itemsChosen -= onReducerTreeViewItemChosen;
+            reducersTreeView.makeItem -= onMakeReducersTreeViewItem;
+            reducersTreeView.selectedIndicesChanged -= onReducerTreeViewIndicesChanged; // Selected multiple reducers from tree // TODO: Do we need this
         }
 
         /// Cleanup when the UI is out-of-scope
@@ -42,15 +51,18 @@ namespace SpacetimeDB.Editor
         /// Open link to SpacetimeDB Module docs
         private void onTopBannerBtnClick() =>
             Application.OpenURL(TOP_BANNER_CLICK_LINK);
-        
-        private void onReducersTreeViewSelectionChanged(IEnumerable<object> obj)
+
+        private async void onRefreshReducersBtnClickAsync()
         {
-            throw new NotImplementedException("TODO: onReducersTreeViewSelectionChanged");
+            // Sanity check
+            if (string.IsNullOrEmpty(moduleNameTxt.value))
+            {
+                return;
+            }
+            
+            await setReducersTreeViewAsync();
         }
 
-        private async void onRefreshReducersBtnClickAsync() =>
-            await setReducersTreeViewAsync();
-        
         private void onActionsRunBtnClick() => 
             throw new NotImplementedException("TODO: onActionsRunBtnClick");
         #endregion // Direct UI Callbacks

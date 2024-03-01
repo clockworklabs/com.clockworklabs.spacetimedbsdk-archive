@@ -8,7 +8,7 @@ namespace SpacetimeDB.Editor
     public class GetEntityStructureResult : SpacetimeCliResult
     {
         /// Serializable from CliOutput
-        public EntityStructure EntityStructure { get; }
+        public EntityStructure EntityStructure { get; private set; }
         
         /// isSuccess?
         public bool HasEntityStructure => EntityStructure is { HasEntities: true };

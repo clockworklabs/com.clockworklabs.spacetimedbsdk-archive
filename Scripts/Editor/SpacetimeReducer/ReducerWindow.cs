@@ -26,9 +26,9 @@ namespace SpacetimeDB.Editor
         // ##################################################################
         private Button topBannerBtn;
 
-        private TextField serverTxt;
-        private TextField identityTxt;
-        private TextField moduleTxt;
+        private TextField serverNameTxt;
+        private TextField identityNameTxt;
+        private TextField moduleNameTxt;
 
         private Button refreshReducersBtn;
         private TreeView reducersTreeView;
@@ -106,9 +106,9 @@ namespace SpacetimeDB.Editor
         {
             topBannerBtn = rootVisualElement.Q<Button>(nameof(topBannerBtn));
             
-            serverTxt = rootVisualElement.Q<TextField>(nameof(serverTxt));
-            identityTxt = rootVisualElement.Q<TextField>(nameof(identityTxt));
-            moduleTxt = rootVisualElement.Q<TextField>(nameof(moduleTxt));
+            serverNameTxt = rootVisualElement.Q<TextField>(nameof(serverNameTxt));
+            identityNameTxt = rootVisualElement.Q<TextField>(nameof(identityNameTxt));
+            moduleNameTxt = rootVisualElement.Q<TextField>(nameof(moduleNameTxt));
             
             refreshReducersBtn = rootVisualElement.Q<Button>(nameof(refreshReducersBtn));
             reducersTreeView = rootVisualElement.Q<TreeView>(nameof(reducersTreeView));
@@ -128,9 +128,9 @@ namespace SpacetimeDB.Editor
             {
                 Assert.IsNotNull(topBannerBtn, $"Expected `#{nameof(topBannerBtn)}`");
                 
-                Assert.IsNotNull(serverTxt, $"Expected `#{nameof(serverTxt)}`");
-                Assert.IsNotNull(identityTxt, $"Expected `#{nameof(identityTxt)}`");
-                Assert.IsNotNull(moduleTxt, $"Expected `#{nameof(moduleTxt)}`");
+                Assert.IsNotNull(serverNameTxt, $"Expected `#{nameof(serverNameTxt)}`");
+                Assert.IsNotNull(identityNameTxt, $"Expected `#{nameof(identityNameTxt)}`");
+                Assert.IsNotNull(moduleNameTxt, $"Expected `#{nameof(moduleNameTxt)}`");
                 
                 Assert.IsNotNull(refreshReducersBtn, $"Expected `#{nameof(refreshReducersBtn)}`");
                 Assert.IsNotNull(reducersTreeView, $"Expected `#{nameof(reducersTreeView)}`");

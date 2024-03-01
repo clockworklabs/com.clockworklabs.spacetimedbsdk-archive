@@ -58,7 +58,7 @@ namespace SpacetimeDB.Editor
             this.ReducerEntity = entity;
             this.SyntaxHints = entity.Schema.Elements
                 .Select(e => // eg: "firstName:string"
-                    $"{e.ElementName.First().Key}:" + 
+                    $"{e.ElementName.First().Value}:" + 
                     e.AlgebraicType.Builtin.First().Key.ToLowerInvariant())
                 .ToList();
         }

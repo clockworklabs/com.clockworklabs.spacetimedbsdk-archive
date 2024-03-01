@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
 namespace SpacetimeDB.Editor
@@ -58,10 +59,13 @@ namespace SpacetimeDB.Editor
         
         
         /// Parses non-server data *after* json is deserialized
-        [JsonConstructor]
-        public EntityStructure()
+        [OnDeserialized]
+        private void OnDeserializedMethod(StreamingContext context)
         {
             Dictionary<string, Entity> reducers = getReducers();
+            if (reducers is null)
+                return;
+            
             this.ReducersInfo = new List<ReducerInfo>();
 
             // For every reducer, create a new ReducerInfo, passing in the Entity
@@ -69,7 +73,7 @@ namespace SpacetimeDB.Editor
                 .Select(r => new ReducerInfo(r.Value))
                 .ToList();
         }
-
+        
 
         #region Utils
         private Dictionary<string, Entity> getReducers()

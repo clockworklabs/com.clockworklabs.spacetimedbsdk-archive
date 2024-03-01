@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -17,6 +18,8 @@ namespace SpacetimeDB.Editor
         /// Initially called by ReducerWindow @ CreateGUI.
         private async Task initDynamicEventsFromReducerWindow()
         {
+            Debug.Log("initDynamicEventsFromReducerWindow");
+            
             await ensureCliInstalledAsync();
             await setSelectedServerTxtAsync();
             await setSelectedIdentityTxtAsync();
@@ -24,6 +27,12 @@ namespace SpacetimeDB.Editor
             //// TODO: If `spacetime list` ever returns db names (not just addresses),
             //// TODO: Auto list them in dropdown
             // await setSelectedModuleTxtAsync();
+            
+            // At this point, sanity  check an existing module name to continue
+            if (string.IsNullOrEmpty(moduleNameTxt.value))
+            {
+                return;
+            }
             
             await setReducersTreeViewAsync();
 
@@ -38,12 +47,12 @@ namespace SpacetimeDB.Editor
         /// Doc | https://docs.unity3d.com/2022.3/Documentation/Manual/UIE-uxml-element-TreeView.html
         private async Task setReducersTreeViewAsync()
         {
-            string moduleName = moduleTxt.value;
+            string moduleName = moduleNameTxt.value;
             GetEntityStructureResult entityStructureResult = await SpacetimeDbCli.GetEntityStructure(moduleName);
             
             bool isSuccess = entityStructureResult is { HasEntityStructure: true };
             if (!isSuccess)
-            {
+            { 
                 Debug.Log("Warning: Searched for reducers; found none");
                 return;
             }
@@ -51,34 +60,50 @@ namespace SpacetimeDB.Editor
             // Success: Load entity names into reducer tree view - cache _entityStructure state
             // TODO: +with friendly styled syntax hint children
             _entityStructure = entityStructureResult.EntityStructure;
-            reducersTreeView.makeItem = () => new Label(); // Creates a new Label for each item
-            reducersTreeView.bindItem = bindReducersTreeViewItem;
 
-            // Enable the TreeView
+            reducersTreeView.Clear();
+            List<TreeViewItemData<string>> treeViewItems = new();
+
+            for (int i = 0; i < _entityStructure.ReducersInfo.Count; i++)
+            {
+                ReducerInfo reducerInfo = _entityStructure.ReducersInfo[i];
+                
+                // TODO: Subitems, eg: treeViewSubItemsData.Add(new TreeViewItemData<string>(subItem.Id, subItem.Name));
+                List<TreeViewItemData<string>> treeViewSubItemsData = new(); // Children
+
+                TreeViewItemData<string> treeViewItemData = new(
+                    id: i,
+                    reducerInfo.GetReducerName(),
+                    treeViewSubItemsData);
+
+                treeViewItems.Add(treeViewItemData);
+            }
+
+            reducersTreeView.SetRootItems(treeViewItems);
+            reducersTreeView.Rebuild();
+
+            // Enable the TreeView, hide loading status
             reducersTreeView.SetEnabled(true);
+            reducersLoadingLabel.style.display = DisplayStyle.None;
         }
 
-        /// Must use the Index (not the ID) with GetItemDataForIndex (of T)
+        private VisualElement onMakeReducersTreeViewItem() => new Label();
+
+        /// We only expect a single index
+        private void onReducerTreeViewIndicesChanged(IEnumerable<int> selectedIndices)
+        {
+            int selectedIndex = selectedIndices.First();
+            string selectedName = _entityStructure.ReducersInfo[selectedIndex].GetReducerName();
+            Debug.Log($"reducerTreeView selectedIndex: {selectedIndex} ({selectedName})");
+        }
+
         private void bindReducersTreeViewItem(VisualElement element, int index)
         {
-            Label label = element as Label;
-            bool isValid = 
-                label is not null && 
-                index >= 0 && 
-                index < _entityStructure.ReducersInfo.Count;
-            
-            if (!isValid)
-                return;
-            
-            ReducerInfo reducerInfo = _entityStructure.ReducersInfo[index];
-            if (reducerInfo is null)
-                return;
-
-            // Set TreeViewItem element
-            label.text = reducerInfo.GetReducerName();
+            Label label = (Label)element;
+            label.text = _entityStructure.ReducersInfo[index].GetReducerName();
         }
 
-        private async Task setSelectedServerTxtAsync()
+        private async Task setSelectedServerTxtAsync() 
         {
             GetServersResult getServersResult = await SpacetimeDbCli.GetServersAsync();
             
@@ -93,7 +118,7 @@ namespace SpacetimeDB.Editor
             // Success
             SpacetimeServer defaultServer = getServersResult.Servers
                 .First(server => server.IsDefault);
-            serverTxt.value = defaultServer.Nickname;
+            serverNameTxt.value = defaultServer.Nickname;
         }
 
         /// Load selected identities => set readonly identity txt
@@ -112,7 +137,7 @@ namespace SpacetimeDB.Editor
             // Success
             SpacetimeIdentity defaultIdentity = getIdentitiesResult.Identities
                 .First(id => id.IsDefault);
-            identityTxt.value = defaultIdentity.Nickname;
+            identityNameTxt.value = defaultIdentity.Nickname;
         }
 
         private async Task ensureCliInstalledAsync()
@@ -139,9 +164,12 @@ namespace SpacetimeDB.Editor
         ///       any persistence from `ViewDataKey`s may override this.
         private void resetUi()
         {
-            serverTxt.value = "";
-            identityTxt.value = "";
-            reducersTreeView.SetEnabled(true);
+            serverNameTxt.value = "";
+            identityNameTxt.value = "";
+            
+            reducersTreeView.Clear();
+            reducersTreeView.SetEnabled(false);
+            
             resetActionsFoldoutUi();
         }
 

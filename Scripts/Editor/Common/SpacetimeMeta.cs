@@ -15,7 +15,6 @@ public static class SpacetimeMeta
     public const string ACTION_COLOR_HEX = "#FFEA30"; // Corn Yellow
     public const string ERROR_COLOR_HEX = "#FDBE01"; // Golden Orange
     public const string SUCCESS_COLOR_HEX = "#4CF490"; // Sea Green
-    public const string SPECIAL_COLOR_HEX = "#4f95ff"; // Hazel blue, often used for syntax hints
     public const string INPUT_TEXT_COLOR = "#B6C0CF"; // Hazel Grey
     
     public enum StringStyle
@@ -35,4 +34,9 @@ public static class SpacetimeMeta
         };
     }
     #endregion // Colors & Formatting
+    
+
+    #region Editor Pref Keys
+    public const string EDITOR_PREFS_MODULE_NAME_KEY = "SPACETIMEDB_MODULE_NAME"; 
+    #endregion // Editor Pref Keys
 }

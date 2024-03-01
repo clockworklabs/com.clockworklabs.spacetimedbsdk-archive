@@ -173,7 +173,6 @@ namespace SpacetimeDB.Editor
         }
         
         /// Used for init only, for when the persistent ViewDataKey
-        /// val is loaded from EditorPrefs 
         private void onPublishModulePathTxtInitChanged(ChangeEvent<string> evt)
         {
             onDirPathSet();

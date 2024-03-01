@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static SpacetimeDB.Editor.PublisherMeta;
@@ -473,12 +474,19 @@ namespace SpacetimeDB.Editor
                 ?? publishResult.CliError);
         }
         
-        /// There may be a false-positive wasm-opt err here; in which case, we'd still run success 
+        /// There may be a false-positive wasm-opt err here; in which case, we'd still run success.
+        /// Caches the module name into EditorPrefs for other tools to use. 
         private void onPublishSuccess(PublishResult publishResult)
         {
             // Success - reset UI back to normal
             setPublishReadyStatus();
             setPublishResultGroupUi(publishResult);
+            
+            // Other editor tools may want to utilize this value,
+            // since the CLI has no idea what you're "default" Module is
+            EditorPrefs.SetString(
+                SpacetimeMeta.EDITOR_PREFS_MODULE_NAME_KEY, 
+                publishModuleNameTxt.value);
         }
 
         private void setPublishResultGroupUi(PublishResult publishResult)

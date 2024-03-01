@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -26,7 +26,7 @@ namespace SpacetimeDB.Editor
             
             //// TODO: If `spacetime list` ever returns db names (not just addresses),
             //// TODO: Auto list them in dropdown
-            // await setSelectedModuleTxtAsync();
+            setSelectedModuleTxtAsync();
             
             // At this point, sanity  check an existing module name to continue
             if (string.IsNullOrEmpty(moduleNameTxt.value))
@@ -41,6 +41,16 @@ namespace SpacetimeDB.Editor
 
             // Show Actions foldout
             throw new NotImplementedException("TODO: Show Actions foldout");
+        }
+
+        /// Pulls from publisher, if any
+        private void setSelectedModuleTxtAsync()
+        {
+            // Other editor tools may want to utilize this value,
+            // since the CLI has no idea what you're "default" Module is
+            moduleNameTxt.value = EditorPrefs.GetString(
+                SpacetimeMeta.EDITOR_PREFS_MODULE_NAME_KEY, 
+                defaultValue: "");
         }
 
         /// Loads reducer names into #reducersTreeView -> Enable

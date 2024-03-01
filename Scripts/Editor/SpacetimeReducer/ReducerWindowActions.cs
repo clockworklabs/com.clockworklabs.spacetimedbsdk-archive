@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using UnityEngine;
-using UnityEngine.Assertions;
 using UnityEngine.UIElements;
 
 namespace SpacetimeDB.Editor
@@ -87,27 +87,6 @@ namespace SpacetimeDB.Editor
             reducersLoadingLabel.style.display = DisplayStyle.None;
         }
 
-        private VisualElement onMakeReducersTreeViewItem() => new Label();
-
-        /// We only expect a single index
-        private void onReducerTreeViewIndicesChanged(IEnumerable<int> selectedIndices)
-        {
-            // Get selected index, or fallback to -1
-            int selectedIndex = selectedIndices != null && selectedIndices.Any() 
-                ? selectedIndices.First()
-                : -1;
-
-            if (selectedIndex == -1)
-            {
-                // User pressed ESC
-                actionsFoldout.style.display = DisplayStyle.None;
-                return;
-            }
-
-            // Since we have a real selection, show the actions foldout + syntax hint + focus the arg input, if any
-            setAction(selectedIndex);
-        }
-
         /// Show the actions foldout + syntax hint + focus the arg input, if any
         private void setAction(int index)
         {
@@ -136,12 +115,67 @@ namespace SpacetimeDB.Editor
             actionTxt.Focus(); // UX
         }
 
-        private void bindReducersTreeViewItem(VisualElement element, int index)
+
+        
+
+        /// We only expect a single index changed
+        /// (!) Looking for name? See onReducerTreeViewSelectionChanged()
+        private void onReducerTreeViewIndicesChanged(IEnumerable<int> selectedIndices)
         {
-            Label label = (Label)element;
-            label.text = _entityStructure.ReducersInfo[index].GetReducerName();
+            // Get selected index, or fallback to -1
+            int selectedIndex = selectedIndices != null && selectedIndices.Any() 
+                ? selectedIndices.First()
+                : -1;
+
+            if (selectedIndex == -1)
+            {
+                // User pressed ESC
+                actionsFoldout.style.display = DisplayStyle.None;
+                return;
+            }
+
+            // Since we have a real selection, show the actions foldout + syntax hint + focus the arg input, if any
+            setAction(selectedIndex);
+        }
+        
+        /// We only expect a single element changed
+        /// (!) Looking for index? See onReducerTreeViewIndicesChanged()
+        private void onReducerTreeViewSelectionChanged(IEnumerable<object> obj)
+        {
+            // The first element should be the string name of the element Label.
+            // Fallback to null if obj count is null or 0
+            bool isNullOrEmpty = obj == null || !obj.Any();
+
+            if (isNullOrEmpty)
+            {
+                actionsRunBtn.SetEnabled(false);
+                return;
+            }
+
+            // We have a new selection - when we run, we'll use this name
+            // string selectedReducerName = obj.First().ToString();
+            enableActionRunBtnIfAriaOk();
         }
 
+        /// 0 args? Enable! Else, ensure some input
+        private void enableActionRunBtnIfAriaOk()
+        {
+            int argsCount = _entityStructure.ReducersInfo[reducersTreeView.selectedIndex].ReducerEntity.Arity;
+            if (argsCount == 0)
+            {
+                // No args: Enable right away
+                actionsRunBtn.SetEnabled(true);
+                return;
+            }
+
+            // Ensure some input
+            bool hasInput = !string.IsNullOrWhiteSpace(actionTxt.value);
+            actionsRunBtn.SetEnabled(hasInput);
+            
+            // TODO: Cache a map of reducer to arg field to persist the previous test
+        }
+
+        private string getSelectedReducerName() => reducersTreeView.selectedItem as string;
         private async Task setSelectedServerTxtAsync() 
         {
             GetServersResult getServersResult = await SpacetimeDbCli.GetServersAsync();

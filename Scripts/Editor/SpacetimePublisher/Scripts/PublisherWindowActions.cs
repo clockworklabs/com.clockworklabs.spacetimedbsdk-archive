@@ -435,13 +435,17 @@ namespace SpacetimeDB.Editor
             setPublishReadyStatus();
         }
 
-        /// Sets status label to "Ready" and enables Publisher btn
+        /// Sets status label to "Ready" and enables+shows Publisher btn
+        /// +Hides the cancel btn
         private void setPublishReadyStatus()
         {
-            publishBtn.SetEnabled(true);
-            publishStatusLabel.text = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Success, 
+            publishStatusLabel.text = GetStyledStr(
+                StringStyle.Success, 
                 "Ready");
+            publishBtn.SetEnabled(true);
+            publishBtn.style.display = DisplayStyle.Flex;
+            
+            publishCancelBtn.style.display = DisplayStyle.None;
         }
         
         /// Be sure to try/catch this with a try/finally to dispose `_cts

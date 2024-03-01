@@ -425,7 +425,7 @@ namespace SpacetimeDB.Editor
         private void onAddIdentitySuccess(SpacetimeIdentity identity)
         {
             Debug.Log($"Add new identity success: {identity.Nickname}");
-            onGetSetIdentitiesSuccessEnsureDefault(new List<SpacetimeIdentity> { identity });
+            _ = onGetSetIdentitiesSuccessEnsureDefault(new List<SpacetimeIdentity> { identity });
         }
 
         /// Success: Show installed txt, keep button disabled, but don't actually check

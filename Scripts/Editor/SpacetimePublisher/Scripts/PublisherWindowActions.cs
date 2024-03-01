@@ -137,7 +137,7 @@ namespace SpacetimeDB.Editor
         /// - Refresh identities, since they are bound per-server
         private async Task onGetServersSetDropdownSuccess(GetServersResult getServersResult)
         {
-            await onGetSetServersSuccessEnsureDefault(getServersResult.Servers);
+            await onGetSetServersSuccessEnsureDefaultAsync(getServersResult.Servers);
             await getIdentitiesSetDropdown(); // Process and reveal the next UI group
         }
 
@@ -368,7 +368,7 @@ namespace SpacetimeDB.Editor
 
         /// Set the selected server dropdown. If servers found but no default, [0] will be set.
         /// Also can be called by OnAddServerSuccess by passing a single server
-        private async Task onGetSetServersSuccessEnsureDefault(List<SpacetimeServer> servers)
+        private async Task onGetSetServersSuccessEnsureDefaultAsync(List<SpacetimeServer> servers)
         {
             // Logs for each found, with default shown
             foreach (SpacetimeServer server in servers)
@@ -432,13 +432,17 @@ namespace SpacetimeDB.Editor
             setPublishReadyStatus();
         }
 
-        /// Sets status label to "Ready" and enables Publisher btn
+        /// Sets status label to "Ready" and enables+shows Publisher btn
+        /// +Hides the cancel btn
         private void setPublishReadyStatus()
         {
-            publishBtn.SetEnabled(true);
             publishStatusLabel.text = GetStyledStr(
                 StringStyle.Success, 
                 "Ready");
+            publishBtn.SetEnabled(true);
+            publishBtn.style.display = DisplayStyle.Flex;
+            
+            publishCancelBtn.style.display = DisplayStyle.None;
         }
         
         /// Be sure to try/catch this with a try/finally to dispose `_cts
@@ -702,7 +706,7 @@ namespace SpacetimeDB.Editor
         private void onAddServerSuccess(SpacetimeServer server)
         {
             Debug.Log($"Add new server success: {server.Nickname}");
-            onGetSetServersSuccessEnsureDefault(new List<SpacetimeServer> { server });
+            _ = onGetSetServersSuccessEnsureDefaultAsync(new List<SpacetimeServer> { server });
         }
 
         private async Task setDefaultIdentityAsync(string idNicknameOrDbAddress)

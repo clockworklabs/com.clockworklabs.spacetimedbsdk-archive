@@ -40,6 +40,9 @@ namespace SpacetimeDB.Editor
 
         private Foldout actionsResultFoldout;
         private Label actionsResultLabel;
+
+        private VisualElement errorCover;
+        private Label errorCoverLabel;
         #endregion // UI Visual Elements
         
         
@@ -122,6 +125,9 @@ namespace SpacetimeDB.Editor
             
             actionsResultFoldout = rootVisualElement.Q<Foldout>(nameof(actionsResultFoldout));
             actionsResultLabel = rootVisualElement.Q<Label>(nameof(actionsResultLabel));
+            
+            errorCover = rootVisualElement.Q<VisualElement>(nameof(errorCover));
+            errorCoverLabel = rootVisualElement.Q<Label>(nameof(errorCoverLabel));
         }
 
         /// Changing implicit names can easily cause unexpected nulls
@@ -146,9 +152,17 @@ namespace SpacetimeDB.Editor
                 
                 Assert.IsNotNull(actionsResultFoldout, $"Expected `#{nameof(actionsResultFoldout)}`");
                 Assert.IsNotNull(actionsResultLabel, $"Expected `#{nameof(actionsResultLabel)}`");
+                
+                Assert.IsNotNull(errorCover, $"Expected `#{nameof(errorCover)}`");
+                Assert.IsNotNull(errorCoverLabel, $"Expected `#{nameof(errorCoverLabel)}`");
             }
             catch (Exception e)
             {
+                // Show err cover
+                errorCover = rootVisualElement.Q<VisualElement>(nameof(errorCover));
+                if (errorCover != null)
+                    errorCover.style.display = DisplayStyle.Flex;
+                
                 Debug.LogError($"Error: {e}");
                 throw;
             }

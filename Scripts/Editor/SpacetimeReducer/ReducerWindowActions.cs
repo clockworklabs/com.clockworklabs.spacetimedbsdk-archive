@@ -313,7 +313,12 @@ namespace SpacetimeDB.Editor
         /// Throws.
         private void showErrorWrapper(string friendlyError)
         {
-            throw new NotImplementedException($"TODO: Hide body -> show err: {friendlyError}");
+            errorCoverLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error, 
+                $"<b>Error:</b> {friendlyError}");
+            errorCover.style.display = DisplayStyle.Flex;
+
+            throw new Exception(friendlyError);
         }
 
         /// Toggle module|args txt, reducers tree based on is[Not]Calling

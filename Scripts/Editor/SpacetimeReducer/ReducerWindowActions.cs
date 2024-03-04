@@ -362,7 +362,7 @@ namespace SpacetimeDB.Editor
                 actionArgsTxt.value);
             
             SpacetimeCliResult cliResult = await SpacetimeDbReducerCli.CallReducerAsync(request);
-            bool isSuccess = cliResult.CliError != null;
+            bool isSuccess = cliResult.CliError == null;
             if (!isSuccess)
                 onCallReducerFail(request, cliResult);
             else

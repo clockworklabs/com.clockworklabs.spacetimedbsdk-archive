@@ -10,7 +10,7 @@
             <ui:Foldout text="&lt;b&gt;Setup&lt;/b&gt;" name="setupFoldout" value="true">
                 <ui:TextField picking-mode="Ignore" label="Server Name" name="serverNameTxt" readonly="true" />
                 <ui:TextField picking-mode="Ignore" label="Identity Name" name="identityNameTxt" readonly="true" />
-                <ui:TextField picking-mode="Ignore" label="Module Name" name="moduleNameTxt" readonly="false" value="unity-server2" />
+                <ui:TextField picking-mode="Ignore" label="Module Name" name="moduleNameTxt" readonly="false" />
             </ui:Foldout>
             <ui:VisualElement name="spacer10" style="height: 10px;" />
             <ui:Foldout text="&lt;b&gt;Reducers&lt;/b&gt;" name="reducersFoldout" value="true">
@@ -25,7 +25,7 @@
                     <ui:TextField picking-mode="Ignore" name="actionArgsTxt" readonly="false" label="Args" style="flex-direction: column; align-items: stretch; justify-content: center; align-self: stretch;" />
                     <ui:Label tabindex="-1" text="&lt;color=#FDBE01&gt;{&lt;/color&gt;actionsSyntaxHintLabel&lt;color=#FDBE01&gt;}&lt;/color&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="actionsSyntaxHintLabel" style="-unity-text-align: upper-right; -unity-font-style: normal; -unity-font: url(&quot;project://database/Assets/UnityDefaultRuntimeTheme.tss?fileID=2230732570650464555&amp;guid=a65ef4ff44de5f34c955224bb125488b&amp;type=3#NotInter-Regular&quot;);" />
                     <ui:VisualElement name="spacer10" style="height: 10px;" />
-                    <ui:Button text="&lt;b&gt;Call&lt;/b&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="actionsCallBtn" style="height: 50px;" />
+                    <ui:Button text="&lt;b&gt;Call Reducer&lt;/b&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="actionsCallReducerBtn" style="height: 50px;" />
                 </ui:GroupBox>
                 <ui:Foldout text="Result" name="actionsResultFoldout" value="true" style="-unity-font-style: normal;">
                     <ui:ScrollView name="actionsResultScrollView" style="min-height: auto; min-width: auto; max-height: 200px;">

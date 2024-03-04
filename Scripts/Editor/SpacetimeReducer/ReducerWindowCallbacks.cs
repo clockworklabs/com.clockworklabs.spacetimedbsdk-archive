@@ -16,7 +16,7 @@ namespace SpacetimeDB.Editor
         private void setOnActionEvents()
         {
             topBannerBtn.clicked += onTopBannerBtnClick; // Launches Module docs website
-            actionsCallBtn.clicked += OnActionsCallBtnClickAsync; // Run the reducer via CLI
+            actionsCallReducerBtn.clicked += ActionsCallReducerBtnClickAsync; // Run the reducer via CLI
             actionArgsTxt.RegisterValueChangedCallback(onActionTxtValueChanged); // Toggles the Run btn
             refreshReducersBtn.clicked += onRefreshReducersBtnClickAsync; // Refresh reducers tree view live from cli
 
@@ -30,7 +30,7 @@ namespace SpacetimeDB.Editor
         private void unsetOnActionEvents()
         {
             topBannerBtn.clicked -= onTopBannerBtnClick;
-            actionsCallBtn.clicked -= OnActionsCallBtnClickAsync;
+            actionsCallReducerBtn.clicked -= ActionsCallReducerBtnClickAsync;
             refreshReducersBtn.clicked -= onRefreshReducersBtnClickAsync;
 
             reducersTreeView.selectedIndicesChanged -= onReducerTreeViewIndicesChanged; // Selected multiple reducers from tree
@@ -61,7 +61,7 @@ namespace SpacetimeDB.Editor
 
             if (hasVal)
             {
-                actionsCallBtn.SetEnabled(hasVal);
+                actionsCallReducerBtn.SetEnabled(hasVal);
                 return;
             }
 
@@ -70,13 +70,13 @@ namespace SpacetimeDB.Editor
 
             if (selectedIndex == -1)
             {
-                actionsCallBtn.SetEnabled(false); // Nothing selected
+                actionsCallReducerBtn.SetEnabled(false); // Nothing selected
                 return;
             }
 
             // We can enable if # of aria is 0
             int numAria = getSelectedReducerArityCount();
-            actionsCallBtn.SetEnabled(numAria == 0);
+            actionsCallReducerBtn.SetEnabled(numAria == 0);
         }
 
         /// Open link to SpacetimeDB Module docs
@@ -101,7 +101,7 @@ namespace SpacetimeDB.Editor
             }
         }
 
-        private async void OnActionsCallBtnClickAsync()
+        private async void ActionsCallReducerBtnClickAsync()
         {
             try
             {

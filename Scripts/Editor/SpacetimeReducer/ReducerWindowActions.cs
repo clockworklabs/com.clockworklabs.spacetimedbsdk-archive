@@ -163,7 +163,7 @@ namespace SpacetimeDB.Editor
             bool isNullOrEmpty = obj == null || !obj.Any();
             if (isNullOrEmpty)
             {
-                actionsCallBtn.SetEnabled(false);
+                actionsCallReducerBtn.SetEnabled(false);
                 return;
             }
 
@@ -180,13 +180,13 @@ namespace SpacetimeDB.Editor
             if (argsCount == 0)
             {
                 // No args: Enable right away
-                actionsCallBtn.SetEnabled(true);
+                actionsCallReducerBtn.SetEnabled(true);
                 return;
             }
 
             // Ensure some input
             bool hasInput = !string.IsNullOrWhiteSpace(actionArgsTxt.value);
-            actionsCallBtn.SetEnabled(hasInput);
+            actionsCallReducerBtn.SetEnabled(hasInput);
             
             // TODO: Cache a map of reducer to arg field to persist the previous test
         }
@@ -279,7 +279,7 @@ namespace SpacetimeDB.Editor
             refreshReducersBtn.SetEnabled(!isRefreshing);
             refreshReducersBtn.text = isRefreshing 
                 ? SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Action, "Refreshing ...") 
-                : "Refresh";
+                : "<b>Refresh</b>"; // TODO: Mv this to meta
 
             if (!isRefreshing)
                 return;
@@ -302,7 +302,7 @@ namespace SpacetimeDB.Editor
         {
             actionsFoldout.style.display = DisplayStyle.None;
             actionsSyntaxHintLabel.style.display = DisplayStyle.None;
-            actionsCallBtn.SetEnabled(false);
+            actionsCallReducerBtn.SetEnabled(false);
         }
         #endregion // Init from ReducerWindow.CreateGUI
 
@@ -343,12 +343,12 @@ namespace SpacetimeDB.Editor
                 actionArgsTxt.SetEnabled(arityCount > 0);
             }
             
-            actionsCallBtn.SetEnabled(!isCalling);
-            actionsCallBtn.text = isCalling 
+            actionsCallReducerBtn.SetEnabled(!isCalling);
+            actionsCallReducerBtn.text = isCalling 
                 ? SpacetimeMeta.GetStyledStr(
                     SpacetimeMeta.StringStyle.Action, 
                     $"Calling {callingReducerName} ...") 
-                : "Call";
+                : "<b>Call Reducer</b>"; // TODO: Mv this to meta
             
             actionsResultFoldout.style.display = isCalling 
                 ? DisplayStyle.None 
@@ -367,7 +367,7 @@ namespace SpacetimeDB.Editor
                 actionArgsTxt.value);
             
             SpacetimeCliResult cliResult = await SpacetimeDbReducerCli.CallReducerAsync(request);
-            bool isSuccess = cliResult.CliError == null;
+            bool isSuccess = string.IsNullOrEmpty(cliResult.CliError);
             if (!isSuccess)
                 onCallReducerFail(request, cliResult);
             else

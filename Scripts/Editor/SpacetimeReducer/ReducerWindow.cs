@@ -36,7 +36,7 @@ namespace SpacetimeDB.Editor
         private Foldout actionsFoldout;
         private TextField actionArgsTxt;
         private Label actionsSyntaxHintLabel;
-        private Button actionsCallBtn;
+        private Button actionsCallReducerBtn;
 
         private Foldout actionsResultFoldout;
         private Label actionsResultLabel;
@@ -121,7 +121,7 @@ namespace SpacetimeDB.Editor
             actionsFoldout = rootVisualElement.Q<Foldout>(nameof(actionsFoldout));
             actionArgsTxt = rootVisualElement.Q<TextField>(nameof(actionArgsTxt));
             actionsSyntaxHintLabel = rootVisualElement.Q<Label>(nameof(actionsSyntaxHintLabel));
-            actionsCallBtn = rootVisualElement.Q<Button>(nameof(actionsCallBtn));
+            actionsCallReducerBtn = rootVisualElement.Q<Button>(nameof(actionsCallReducerBtn));
             
             actionsResultFoldout = rootVisualElement.Q<Foldout>(nameof(actionsResultFoldout));
             actionsResultLabel = rootVisualElement.Q<Label>(nameof(actionsResultLabel));
@@ -148,7 +148,7 @@ namespace SpacetimeDB.Editor
                 Assert.IsNotNull(actionsFoldout, $"Expected `#{nameof(actionsFoldout)}`");
                 Assert.IsNotNull(actionArgsTxt, $"Expected `#{nameof(actionArgsTxt)}`");
                 Assert.IsNotNull(actionsSyntaxHintLabel, $"Expected `#{nameof(actionsSyntaxHintLabel)}`");
-                Assert.IsNotNull(actionsCallBtn, $"Expected `#{nameof(actionsCallBtn)}`");
+                Assert.IsNotNull(actionsCallReducerBtn, $"Expected `#{nameof(actionsCallReducerBtn)}`");
                 
                 Assert.IsNotNull(actionsResultFoldout, $"Expected `#{nameof(actionsResultFoldout)}`");
                 Assert.IsNotNull(actionsResultLabel, $"Expected `#{nameof(actionsResultLabel)}`");

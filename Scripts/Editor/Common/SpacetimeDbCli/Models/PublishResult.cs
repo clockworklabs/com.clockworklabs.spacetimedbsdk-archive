@@ -1,6 +1,6 @@
 using System;
 using System.Text.RegularExpressions;
-using Unity.Plastic.Newtonsoft.Json;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace SpacetimeDB.Editor

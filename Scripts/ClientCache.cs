@@ -40,19 +40,21 @@ namespace SpacetimeDB
             }
 
             /// <summary>
-            /// Inserts the value into the table. There can be no existing value with the provided pk.
+            /// Inserts the value into the table. There can be no existing value with the provided BSATN bytes.
             /// </summary>
+            /// <param name="rowBytes">The BSATN encoded bytes of the row to retrieve.</param>
+            /// <param name="value">The parsed AlgebraicValue of the row encoded by the <paramref>rowBytes</paramref>.</param>
             /// <returns>True if the row was inserted, false if the row wasn't inserted because it was a duplicate.</returns>
-            public bool InsertEntry(byte[] rowPk, IDatabaseTable value) => entries.TryAdd(rowPk, value);
+            public bool InsertEntry(byte[] rowBytes, IDatabaseTable value) => entries.TryAdd(rowBytes, value);
 
             /// <summary>
             /// Deletes a value from the table.
             /// </summary>
-            /// <param name="rowPk">The primary key that uniquely identifies this row</param>
-            /// <returns></returns>
-            public bool DeleteEntry(byte[] rowPk)
+            /// <param name="rowBytes">The BSATN encoded bytes of the row to remove.</param>
+            /// <returns>True if and only if the value was previously resident and has been deleted.</returns>
+            public bool DeleteEntry(byte[] rowBytes)
             {
-                if (entries.Remove(rowPk))
+                if (entries.Remove(rowBytes))
                 {
                     return true;
                 }
@@ -64,9 +66,10 @@ namespace SpacetimeDB
             /// <summary>
             /// Gets a value from the table
             /// </summary>
-            /// <param name="rowPk">The primary key that uniquely identifies this row</param>
-            /// <returns></returns>
-            public bool TryGetValue(byte[] rowPk, out IDatabaseTable? value) => entries.TryGetValue(rowPk, out value);
+            /// <param name="rowBytes">The primary key that uniquely identifies this row</param>
+            /// <param name="value">Output: the parsed domain type corresponding to the <paramref>rowBytes</paramref>, or <c>null</c> if the row was not present in the cache.</param>
+            /// <returns>True if and only if the value is resident and was stored in <paramref>value</paramref>.</returns>
+            public bool TryGetValue(byte[] rowBytes, out IDatabaseTable? value) => entries.TryGetValue(rowBytes, out value);
         }
 
         private readonly ConcurrentDictionary<string, TableCache> tables = new();

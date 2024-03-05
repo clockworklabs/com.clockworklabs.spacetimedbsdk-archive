@@ -4,9 +4,7 @@
   "version": "0.8.0",
   "description": "The SpacetimeDB Client SDK is a software development kit (SDK) designed to interact with and manipulate SpacetimeDB modules..",
   "keywords": [],
-  "dependencies": {
-    "com.clockworklabs.spacetimedbsdk.runtime": "https://github.com/clockworklabs/SpacetimeDB.git?path=/crates/bindings-csharp/BSATN.Runtime#csharp-refactor"
-  },
+  "dependencies": {},
   "author": {
     "name": "Clockwork Labs",
     "email": "john@clockworklabs.io",

@@ -14,8 +14,16 @@ namespace SpacetimeDB
         {
             ReducerName = dbEvent.FunctionCall.Reducer;
             Timestamp = dbEvent.Timestamp;
-            Identity = Identity.From(dbEvent.CallerIdentity.ToByteArray());
-            CallerAddress = Address.From(dbEvent.CallerAddress.ToByteArray());
+            if (dbEvent.CallerIdentity != null)
+            {
+                Identity = Identity.From(dbEvent.CallerIdentity.ToByteArray());    
+            }
+
+            if (dbEvent.CallerAddress != null)
+            {
+                CallerAddress = Address.From(dbEvent.CallerAddress.ToByteArray());    
+            }
+            
             ErrMessage = dbEvent.Message;
             Status = dbEvent.Status;
             Args = args;

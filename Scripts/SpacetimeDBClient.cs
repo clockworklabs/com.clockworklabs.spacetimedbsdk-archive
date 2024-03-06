@@ -608,9 +608,7 @@ namespace SpacetimeDB
                         }
                         else
                         {
-                            var op = dbOps[i];
-                            op.op = TableOp.NoChange;
-                            dbOps[i] = op;
+                            dbOps[i].op = TableOp.NoChange;
                         }
                         break;
                     case TableOp.Insert:
@@ -620,9 +618,7 @@ namespace SpacetimeDB
                         }
                         else
                         {
-                            var op = dbOps[i];
-                            op.op = TableOp.NoChange;
-                            dbOps[i] = op;
+                            dbOps[i].op = TableOp.NoChange;
                         }
                         break;
                     case TableOp.Update:
@@ -632,9 +628,7 @@ namespace SpacetimeDB
                         }
                         else
                         {
-                            var op = dbOps[i];
-                            op.op = TableOp.NoChange;
-                            dbOps[i] = op;
+                            dbOps[i].op = TableOp.NoChange;
                         }
 
                         if (dbOps[i].table.InsertEntry(update.insertedBytes, update.newValue))
@@ -643,9 +637,7 @@ namespace SpacetimeDB
                         }
                         else
                         {
-                            var op = dbOps[i];
-                            op.op = TableOp.NoChange;
-                            dbOps[i] = op;
+                            dbOps[i].op = TableOp.NoChange;
                         }
                         break;
                     default:

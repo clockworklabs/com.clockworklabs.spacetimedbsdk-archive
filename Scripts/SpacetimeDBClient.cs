@@ -369,7 +369,7 @@ namespace SpacetimeDB
                                     {
                                         Debug.LogError($"MobileEntityState Subscription");
                                     }
-                                    
+
                                     op.primaryKeyValue = objWithPk.GetPrimaryKeyValue();
 
                                     var key = (tableName, op.primaryKeyValue);
@@ -392,7 +392,7 @@ namespace SpacetimeDB
                                             insertOp = oldOp;
                                             deleteOp = op;
                                         }
-                                        
+
                                         op = new DbOp
                                         {
                                             table = insertOp.table,
@@ -825,29 +825,29 @@ namespace SpacetimeDB
         }
 
         private void OnMessageReceived(byte[] bytes) => _messageQueue.Add(bytes);
-        
-        public void InternalCallReducer<T>(string reducerName, T args)
-            where T : IStructuralReadWrite, new()
+
+        public void InternalCallReducer<T>(T args)
+            where T : IReducerArgsBase, new()
         {
             if (!webSocket.IsConnected)
             {
                 logger.LogError("Cannot call reducer, not connected to server!");
                 return;
             }
-                
+
             var requestId = stats.ReducerRequestTracker.StartTrackingRequest();
 
             webSocket.Send(new Message
             {
                 FunctionCall = new FunctionCall
                 {
-                    Reducer = reducerName,
+                    Reducer = args.ReducerName,
                     ArgBytes = args.ToProtoBytes(),
                     RequestId = requestId,
                 }
             });
         }
-        
+
         public void Subscribe(List<string> queries)
         {
             if (!webSocket.IsConnected)

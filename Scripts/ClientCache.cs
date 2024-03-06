@@ -31,17 +31,13 @@ namespace SpacetimeDB
                 }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                private bool EqualsUnvectorized(byte[] left, byte[] right)
+                private unsafe bool EqualsUnvectorized(byte[] left, byte[] right)
                 {
-                    for (int i = 0; i < left.Length; i++)
-                    {
-                        if (left[i] != right[i])
-                        {
-                            return false;
-                        }
-                    }
-
-                    return true;
+					fixed (byte* a = left)
+					fixed (byte* b = right)
+					{
+						return Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCmp(a, b, left.Length) == 0;
+					}
                 }
 
                 public int GetHashCode(byte[] obj)

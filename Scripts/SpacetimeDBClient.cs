@@ -743,11 +743,9 @@ namespace SpacetimeDB
                     }
 
                     // Send out events
-                    var updateCount = dbOps.Count;
-                    for (var i = 0; i < updateCount; i++)
+                    foreach (var dbOp in dbOps)
                     {
-                        var dbOp = dbOps[i];
-                        var tableName = dbOp.table.Name;
+                        var table = dbOp.table;
                         var tableOp = dbOp.op;
                         var oldValue = dbOp.oldValue;
                         var newValue = dbOp.newValue;
@@ -759,9 +757,9 @@ namespace SpacetimeDB
                                 {
                                     try
                                     {
-                                        if (dbOp.table.InsertCallback != null)
+                                        if (table.InsertCallback != null)
                                         {
-                                            dbOp.table.InsertCallback.Invoke(newValue,
+                                            table.InsertCallback.Invoke(newValue,
                                                 message.TransactionUpdate?.Event);
                                         }
                                     }
@@ -772,9 +770,9 @@ namespace SpacetimeDB
 
                                     try
                                     {
-                                        if (dbOp.table.RowUpdatedCallback != null)
+                                        if (table.RowUpdatedCallback != null)
                                         {
-                                            dbOp.table.RowUpdatedCallback
+                                            table.RowUpdatedCallback
                                                 .Invoke(tableOp, null, newValue, message.TransactionUpdate?.Event);
                                         }
                                     }
@@ -793,11 +791,11 @@ namespace SpacetimeDB
                                 {
                                     if (oldValue != null && newValue == null)
                                     {
-                                        if (dbOp.table.DeleteCallback != null)
+                                        if (table.DeleteCallback != null)
                                         {
                                             try
                                             {
-                                                dbOp.table.DeleteCallback.Invoke(oldValue,
+                                                table.DeleteCallback.Invoke(oldValue,
                                                     message.TransactionUpdate?.Event);
                                             }
                                             catch (Exception e)
@@ -806,11 +804,11 @@ namespace SpacetimeDB
                                             }
                                         }
 
-                                        if (dbOp.table.RowUpdatedCallback != null)
+                                        if (table.RowUpdatedCallback != null)
                                         {
                                             try
                                             {
-                                                dbOp.table.RowUpdatedCallback
+                                                table.RowUpdatedCallback
                                                     .Invoke(tableOp, oldValue, null, message.TransactionUpdate?.Event);
                                             }
                                             catch (Exception e)
@@ -832,9 +830,9 @@ namespace SpacetimeDB
                                     {
                                         try
                                         {
-                                            if (dbOp.table.UpdateCallback != null)
+                                            if (table.UpdateCallback != null)
                                             {
-                                                dbOp.table.UpdateCallback.Invoke(oldValue, newValue,
+                                                table.UpdateCallback.Invoke(oldValue, newValue,
                                                     message.TransactionUpdate?.Event);
                                             }
                                         }
@@ -845,9 +843,9 @@ namespace SpacetimeDB
 
                                         try
                                         {
-                                            if (dbOp.table.RowUpdatedCallback != null)
+                                            if (table.RowUpdatedCallback != null)
                                             {
-                                                dbOp.table.RowUpdatedCallback
+                                                table.RowUpdatedCallback
                                                     .Invoke(tableOp, oldValue, newValue, message.TransactionUpdate?.Event);
                                             }
                                         }
@@ -872,7 +870,7 @@ namespace SpacetimeDB
 
                         if (tableOp != TableOp.NoChange)
                         {
-                            onRowUpdate?.Invoke(tableName, tableOp, oldValue, newValue,
+                            onRowUpdate?.Invoke(table.Name, tableOp, oldValue, newValue,
                                 message.Event?.FunctionCall.CallInfo);
                         }
                     }

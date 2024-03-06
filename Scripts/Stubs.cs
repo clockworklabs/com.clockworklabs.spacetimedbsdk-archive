@@ -29,6 +29,6 @@ namespace SpacetimeDB
             Args = args;
         }
 
-        public abstract void InvokeHandler();
+        public abstract bool InvokeHandler();
     }
 }

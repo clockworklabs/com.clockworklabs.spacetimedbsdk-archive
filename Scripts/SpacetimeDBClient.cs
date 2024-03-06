@@ -355,11 +355,6 @@ namespace SpacetimeDB
 
                                 if (obj is IDatabaseTableWithPrimaryKey objWithPk)
                                 {
-                                    if (tableName == "MobileEntityState")
-                                    {
-                                        Debug.LogError($"MobileEntityState Subscription");
-                                    }
-
                                     op.primaryKeyValue = objWithPk.GetPrimaryKeyValue();
 
                                     var key = (tableName, op.primaryKeyValue);

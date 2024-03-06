@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
@@ -104,6 +105,7 @@ namespace SpacetimeDB
         public event Action<ClientApi.Event> onEvent;
 
         public Address clientAddress { get; private set; }
+        public Identity clientIdentity { get; private set; }
 
         private SpacetimeDB.WebSocket webSocket;
         private bool connectionClosed;
@@ -126,6 +128,7 @@ namespace SpacetimeDB
 
         public ISpacetimeDBLogger Logger => logger;
         private ISpacetimeDBLogger logger;
+        private Stats stats;
 
         public static void CreateInstance(ISpacetimeDBLogger loggerToUse)
         {
@@ -174,6 +177,7 @@ namespace SpacetimeDB
 
             instance = this;
 
+            stats = new Stats();
             clientAddress = Address.Random();
 
             logger = loggerToUse;
@@ -253,12 +257,13 @@ namespace SpacetimeDB
         struct PreProcessedMessage
         {
             public Message message;
+            public DateTime timestamp;
             public List<DbOp> dbOps;
             public Dictionary<string, HashSet<byte[]>> inserts;
         }
 
-        private readonly BlockingCollection<byte[]> _messageQueue =
-            new BlockingCollection<byte[]>(new ConcurrentQueue<byte[]>());
+        private readonly BlockingCollection<(byte[], DateTime)> _messageQueue =
+            new BlockingCollection<(byte[], DateTime)>(new ConcurrentQueue<(byte[], DateTime)>());
 
         private readonly BlockingCollection<PreProcessedMessage> _preProcessedNetworkMessages =
             new BlockingCollection<PreProcessedMessage>(new ConcurrentQueue<PreProcessedMessage>());
@@ -272,8 +277,8 @@ namespace SpacetimeDB
             {
                 try
                 {
-                    var bytes = _messageQueue.Take(_preProcessCancellationToken);
-                    var preprocessedMessage = PreProcessMessage(bytes);
+                    var message = _messageQueue.Take(_preProcessCancellationToken);
+                    var preprocessedMessage = PreProcessMessage(message.Item1, message.Item2);
                     _preProcessedNetworkMessages.Add(preprocessedMessage, _preProcessCancellationToken);
                 }
                 catch (OperationCanceledException)
@@ -283,7 +288,7 @@ namespace SpacetimeDB
                 }
             }
 
-            PreProcessedMessage PreProcessMessage(byte[] bytes)
+            PreProcessedMessage PreProcessMessage(byte[] bytes, DateTime timestamp)
             {
                 var dbOps = new List<DbOp>();
                 var message = Message.Parser.ParseFrom(bytes);
@@ -510,15 +515,15 @@ namespace SpacetimeDB
 
 
                 // logger.LogWarning($"Total Updates preprocessed: {totalUpdateCount}");
-                return new PreProcessedMessage { message = message, dbOps = dbOps, inserts = subscriptionInserts };
+                return new PreProcessedMessage { message = message, timestamp = timestamp, dbOps = dbOps, inserts = subscriptionInserts };
             }
         }
 
         struct ProcessedMessage
         {
             public Message message;
+            public DateTime timestamp;
             public List<DbOp> dbOps;
-            public HashSet<byte[]> inserts;
         }
 
         // The message that has been preprocessed and has had its state diff calculated
@@ -534,8 +539,8 @@ namespace SpacetimeDB
                 try
                 {
                     var message = _preProcessedNetworkMessages.Take(_stateDiffCancellationToken);
-                    var (m, events) = CalculateStateDiff(message);
-                    _stateDiffMessages.Add(new ProcessedMessage { dbOps = events, message = m, });
+                    var (m, timestamp, events) = CalculateStateDiff(message);
+                    _stateDiffMessages.Add(new ProcessedMessage { message = m, timestamp = timestamp, dbOps = events,});
                 }
                 catch (OperationCanceledException)
                 {
@@ -544,9 +549,10 @@ namespace SpacetimeDB
                 }
             }
 
-            (Message, List<DbOp>) CalculateStateDiff(PreProcessedMessage preProcessedMessage)
+            (Message, DateTime, List<DbOp>) CalculateStateDiff(PreProcessedMessage preProcessedMessage)
             {
                 var message = preProcessedMessage.message;
+                var timestamp = preProcessedMessage.timestamp;
                 var dbOps = preProcessedMessage.dbOps;
                 // Perform the state diff, this has to be done on the main thread because we have to touch
                 // the client cache.
@@ -580,7 +586,7 @@ namespace SpacetimeDB
                     }
                 }
 
-                return (message, dbOps);
+                return (message, timestamp, dbOps);
             }
         }
 
@@ -631,12 +637,30 @@ namespace SpacetimeDB
             });
         }
 
-        private void OnMessageProcessComplete(Message message, List<DbOp> dbOps)
+        private void OnMessageProcessComplete(Message message, DateTime timestamp, List<DbOp> dbOps)
         {
+            stats.ParseMessageTracker.InsertRequest(DateTime.Now, timestamp - DateTime.Now, null);
             switch (message.TypeCase)
             {
                 case Message.TypeOneofCase.SubscriptionUpdate:
                     onBeforeSubscriptionApplied?.Invoke();
+                    stats.SubscriptionRequestTracker.FinishTrackingRequest(message.SubscriptionUpdate.RequestId);
+                    break;
+                case Message.TypeOneofCase.TransactionUpdate:
+                {
+                    var callerIdentity = Identity.From(message.TransactionUpdate.Event.CallerIdentity.ToByteArray());
+                    if (callerIdentity == clientIdentity)
+                    {
+                        // This was a request that we initiated
+                        stats.ReducerRequestTracker.FinishTrackingRequest(message.TransactionUpdate.SubscriptionUpdate
+                            .RequestId);
+                    }
+                    else
+                    {
+                        stats.RemoteRequestTracker.InsertRequest(DateTime.Now, TimeSpan.FromMicroseconds(message.TransactionUpdate.Event.HostExecutionDurationMicros), callerIdentity);
+                    }
+                }
+            
                     break;
             }
             
@@ -946,8 +970,9 @@ namespace SpacetimeDB
                 case Message.TypeOneofCase.IdentityToken:
                     try
                     {
+                        clientIdentity = Identity.From(message.IdentityToken.Identity.ToByteArray());
                         onIdentityReceived?.Invoke(message.IdentityToken.Token,
-                            Identity.From(message.IdentityToken.Identity.ToByteArray()),
+                            clientIdentity,
                             (Address)Address.From(message.IdentityToken.Address.ToByteArray()));
                     }
                     catch (Exception e)
@@ -970,8 +995,14 @@ namespace SpacetimeDB
             }
         }
 
-        private void OnMessageReceived(byte[] bytes) => _messageQueue.Add(bytes);
+        private void OnMessageReceived(byte[] bytes, DateTime timestamp) => _messageQueue.Add((bytes, timestamp));
 
+        // TODO: Delete this
+        struct ReducerRequest
+        {
+            public string reducer;
+        }
+        
         public void InternalCallReducer(string json)
         {
             if (!webSocket.IsConnected)
@@ -980,7 +1011,11 @@ namespace SpacetimeDB
                 return;
             }
 
-            webSocket.Send(Encoding.ASCII.GetBytes("{ \"call\": " + json + " }"));
+            // TODO: this is completely reworked with Ingvar's PR to not use json
+            var reducerRequest = Newtonsoft.Json.JsonConvert.DeserializeObject<ReducerRequest>(json);
+            json = json.Substring(0, json.LastIndexOf('}') - 1);
+            var requestId = stats.ReducerRequestTracker.StartTrackingRequest(reducerRequest.reducer);
+            webSocket.Send(Encoding.ASCII.GetBytes("{ \"call\": " + json + ", \"requestId\": " + requestId + "} }"));
         }
 
         public void Subscribe(List<string> queries)
@@ -993,7 +1028,8 @@ namespace SpacetimeDB
 
             var json = JsonConvert.SerializeObject(queries);
             // should we use UTF8 here? ASCII is fragile.
-            webSocket.Send(Encoding.ASCII.GetBytes("{ \"subscribe\": { \"query_strings\": " + json + " }}"));
+            var requestId = stats.SubscriptionRequestTracker.StartTrackingRequest();
+            webSocket.Send(Encoding.ASCII.GetBytes("{ \"subscribe\": { \"query_strings\": " + json + ", \"requestId\": " + requestId + " } }"));
         }
 
         /// Usage: SpacetimeDBClient.instance.OneOffQuery<Message>("WHERE sender = \"bob\"");
@@ -1003,6 +1039,7 @@ namespace SpacetimeDB
             Type type = typeof(T);
             Channel<OneOffQueryResponse> resultChannel = Channel.CreateBounded<OneOffQueryResponse>(1);
             waitingOneOffQueries[messageId] = resultChannel;
+            var requestId = stats.OneOffRequestTracker.StartTrackingRequest();
 
             // unsanitized here, but writes will be prevented serverside.
             // the best they can do is send multiple selects, which will just result in them getting no data back.
@@ -1016,6 +1053,10 @@ namespace SpacetimeDB
 
             // Suspend for an arbitrary amount of time
             var result = await resultChannel.Reader.ReadAsync();
+            if (!stats.OneOffRequestTracker.FinishTrackingRequest(requestId))
+            {
+                logger.LogWarning("Failed to finish tracking one off request: " + requestId);
+            }
 
             T[] LogAndThrow(string error)
             {
@@ -1069,7 +1110,7 @@ namespace SpacetimeDB
             webSocket.Update();
             while (_stateDiffMessages.TryTake(out var stateDiffMessage))
             {
-                OnMessageProcessComplete(stateDiffMessage.message, stateDiffMessage.dbOps);
+                OnMessageProcessComplete(stateDiffMessage.message, stateDiffMessage.timestamp, stateDiffMessage.dbOps);
             }
         }
     }

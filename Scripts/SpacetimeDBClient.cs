@@ -657,7 +657,9 @@ namespace SpacetimeDB
                     }
                     else
                     {
-                        stats.RemoteRequestTracker.InsertRequest(DateTime.Now, TimeSpan.FromMicroseconds(message.TransactionUpdate.Event.HostExecutionDurationMicros), callerIdentity);
+                        var millisecondsAsDouble =
+                            (double)message.TransactionUpdate.Event.HostExecutionDurationMicros / 1000.0d;
+                        stats.RemoteRequestTracker.InsertRequest(DateTime.Now, TimeSpan.FromMilliseconds(millisecondsAsDouble), callerIdentity);
                     }
                 }
             

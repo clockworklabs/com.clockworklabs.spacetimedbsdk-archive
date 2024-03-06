@@ -16,17 +16,19 @@ namespace SpacetimeDB
             Timestamp = dbEvent.Timestamp;
             if (dbEvent.CallerIdentity != null)
             {
-                Identity = Identity.From(dbEvent.CallerIdentity.ToByteArray());    
+                Identity = Identity.From(dbEvent.CallerIdentity.ToByteArray());
             }
 
             if (dbEvent.CallerAddress != null)
             {
-                CallerAddress = Address.From(dbEvent.CallerAddress.ToByteArray());    
+                CallerAddress = Address.From(dbEvent.CallerAddress.ToByteArray());
             }
-            
+
             ErrMessage = dbEvent.Message;
             Status = dbEvent.Status;
             Args = args;
         }
+
+        public abstract void InvokeHandler();
     }
 }

@@ -93,9 +93,6 @@ namespace SpacetimeDB
         public Identity localIdentity;
         public Address localAddress;
 
-        public static Dictionary<string, Func<ClientApi.Event, bool>> reducerEventCache =
-            new Dictionary<string, Func<ClientApi.Event, bool>>();
-
         public static Dictionary<string, Action<ClientApi.Event>> deserializeEventCache =
             new Dictionary<string, Action<ClientApi.Event>>();
 
@@ -196,13 +193,6 @@ namespace SpacetimeDB
                 // cache all our reducer events by their function name
                 foreach (var methodInfo in reducerType.GetMethods())
                 {
-                    if (methodInfo.GetCustomAttribute<ReducerCallbackAttribute>() is
-                        { } reducerEvent)
-                    {
-                        reducerEventCache.Add(reducerEvent.FunctionName,
-                            methodInfo.CreateDelegate<Func<ClientApi.Event, bool>>());
-                    }
-
                     if (methodInfo.GetCustomAttribute<DeserializeEventAttribute>() is
                         { } deserializeEvent)
                     {
@@ -369,7 +359,7 @@ namespace SpacetimeDB
                                     {
                                         Debug.LogError($"MobileEntityState Subscription");
                                     }
-                                    
+
                                     op.primaryKeyValue = objWithPk.GetPrimaryKeyValue();
 
                                     var key = (tableName, op.primaryKeyValue);
@@ -392,7 +382,7 @@ namespace SpacetimeDB
                                             insertOp = oldOp;
                                             deleteOp = op;
                                         }
-                                        
+
                                         op = new DbOp
                                         {
                                             table = insertOp.table,
@@ -772,17 +762,13 @@ namespace SpacetimeDB
                     }
 
                     bool reducerFound = false;
-                    var functionName = transactionEvent.FunctionCall.Reducer;
-                    if (reducerEventCache.TryGetValue(functionName, out var value))
+                    try
                     {
-                        try
-                        {
-                            reducerFound = value.Invoke(transactionEvent);
-                        }
-                        catch (Exception e)
-                        {
-                            logger.LogException(e);
-                        }
+                        reducerFound = transactionEvent.FunctionCall.CallInfo.InvokeHandler();
+                    }
+                    catch (Exception e)
+                    {
+                        logger.LogException(e);
                     }
 
                     if (!reducerFound && transactionEvent.Status == Event.Types.Status.Failed)
@@ -825,7 +811,7 @@ namespace SpacetimeDB
         }
 
         private void OnMessageReceived(byte[] bytes) => _messageQueue.Add(bytes);
-        
+
         public void InternalCallReducer<T>(string reducerName, T args)
             where T : IStructuralReadWrite, new()
         {
@@ -834,7 +820,7 @@ namespace SpacetimeDB
                 logger.LogError("Cannot call reducer, not connected to server!");
                 return;
             }
-                
+
             var requestId = stats.ReducerRequestTracker.StartTrackingRequest();
 
             webSocket.Send(new Message
@@ -847,7 +833,7 @@ namespace SpacetimeDB
                 }
             });
         }
-        
+
         public void Subscribe(List<string> queries)
         {
             if (!webSocket.IsConnected)

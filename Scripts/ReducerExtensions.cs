@@ -8,12 +8,6 @@ namespace SpacetimeDB
     }
 
     [AttributeUsage(AttributeTargets.Method)]
-    public class ReducerCallbackAttribute : Attribute
-    {
-        public string? FunctionName { get; set; }
-    }
-
-    [AttributeUsage(AttributeTargets.Method)]
     public class DeserializeEventAttribute : Attribute
     {
         public string? FunctionName { get; set; }

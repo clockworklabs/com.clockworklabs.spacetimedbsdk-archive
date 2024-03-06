@@ -210,8 +210,8 @@ namespace SpacetimeDB
                                          a.GetParameters().Length > 0 &&
                                          a.GetParameters()[0].ParameterType ==
                                          typeof(AlgebraicValue));
-				var decodeDelegate = (Func<AlgebraicValue, object>)conversionFunc.CreateDelegate(typeof(Func<AlgebraicValue, object>));  
-				clientDB.AddTable(@class, algebraicValue, decodeDelegate);
+                var decodeDelegate = (Func<AlgebraicValue, object>)conversionFunc.CreateDelegate(typeof(Func<AlgebraicValue, object>));  
+                clientDB.AddTable(@class, algebraicValue, decodeDelegate);
             }
 
             var reducerType = FindReducerType();
@@ -701,8 +701,8 @@ namespace SpacetimeDB
                                 }
                                 else
                                 {
-									update.op = TableOp.NoChange;
-									dbOps[i] = update;
+                                    update.op = TableOp.NoChange;
+                                    dbOps[i] = update;
                                 }
                                 break;
                             case TableOp.Insert:
@@ -712,8 +712,8 @@ namespace SpacetimeDB
                                 }
                                 else
                                 {
-									update.op = TableOp.NoChange;
-									dbOps[i] = update;
+                                    update.op = TableOp.NoChange;
+                                    dbOps[i] = update;
                                 }
                                 break;
                             case TableOp.Update:
@@ -723,8 +723,8 @@ namespace SpacetimeDB
                                 }
                                 else
                                 {
-									update.op = TableOp.NoChange;
-									dbOps[i] = update;
+                                    update.op = TableOp.NoChange;
+                                    dbOps[i] = update;
                                 }
                                 
                                 if (update.table.InsertEntry(update.insertedPk, update.rowValue))
@@ -733,8 +733,8 @@ namespace SpacetimeDB
                                 }
                                 else
                                 {
-									update.op = TableOp.NoChange;
-									dbOps[i] = update;
+                                    update.op = TableOp.NoChange;
+                                    dbOps[i] = update;
                                 }
                                 break;
                             default:
@@ -746,7 +746,7 @@ namespace SpacetimeDB
                     var updateCount = dbOps.Count;
                     for (var i = 0; i < updateCount; i++)
                     {
-						var dbOp = dbOps[i];
+                        var dbOp = dbOps[i];
                         var tableName = dbOp.table.Name;
                         var tableOp = dbOp.op;
                         var oldValue = dbOp.oldValue;

@@ -14,6 +14,7 @@ using ClientApi;
 using Newtonsoft.Json;
 using SpacetimeDB.SATS;
 using Channel = System.Threading.Channels.Channel;
+using Debug = UnityEngine.Debug;
 using Thread = System.Threading.Thread;
 
 namespace SpacetimeDB
@@ -128,7 +129,7 @@ namespace SpacetimeDB
 
         public ISpacetimeDBLogger Logger => logger;
         private ISpacetimeDBLogger logger;
-        private Stats stats;
+        public Stats stats;
 
         public static void CreateInstance(ISpacetimeDBLogger loggerToUse)
         {
@@ -639,27 +640,27 @@ namespace SpacetimeDB
 
         private void OnMessageProcessComplete(Message message, DateTime timestamp, List<DbOp> dbOps)
         {
-            stats.ParseMessageTracker.InsertRequest(DateTime.Now, timestamp - DateTime.Now, null);
+            
             switch (message.TypeCase)
             {
                 case Message.TypeOneofCase.SubscriptionUpdate:
                     onBeforeSubscriptionApplied?.Invoke();
+                    stats.ParseMessageTracker.InsertRequest(DateTime.UtcNow, DateTime.UtcNow - timestamp, "type=" + message.TypeCase.ToString());
                     stats.SubscriptionRequestTracker.FinishTrackingRequest(message.SubscriptionUpdate.RequestId);
                     break;
                 case Message.TypeOneofCase.TransactionUpdate:
                 {
+                    stats.ParseMessageTracker.InsertRequest(DateTime.UtcNow, DateTime.UtcNow - timestamp, "type=" + message.TypeCase.ToString() + ",reducer=" + message.TransactionUpdate.Event.FunctionCall.Reducer);
+                    stats.AllReducersTracker.InsertRequest(DateTime.UtcNow, TimeSpan.FromMilliseconds(message.TransactionUpdate.Event.HostExecutionDurationMicros / 1000.0d), "reducer=" + message.TransactionUpdate.Event.FunctionCall.Reducer);
                     var callerIdentity = Identity.From(message.TransactionUpdate.Event.CallerIdentity.ToByteArray());
                     if (callerIdentity == clientIdentity)
                     {
                         // This was a request that we initiated
-                        stats.ReducerRequestTracker.FinishTrackingRequest(message.TransactionUpdate.SubscriptionUpdate
-                            .RequestId);
-                    }
-                    else
-                    {
-                        var millisecondsAsDouble =
-                            (double)message.TransactionUpdate.Event.HostExecutionDurationMicros / 1000.0d;
-                        stats.RemoteRequestTracker.InsertRequest(DateTime.Now, TimeSpan.FromMilliseconds(millisecondsAsDouble), callerIdentity);
+                        if (!stats.ReducerRequestTracker.FinishTrackingRequest(message.TransactionUpdate.SubscriptionUpdate.RequestId))
+                        {
+                            logger.LogWarning("Failed to finish tracking reducer request: " +
+                                              message.TransactionUpdate.SubscriptionUpdate.RequestId);
+                        }
                     }
                 }
             
@@ -1002,7 +1003,7 @@ namespace SpacetimeDB
         // TODO: Delete this
         struct ReducerRequest
         {
-            public string reducer;
+            public string fn;
         }
         
         public void InternalCallReducer(string json)
@@ -1015,9 +1016,9 @@ namespace SpacetimeDB
 
             // TODO: this is completely reworked with Ingvar's PR to not use json
             var reducerRequest = Newtonsoft.Json.JsonConvert.DeserializeObject<ReducerRequest>(json);
-            json = json.Substring(0, json.LastIndexOf('}') - 1);
-            var requestId = stats.ReducerRequestTracker.StartTrackingRequest(reducerRequest.reducer);
-            webSocket.Send(Encoding.ASCII.GetBytes("{ \"call\": " + json + ", \"requestId\": " + requestId + "} }"));
+            json = json.Substring(0, json.LastIndexOf('}'));
+            var requestId = stats.ReducerRequestTracker.StartTrackingRequest(reducerRequest.fn);
+            webSocket.Send(Encoding.ASCII.GetBytes("{ \"call\": " + json + ", \"request_id\": " + requestId + "} }"));
         }
 
         public void Subscribe(List<string> queries)
@@ -1031,7 +1032,7 @@ namespace SpacetimeDB
             var json = JsonConvert.SerializeObject(queries);
             // should we use UTF8 here? ASCII is fragile.
             var requestId = stats.SubscriptionRequestTracker.StartTrackingRequest();
-            webSocket.Send(Encoding.ASCII.GetBytes("{ \"subscribe\": { \"query_strings\": " + json + ", \"requestId\": " + requestId + " } }"));
+            webSocket.Send(Encoding.ASCII.GetBytes("{ \"subscribe\": { \"query_strings\": " + json + ", \"request_id\": " + requestId + " } }"));
         }
 
         /// Usage: SpacetimeDBClient.instance.OneOffQuery<Message>("WHERE sender = \"bob\"");

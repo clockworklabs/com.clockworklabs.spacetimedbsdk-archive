@@ -205,7 +205,7 @@ class OnSendErrorMessage : MainThreadDispatch
                         return;
                     }
 
-                    var startReceive = DateTime.Now;
+                    var startReceive = DateTime.UtcNow;
                     var count = receiveResult.Count;
                     while (receiveResult.EndOfMessage == false)
                     {

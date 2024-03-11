@@ -93,8 +93,7 @@ namespace SpacetimeDB
         public Identity localIdentity;
         public Address localAddress;
 
-        public static Dictionary<string, Action<ClientApi.Event>> deserializeEventCache =
-            new Dictionary<string, Action<ClientApi.Event>>();
+        private Func<ClientApi.Event, ReducerEventBase> reducerEventFromDbEvent;
 
         private static Dictionary<Guid, Channel<OneOffQueryResponse>> waitingOneOffQueries =
             new Dictionary<Guid, Channel<OneOffQueryResponse>>();
@@ -121,7 +120,7 @@ namespace SpacetimeDB
             }
         }
 
-        public Type FindReducerType()
+        public Type FindReducerEventType()
         {
             // Get all loaded assemblies
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
@@ -132,10 +131,10 @@ namespace SpacetimeDB
                 // Get all types in the assembly
                 Type[] types = assembly.GetTypes();
 
-                // Search for the class with the attribute ReducerClass
+                // Search for the class implementing (subclassing) the ReducerEventBase abstract class.
                 foreach (Type type in types)
                 {
-                    if (type.GetCustomAttribute<ReducerClassAttribute>() != null)
+                    if (type.IsSubclassOf(typeof(ReducerEventBase)))
                     {
                         return type;
                     }
@@ -187,23 +186,14 @@ namespace SpacetimeDB
                 addTableGenericMethod.MakeGenericMethod(@class).Invoke(clientDB, null);
             }
 
-            var reducerType = FindReducerType();
-            if (reducerType != null)
+            var reducerEventType = FindReducerEventType();
+            if (reducerEventType != null)
             {
-                // cache all our reducer events by their function name
-                foreach (var methodInfo in reducerType.GetMethods())
-                {
-                    if (methodInfo.GetCustomAttribute<DeserializeEventAttribute>() is
-                        { } deserializeEvent)
-                    {
-                        deserializeEventCache.Add(deserializeEvent.FunctionName,
-                            methodInfo.CreateDelegate<Action<ClientApi.Event>>());
-                    }
-                }
+                reducerEventFromDbEvent = reducerEventType.GetMethod("FromDbEvent").CreateDelegate<Func<ClientApi.Event, ReducerEventBase>>();
             }
             else
             {
-                loggerToUse.LogError($"Could not find reducer type. Have you run spacetime generate?");
+                loggerToUse.LogError($"Could not find reducer event type. Have you run spacetime generate?");
             }
 
             _preProcessCancellationToken = _preProcessCancellationTokenSource.Token;
@@ -404,12 +394,8 @@ namespace SpacetimeDB
 
                         // Convert the generic event arguments in to a domain specific event object, this gets fed back into
                         // the message.TransactionUpdate.Event.FunctionCall.CallInfo field.
-                        if (message.TypeCase == Message.TypeOneofCase.TransactionUpdate &&
-                            deserializeEventCache.TryGetValue(message.TransactionUpdate.Event.FunctionCall.Reducer,
-                                out var deserializer))
-                        {
-                            deserializer.Invoke(message.TransactionUpdate.Event);
-                        }
+                        var dbEvent = message.TransactionUpdate.Event;
+                        dbEvent.FunctionCall.CallInfo = reducerEventFromDbEvent(dbEvent);
 
                         break;
                     case { TypeCase: Message.TypeOneofCase.OneOffQueryResponse, OneOffQueryResponse: var resp }:

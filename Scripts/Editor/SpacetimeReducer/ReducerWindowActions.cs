@@ -170,7 +170,7 @@ namespace SpacetimeDB.Editor
             // We have a new selection - when we run, we'll use this name
             // string selectedReducerName = obj.First().ToString();
             toggleActionCallBtnIfArityOk();
-            actionArgsTxt.Focus();
+            // actionArgsTxt.Focus(); // If someone wants to scroll down list, this will interrupt the UX
         }
 
         /// 0 args? Enable! Else, ensure some input. Else, disable.

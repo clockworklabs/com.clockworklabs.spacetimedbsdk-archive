@@ -26,7 +26,7 @@ namespace SpacetimeDB.Editor
         /// Eg: 3000
         public ushort UploadedToPort { get; private set; }
 
-        /// Not to be confused with UploadedToHost
+        /// Not to be confused with UploadedToHost. Eg: "123abc123abc123abc123abc123abc12"
         public string DatabaseAddressHash { get; private set; }
 
         public bool IsLocal { get; private set; }
@@ -80,7 +80,8 @@ namespace SpacetimeDB.Editor
                     onPublisherError(cliResult);
 
                 // Check for false-positive errs (that are more-so warnings)
-                this.IsSuccessfulPublish = CliOutput.Contains("Updated database with domain");
+                // "created new database with domain" || "updated database with domain"
+                this.IsSuccessfulPublish = CliOutput.Contains("database with domain");
                 if (!IsSuccessfulPublish)
                     return;
             }
@@ -203,11 +204,19 @@ namespace SpacetimeDB.Editor
         }
 
         /// This could either be from "created" or "updated" prompts.
-        /// Eg: "41c6f8bff828bb33356c6104b35efe45"
+        /// Eg: "123abc123abc123abc123abc123abc12"
         private string getDatabaseAddressHash()
         {
-            // Check for updated
-            const string updatedPattern = @"Updated database with domain:.+address: (\w+)";
+            // ###############################################################################################
+            // Created new database with domain: unity-server, address: 123abc123abc123abc123abc123abc12
+            // ###############################################################################################
+            // Updated database with domain: unity-server, address: 123abc123abc123abc123abc123abc12
+            // ###############################################################################################
+            
+            // We either updated or created
+            const string commonPattern = @"database with domain:.+address: (\w+)";
+            
+            string updatedPattern = $@"Updated {commonPattern}";
             Match match = Regex.Match(CliOutput, updatedPattern);
             if (match.Success)
             {
@@ -216,18 +225,12 @@ namespace SpacetimeDB.Editor
                 return match.Groups[1].Value;
             }
             
-            // Check for created
-            const string createdPattern = @"Created new database with address: (\S+)";
+            string createdPattern = $@"Created new {commonPattern}";
             match = Regex.Match(CliOutput, createdPattern);
             {
-                if (!match.Success)
-                    return match.Success ? match.Groups[1].Value : null; // fail - unknown
-
                 // Success - Created
                 this.PublishType = DbPublishType.Created;
                 return match.Groups[1].Value;
-
-                // Fail - Unknown
             }
         }
 

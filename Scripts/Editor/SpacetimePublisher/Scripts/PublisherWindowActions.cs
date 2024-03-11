@@ -465,6 +465,7 @@ namespace SpacetimeDB.Editor
 
             // Process result -> Update UI
             bool isSuccess = publishResult.IsSuccessfulPublish;
+            Debug.Log($"PublishAsync success: {isSuccess}");
             if (isSuccess)
                 onPublishSuccess(publishResult);
             else

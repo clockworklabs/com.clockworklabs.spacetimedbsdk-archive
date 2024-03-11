@@ -51,10 +51,16 @@ namespace SpacetimeDB.Editor
             public Dictionary<string, string> ElementName { get; set; }
         }
 
+        /// Only 1 child will exist: Builtin || CustomRefNum
         public class AlgebraicType
         {
+            /// When this exists, CustomRefNum !exists
             [JsonProperty("Builtin")]
             public Dictionary<string, object> Builtin { get; set; }
+
+            /// Only appears when there's a custom ref# (Builtin will !exist, when this exists)
+            [JsonProperty("Ref")]
+            public int? CustomRefNum;
         }
         #endregion // Child Classes
         

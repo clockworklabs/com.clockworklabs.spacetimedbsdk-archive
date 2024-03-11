@@ -8,7 +8,7 @@ namespace SpacetimeDB
         public SpacetimeDB.Address? CallerAddress { get; }
         public string ErrMessage { get; }
         public ClientApi.Event.Types.Status Status { get; }
-        protected object Args;
+        public object Args;
 
         public ReducerEventBase(ClientApi.Event dbEvent, object args)
         {

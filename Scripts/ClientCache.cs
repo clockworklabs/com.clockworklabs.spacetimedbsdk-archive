@@ -71,14 +71,10 @@ namespace SpacetimeDB
         {
             string name = typeof(T).Name;
 
-            if (tables.ContainsKey(name))
+            if (!tables.TryAdd(name, TableCache.Create<T>()))
             {
                 SpacetimeDBClient.instance.Logger.LogError($"Table with name already exists: {name}");
-                return;
             }
-
-            // Initialize this table
-            tables[name] = TableCache.Create<T>();
         }
 
         public TableCache? GetTable(string name)

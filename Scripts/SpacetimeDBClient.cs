@@ -167,7 +167,7 @@ namespace SpacetimeDB
         {
             public Message message;
             public List<DbOp> dbOps;
-            public Dictionary<string, HashSet<byte[]>> inserts;
+            public Dictionary<System.Type, HashSet<byte[]>> inserts;
         }
 
         private readonly BlockingCollection<byte[]> _messageQueue =
@@ -202,16 +202,16 @@ namespace SpacetimeDB
                 var message = Message.Parser.ParseFrom(bytes);
 
                 // This is all of the inserts
-                Dictionary<string, HashSet<byte[]>> subscriptionInserts = null;
+                Dictionary<System.Type, HashSet<byte[]>> subscriptionInserts = null;
                 // All row updates that have a primary key, this contains inserts, deletes and updates.
-                var primaryKeyChanges = new Dictionary<(string tableName, object primaryKeyValue), DbOp>();
+                var primaryKeyChanges = new Dictionary<(System.Type tableType, object primaryKeyValue), DbOp>();
 
-                HashSet<byte[]> GetInsertHashSet(string tableName, int tableSize)
+                HashSet<byte[]> GetInsertHashSet(System.Type tableType, int tableSize)
                 {
-                    if (!subscriptionInserts.TryGetValue(tableName, out var hashSet))
+                    if (!subscriptionInserts.TryGetValue(tableType, out var hashSet))
                     {
                         hashSet = new HashSet<byte[]>(capacity: tableSize, comparer: ByteArrayComparer.Instance);
-                        subscriptionInserts[tableName] = hashSet;
+                        subscriptionInserts[tableType] = hashSet;
                     }
 
                     return hashSet;
@@ -220,14 +220,14 @@ namespace SpacetimeDB
                 switch (message)
                 {
                     case { TypeCase: Message.TypeOneofCase.SubscriptionUpdate, SubscriptionUpdate: var subscriptionUpdate }:
-                        subscriptionInserts = new Dictionary<string, HashSet<byte[]>>(
+                        subscriptionInserts = new Dictionary<System.Type, HashSet<byte[]>>(
                             capacity: subscriptionUpdate.TableUpdates.Sum(a => a.TableRowOperations.Count));
                         // First apply all of the state
                         foreach (var update in subscriptionUpdate.TableUpdates)
                         {
                             var tableName = update.TableName;
-                            var hashSet = GetInsertHashSet(tableName, subscriptionUpdate.TableUpdates.Count);
                             var table = clientDB.GetTable(tableName);
+                            var hashSet = GetInsertHashSet(table.ClientTableType, subscriptionUpdate.TableUpdates.Count);
                             if (table == null)
                             {
                                 logger.LogError($"Unknown table name: {tableName}");
@@ -305,7 +305,7 @@ namespace SpacetimeDB
                                 {
                                     op.primaryKeyValue = objWithPk.GetPrimaryKeyValue();
 
-                                    var key = (tableName, op.primaryKeyValue);
+                                    var key = (table.ClientTableType, op.primaryKeyValue);
 
                                     if (primaryKeyChanges.TryGetValue(key, out var oldOp))
                                     {
@@ -416,7 +416,7 @@ namespace SpacetimeDB
                 {
                     foreach (var table in clientDB.GetTables())
                     {
-                        if (!preProcessedMessage.inserts.TryGetValue(table.Name, out var hashSet))
+                        if (!preProcessedMessage.inserts.TryGetValue(table.ClientTableType, out var hashSet))
                         {
                             continue;
                         }

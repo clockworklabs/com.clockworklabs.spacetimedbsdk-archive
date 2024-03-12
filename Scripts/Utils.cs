@@ -2,6 +2,13 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
+// This attribute is recognised by C# compilers but doesn't exist in .NET standard.
+namespace System.Runtime.CompilerServices
+{
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class ModuleInitializerAttribute : Attribute { }
+}
+
 namespace SpacetimeDB
 {
     // Helpful utilities from .NET that don't exist in .NET standard.

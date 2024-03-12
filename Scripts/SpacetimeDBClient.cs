@@ -596,7 +596,6 @@ namespace SpacetimeDB
             var updateCount = dbOps.Count;
             for (var i = 0; i < updateCount; i++)
             {
-                var tableName = dbOps[i].table.ClientTableType.Name;
                 var tableOp = dbOps[i].op;
                 var oldValue = dbOps[i].oldValue;
                 var newValue = dbOps[i].newValue;

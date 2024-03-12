@@ -18,66 +18,237 @@ namespace SpacetimeDB.Editor
         /// Curry sync Actions from UI => to async Tasks
         private void setOnActionEvents()
         {
-            topBannerBtn.clicked += onTopBannerBtnClick;
+            if (topBannerBtn != null)
+            {
+                topBannerBtn.clicked += onTopBannerBtnClick;
+            }
+            if (serverSelectedDropdown != null)
+            {
+                // Show if !null
+                serverSelectedDropdown.RegisterValueChangedCallback(
+                    onServerSelectedDropdownChangedAsync);
+            }
+            if (serverAddNewShowUiBtn != null)
+            {
+                // Toggle reveals the "new server" groupbox UI
+                serverAddNewShowUiBtn.clicked += onServerAddNewShowUiBtnClick;
+            }
+            if (serverNicknameTxt != null)
+            {
+                // Replace spaces with dashes
+                serverNicknameTxt.RegisterValueChangedCallback(
+                    onServerNicknameTxtChanged);
+            }
+            if (serverNicknameTxt != null)
+            {
+                serverNicknameTxt.RegisterCallback<FocusOutEvent>(
+                    onServerNicknameFocusOut);
+            }
+            if (serverHostTxt != null)
+            {
+                // If valid, enable Add New Server btn
+                serverHostTxt.RegisterCallback<FocusOutEvent>(
+                    onServerHostTxtFocusOut);
+            }
+            if (serverAddBtn != null)
+            {
+                // Add new newServer
+                serverAddBtn.clicked += onServerAddBtnClickAsync;
+            }
+            if (identitySelectedDropdown != null)
+            {
+                // Show if !null
+                identitySelectedDropdown.RegisterValueChangedCallback(
+                    onIdentitySelectedDropdownChangedAsync);
+            }
+            if (identityAddNewShowUiBtn != null)
+            {
+                // Toggle reveals the "new identity" groupbox UI
+                identityAddNewShowUiBtn.clicked += onIdentityAddNewShowUiBtnClick;
+            }
+            if (identityNicknameTxt != null)
+            {
+                // Replace spaces with dashes
+                identityNicknameTxt.RegisterValueChangedCallback(
+                    onIdentityNicknameTxtChanged);
+            }
+            if (identityNicknameTxt != null)
+            {
+                identityNicknameTxt.RegisterCallback<FocusOutEvent>(
+                    onIdentityNicknameFocusOut);
+            }
+            if (identityEmailTxt != null)
+            {
+                // Normalize email chars
+                identityEmailTxt.RegisterValueChangedCallback(
+                    onIdentityEmailTxtChanged);
+            }
+            if (identityEmailTxt != null)
+            {
+                // If valid, enable Add New Identity btn
+                identityEmailTxt.RegisterCallback<FocusOutEvent>(
+                    onIdentityEmailTxtFocusOut);
+            }
+            if (identityAddBtn != null)
+            {
+                // Add new newIdentity
+                identityAddBtn.clicked += onIdentityAddBtnClickAsync;
+            }
             
-            serverSelectedDropdown.RegisterValueChangedCallback(onServerSelectedDropdownChangedAsync); // Show if !null
-            serverAddNewShowUiBtn.clicked += onServerAddNewShowUiBtnClick; // Toggle reveals the "new server" groupbox UI
-            serverNicknameTxt.RegisterValueChangedCallback(onServerNicknameTxtChanged); // Replace spaces with dashes
-            serverNicknameTxt.RegisterCallback<FocusOutEvent>(onServerNicknameFocusOut);
-            serverHostTxt.RegisterCallback<FocusOutEvent>(onServerHostTxtFocusOut); // If valid, enable Add New Server btn
-            serverAddBtn.clicked += onServerAddBtnClickAsync; // Add new newServer
+            if (publishModulePathTxt != null)
+            {
+                // For init only
+                publishModulePathTxt.RegisterValueChangedCallback(
+                    onPublishModulePathTxtInitChanged);
+            }
+            if (publishModulePathTxt != null)
+            {
+                // If !empty, Reveal next UI grou
+                publishModulePathTxt.RegisterCallback<FocusOutEvent>(
+                    onPublishModulePathTxtFocusOut);
+            }
+            if (publishPathSetDirectoryBtn != null)
+            {
+                // Show folder dialog -> Set path label
+                publishPathSetDirectoryBtn.clicked += OnPublishPathSetDirectoryBtnClick;
+            }
+            if (publishModuleNameTxt != null)
+            {
+                // Suggest module name if empty
+                publishModuleNameTxt.RegisterCallback<FocusOutEvent>(
+                    onPublishModuleNameTxtFocusOut);
+            }
+            if (publishModuleNameTxt != null)
+            {
+                // Replace spaces with dashes
+                publishModuleNameTxt.RegisterValueChangedCallback(
+                    onPublishModuleNameTxtChanged);
+            }
+            if (publishBtn != null)
+            {
+                // Start publishAsync chain
+                publishBtn.clicked += onPublishBtnClickAsync;
+            }
+            if (publishCancelBtn != null)
+            {
+                // Cancel publishAsync chain
+                publishCancelBtn.clicked += onCancelPublishBtnClick;
+            }
             
-            identitySelectedDropdown.RegisterValueChangedCallback(onIdentitySelectedDropdownChangedAsync); // Show if !null
-            identityAddNewShowUiBtn.clicked += onIdentityAddNewShowUiBtnClick; // Toggle reveals the "new identity" groupbox UI
-            identityNicknameTxt.RegisterValueChangedCallback(onIdentityNicknameTxtChanged); // Replace spaces with dashes
-            identityNicknameTxt.RegisterCallback<FocusOutEvent>(onIdentityNicknameFocusOut);
-            identityEmailTxt.RegisterValueChangedCallback(onIdentityEmailTxtChanged); // Normalize email chars
-            identityEmailTxt.RegisterCallback<FocusOutEvent>(onIdentityEmailTxtFocusOut); // If valid, enable Add New Identity btn
-            identityAddBtn.clicked += onIdentityAddBtnClickAsync; // Add new newIdentity
-            
-            publishModulePathTxt.RegisterValueChangedCallback(onPublishModulePathTxtInitChanged); // For init only
-            publishModulePathTxt.RegisterCallback<FocusOutEvent>(onPublishModulePathTxtFocusOut); // If !empty, Reveal next UI grou
-            publishPathSetDirectoryBtn.clicked += OnPublishPathSetDirectoryBtnClick; // Show folder dialog -> Set path label
-            publishModuleNameTxt.RegisterCallback<FocusOutEvent>(onPublishModuleNameTxtFocusOut); // Suggest module name if empty
-            publishModuleNameTxt.RegisterValueChangedCallback(onPublishModuleNameTxtChanged); // Replace spaces with dashes
-            publishBtn.clicked += onPublishBtnClickAsync; // Start publishAsync chain
-            publishCancelBtn.clicked += onCancelPublishBtnClick; // Cancel publishAsync chain
-            
-            // Show [Install Package] btn if !optimized
-            publishResultIsOptimizedBuildToggle.RegisterValueChangedCallback(
-                onPublishResultIsOptimizedBuildToggleChanged);
-            installWasmOptBtn.clicked += onInstallWasmOptBtnClick; // Curry to an async Task => install `wasm-opt` npm pkg
+            if (publishResultIsOptimizedBuildToggle != null)
+            {
+                // Show [Install Package] btn if !optimized
+                publishResultIsOptimizedBuildToggle.RegisterValueChangedCallback(
+                    onPublishResultIsOptimizedBuildToggleChanged);
+            }
+            if (installWasmOptBtn != null)
+            {
+                // Curry to an async Task => install `wasm-opt` npm pkg
+                installWasmOptBtn.clicked += onInstallWasmOptBtnClick;
+            }
         }
         
         /// Cleanup: This should parity the opposite of setOnActionEvents()
         private void unsetOnActionEvents()
         {
-            topBannerBtn.clicked -= onTopBannerBtnClick;
-            
-            serverSelectedDropdown.UnregisterValueChangedCallback(onServerSelectedDropdownChangedAsync); // Show if !null
-            serverAddNewShowUiBtn.clicked -= onServerAddNewShowUiBtnClick; // Toggle reveals the "new server" groupbox UI
-            serverNicknameTxt.UnregisterValueChangedCallback(onServerNicknameTxtChanged); // Replace spaces with dashes
-            serverNicknameTxt.UnregisterCallback<FocusOutEvent>(onServerNicknameFocusOut);
-            serverHostTxt.UnregisterCallback<FocusOutEvent>(onServerHostTxtFocusOut); // If valid, enable Add New Server btn
-            serverAddBtn.clicked -= onServerAddBtnClickAsync; // Add new newServer
-             
-            identitySelectedDropdown.RegisterValueChangedCallback(onIdentitySelectedDropdownChangedAsync);
-            identityNicknameTxt.UnregisterValueChangedCallback(onIdentityNicknameTxtChanged);
-            identityNicknameTxt.UnregisterCallback<FocusOutEvent>(onIdentityNicknameFocusOut);
-            identityEmailTxt.UnregisterValueChangedCallback(onIdentityEmailTxtChanged);
-            identityEmailTxt.UnregisterCallback<FocusOutEvent>(onIdentityEmailTxtFocusOut);
-            identityAddBtn.clicked -= onIdentityAddBtnClickAsync;
-            
-            publishModulePathTxt.UnregisterValueChangedCallback(onPublishModulePathTxtInitChanged); // For init only; likely already unsub'd itself
-            publishModulePathTxt.UnregisterCallback<FocusOutEvent>(onPublishModulePathTxtFocusOut);
-            publishPathSetDirectoryBtn.clicked -= OnPublishPathSetDirectoryBtnClick;
-            publishModuleNameTxt.UnregisterCallback<FocusOutEvent>(onPublishModuleNameTxtFocusOut);
-            publishModuleNameTxt.UnregisterValueChangedCallback(onPublishModuleNameTxtChanged);
-            publishBtn.clicked -= onPublishBtnClickAsync;
-            
-            publishResultIsOptimizedBuildToggle.UnregisterValueChangedCallback(
-                onPublishResultIsOptimizedBuildToggleChanged);
-            installWasmOptBtn.clicked -= onInstallWasmOptBtnClick;
+            if (topBannerBtn != null)
+            {
+                topBannerBtn.clicked -= onTopBannerBtnClick;
+            }
+            if (serverSelectedDropdown != null) 
+            {
+                serverSelectedDropdown.UnregisterValueChangedCallback(
+                    onServerSelectedDropdownChangedAsync);
+            }
+            if (serverAddNewShowUiBtn != null) 
+            {
+                serverAddNewShowUiBtn.clicked -= onServerAddNewShowUiBtnClick;
+            }
+            if (serverNicknameTxt != null) 
+            {
+                serverNicknameTxt.UnregisterValueChangedCallback(
+                    onServerNicknameTxtChanged);
+            }
+            if (serverNicknameTxt != null) 
+            {
+                serverNicknameTxt.UnregisterCallback<FocusOutEvent>(
+                    onServerNicknameFocusOut);
+            }
+            if (serverHostTxt != null)
+            {
+                serverHostTxt.UnregisterCallback<FocusOutEvent>(
+                    onServerHostTxtFocusOut);
+            }
+            if (serverAddBtn != null)
+            {
+                serverAddBtn.clicked -= onServerAddBtnClickAsync;
+            }
+            if (identitySelectedDropdown != null)
+            {
+                identitySelectedDropdown.RegisterValueChangedCallback(
+                    onIdentitySelectedDropdownChangedAsync);
+            }
+            if (identityNicknameTxt != null)
+            {
+                identityNicknameTxt.UnregisterValueChangedCallback(
+                    onIdentityNicknameTxtChanged);
+            }
+            if (identityNicknameTxt != null)
+            {
+                identityNicknameTxt.UnregisterCallback<FocusOutEvent>(
+                    onIdentityNicknameFocusOut);
+            }
+            if (identityEmailTxt != null)
+            {
+                identityEmailTxt.UnregisterValueChangedCallback(
+                    onIdentityEmailTxtChanged);
+            }
+            if (identityEmailTxt != null)
+            {
+                identityEmailTxt.UnregisterCallback<FocusOutEvent>(
+                    onIdentityEmailTxtFocusOut);
+            }
+            if (identityAddBtn != null)
+            {
+                identityAddBtn.clicked -= onIdentityAddBtnClickAsync;
+            }
+            if (publishModulePathTxt != null)
+            {
+                // For init only; likely already unsub'd itself
+                publishModulePathTxt.UnregisterValueChangedCallback(
+                    onPublishModulePathTxtInitChanged);
+            }
+            if (publishModulePathTxt != null)
+            {
+                publishModulePathTxt.UnregisterCallback<FocusOutEvent>(
+                    onPublishModulePathTxtFocusOut);
+            }
+            if (publishPathSetDirectoryBtn != null)
+            {
+                publishPathSetDirectoryBtn.clicked -= OnPublishPathSetDirectoryBtnClick;
+            }
+            if (publishModuleNameTxt != null)
+            {
+                publishModuleNameTxt.UnregisterCallback<FocusOutEvent>(
+                    onPublishModuleNameTxtFocusOut);
+            }
+            if (publishModuleNameTxt != null)
+            {
+                publishModuleNameTxt.UnregisterValueChangedCallback(onPublishModuleNameTxtChanged);
+            }
+            if (publishBtn != null)
+            {
+                publishBtn.clicked -= onPublishBtnClickAsync;
+            }
+            if (publishResultIsOptimizedBuildToggle != null)
+            {
+                publishResultIsOptimizedBuildToggle.UnregisterValueChangedCallback(
+                    onPublishResultIsOptimizedBuildToggleChanged);
+            }
+            if (installWasmOptBtn != null)
+            {
+                installWasmOptBtn.clicked -= onInstallWasmOptBtnClick;
+            }
         }
 
         /// Cleanup when the UI is out-of-scope

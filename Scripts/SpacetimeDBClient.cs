@@ -14,7 +14,6 @@ using SpacetimeDB.BSATN;
 using Channel = System.Threading.Channels.Channel;
 using Thread = System.Threading.Thread;
 using Google.Protobuf;
-using UnityEngine;
 using Event = ClientApi.Event;
 
 namespace SpacetimeDB

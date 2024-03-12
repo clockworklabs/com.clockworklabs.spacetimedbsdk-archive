@@ -14,11 +14,6 @@ namespace SpacetimeDB
     // Helpful utilities from .NET that don't exist in .NET standard.
     internal static class NetExtensions
     {
-        public static T CreateDelegate<T>(this System.Reflection.MethodInfo methodInfo) where T : Delegate
-        {
-            return (T)methodInfo.CreateDelegate(typeof(T));
-        }
-
         public static void AddBytes(this HashCode hashCode, ReadOnlySpan<byte> value)
         {
             foreach (var b in value)

@@ -89,13 +89,19 @@ namespace SpacetimeDB
         private SpacetimeDB.WebSocket webSocket;
         private bool connectionClosed;
         public static ClientCache clientDB = new();
-        public Identity localIdentity;
-        public Address localAddress;
 
-        private Func<ClientApi.Event, ReducerEventBase> reducerEventFromDbEvent;
+        private static Func<ClientApi.Event, ReducerEventBase> reducerEventFromDbEvent;
 
-        private static Dictionary<Guid, Channel<OneOffQueryResponse>> waitingOneOffQueries =
-            new Dictionary<Guid, Channel<OneOffQueryResponse>>();
+        public static void SetReducerEventFromDbEvent(Func<ClientApi.Event, ReducerEventBase> reducerEventFromDbEvent_)
+        {
+            if (reducerEventFromDbEvent != null)
+            {
+                throw new Exception("Another module has already called SetReducerEventFromDbEvent!");
+            }
+            reducerEventFromDbEvent = reducerEventFromDbEvent_;
+        }
+
+        private readonly Dictionary<Guid, Channel<OneOffQueryResponse>> waitingOneOffQueries = new();
 
         private bool isClosing;
         private Thread networkMessageProcessThread;
@@ -119,18 +125,11 @@ namespace SpacetimeDB
             }
         }
 
-        public Type FindReducerEventType()
-        {
-            var reducerEventBase = typeof(ReducerEventBase);
-            return AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes())
-                .SingleOrDefault(p => p.IsSubclassOf(reducerEventBase));
-        }
-
         protected SpacetimeDBClient(ISpacetimeDBLogger loggerToUse)
         {
             if (instance != null)
             {
-                loggerToUse.LogError($"There is more than one {GetType()}");
+                loggerToUse.LogError($"There is more than one {nameof(SpacetimeDBClient)}");
                 return;
             }
 
@@ -150,12 +149,7 @@ namespace SpacetimeDB
             webSocket.OnConnectError += (a, b) => onConnectError?.Invoke(a, b);
             webSocket.OnSendError += a => onSendError?.Invoke(a);
 
-            var reducerEventType = FindReducerEventType();
-            if (reducerEventType != null)
-            {
-                reducerEventFromDbEvent = reducerEventType.GetMethod("FromDbEvent").CreateDelegate<Func<ClientApi.Event, ReducerEventBase>>();
-            }
-            else
+            if (reducerEventFromDbEvent == null)
             {
                 loggerToUse.LogError($"Could not find reducer event type. Have you run spacetime generate?");
             }

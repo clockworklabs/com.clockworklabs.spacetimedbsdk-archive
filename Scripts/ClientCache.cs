@@ -62,14 +62,6 @@ namespace SpacetimeDB
                 SpacetimeDBClient.instance.Logger.LogWarning("Deleting value that we don't have (no cached value available)");
                 return false;
             }
-
-            /// <summary>
-            /// Gets a value from the table
-            /// </summary>
-            /// <param name="rowBytes">The primary key that uniquely identifies this row</param>
-            /// <param name="value">Output: the parsed domain type corresponding to the <paramref>rowBytes</paramref>, or <c>null</c> if the row was not present in the cache.</param>
-            /// <returns>True if and only if the value is resident and was stored in <paramref>value</paramref>.</returns>
-            public bool TryGetValue(byte[] rowBytes, out IDatabaseTable? value) => entries.TryGetValue(rowBytes, out value);
         }
 
         private readonly ConcurrentDictionary<string, TableCache> tables = new();

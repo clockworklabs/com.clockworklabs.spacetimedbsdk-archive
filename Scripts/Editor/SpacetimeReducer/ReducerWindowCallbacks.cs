@@ -15,26 +15,71 @@ namespace SpacetimeDB.Editor
         /// Curry sync Actions from UI => to async Tasks
         private void setOnActionEvents()
         {
-            topBannerBtn.clicked += onTopBannerBtnClick; // Launches Module docs website
-            actionsCallReducerBtn.clicked += ActionsCallReducerBtnClickAsync; // Run the reducer via CLI
-            actionArgsTxt.RegisterValueChangedCallback(onActionTxtValueChanged); // Toggles the Run btn
-            refreshReducersBtn.clicked += onRefreshReducersBtnClickAsync; // Refresh reducers tree view live from cli
-
-            reducersTreeView.bindItem = onBindReducersTreeViewItem; // No need to unsub // Populates the Adds _entityStructure nickname to element
-            reducersTreeView.makeItem = onMakeReducersTreeViewItem; // No need to unsub // Creates a new VisualElement within the tree view on new item
-            reducersTreeView.selectedIndicesChanged += onReducerTreeViewIndicesChanged; // Selected multiple reducers from tree
-            reducersTreeView.selectionChanged += onReducerTreeViewSelectionChanged; // Single reducer selected from tree
+            if (topBannerBtn != null)
+            {
+                // Launches Module docs website
+                topBannerBtn.clicked += onTopBannerBtnClick;
+            }
+            if (actionsCallReducerBtn != null)
+            {
+                // Run the reducer via CLI
+                actionsCallReducerBtn.clicked += ActionsCallReducerBtnClickAsync;
+            }
+            if (actionArgsTxt != null)
+            {
+                // Toggles the Run btn
+                actionArgsTxt.RegisterValueChangedCallback(onActionTxtValueChanged);
+            }
+            if (refreshReducersBtn != null)
+            {
+                // Refresh reducers tree view live from cli
+                refreshReducersBtn.clicked += onRefreshReducersBtnClickAsync;
+            }
+            if (reducersTreeView != null)
+            {
+                // No need to unsub - Populates the Adds _entityStructure nickname to element
+                reducersTreeView.bindItem = onBindReducersTreeViewItem;
+            }
+            if (reducersTreeView != null)
+            {
+                // No need to unsub - Creates a new VisualElement within the tree view on new item
+                reducersTreeView.makeItem = onMakeReducersTreeViewItem;
+            }
+            if (reducersTreeView != null)
+            {
+                // Selected multiple reducers from tree
+                reducersTreeView.selectedIndicesChanged += onReducerTreeViewIndicesChanged;
+            }
+            if (reducersTreeView != null)
+            {
+                // Single reducer selected from tree
+                reducersTreeView.selectionChanged += onReducerTreeViewSelectionChanged;
+            }
         }
 
         /// Cleanup: This should parity the opposite of setOnActionEvents()
         private void unsetOnActionEvents()
         {
-            topBannerBtn.clicked -= onTopBannerBtnClick;
-            actionsCallReducerBtn.clicked -= ActionsCallReducerBtnClickAsync;
-            refreshReducersBtn.clicked -= onRefreshReducersBtnClickAsync;
-
-            reducersTreeView.selectedIndicesChanged -= onReducerTreeViewIndicesChanged; // Selected multiple reducers from tree
-            reducersTreeView.selectionChanged -= onReducerTreeViewSelectionChanged;
+            if (topBannerBtn != null)
+            {
+                topBannerBtn.clicked -= onTopBannerBtnClick;
+            }
+            if (actionsCallReducerBtn != null)
+            {
+                actionsCallReducerBtn.clicked -= ActionsCallReducerBtnClickAsync;
+            }
+            if (refreshReducersBtn != null)
+            {
+                refreshReducersBtn.clicked -= onRefreshReducersBtnClickAsync;
+            }
+            if (reducersTreeView != null)
+            {
+                reducersTreeView.selectedIndicesChanged -= onReducerTreeViewIndicesChanged;
+            }
+            if (reducersTreeView != null)
+            {
+                reducersTreeView.selectionChanged -= onReducerTreeViewSelectionChanged;
+            }
         }
 
         /// Cleanup when the UI is out-of-scope

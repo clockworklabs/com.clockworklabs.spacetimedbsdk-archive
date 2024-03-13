@@ -14,14 +14,6 @@ namespace SpacetimeDB
     // Helpful utilities from .NET that don't exist in .NET standard.
     internal static class NetExtensions
     {
-        public static void AddBytes(this HashCode hashCode, ReadOnlySpan<byte> value)
-        {
-            foreach (var b in value)
-            {
-                hashCode.Add(b);
-            }
-        }
-
         public static class Convert
         {
             public static string ToHexString(byte[] bytes) => BitConverter.ToString(bytes).Replace("-", "");

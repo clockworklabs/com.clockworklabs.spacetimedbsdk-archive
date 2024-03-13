@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:GroupBox name="installCliGroupBox">
+        <ui:ProgressBar value="5" title="Installing SpacetimeDB CLI ..." name="installCliProgressBar" tooltip="Allows for the `spacetime` CLI command" low-value="5" style="display: flex;" />
+        <ui:Label tabindex="-1" text="{installCliStatusTxt}" parse-escape-sequences="true" display-tooltip-when-elided="true" name="installCliStatusLabel" style="color: rgb(182, 192, 207); font-size: 14px; -unity-text-align: upper-center; display: flex; white-space: normal; -unity-font-style: normal;" />
+    </ui:GroupBox>
+</ui:UXML>

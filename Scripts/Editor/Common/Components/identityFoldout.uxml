@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:Foldout text="&lt;b&gt;Identity&lt;/b&gt;" name="identityFoldout" view-data-key="identityFoldout" value="true" style="display: flex; -unity-font-style: normal;">
+        <ui:VisualElement name="selectedIdentityHoriz" style="flex-grow: 1; flex-direction: row;">
+            <ui:DropdownField label="Selected Identity" index="-1" choices="System.Collections.Generic.List`1[System.String]" name="identitySelectedDropdown" tooltip="This will change between target server hosts" style="flex-grow: 1;" />
+            <ui:Button text="+" parse-escape-sequences="true" display-tooltip-when-elided="true" name="identityAddNewShowUiBtn" tooltip="Add new identity" style="flex-grow: 0; flex-shrink: 0; -unity-font-style: bold;" />
+        </ui:VisualElement>
+        <ui:GroupBox name="identityNewGroupBox" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;">
+            <ui:TextField picking-mode="Ignore" label="Nickname:" name="identityNicknameTxt" multiline="false" tooltip="Mapped to your DB Address, which is mapped to your server. Identities are bound per-server (not universal)." readonly="false" keyboard-type="ASCIICapable" />
+            <ui:TextField picking-mode="Ignore" label="Email:" name="identityEmailTxt" multiline="false" tooltip="You don&apos;t need to confirm this. Aliases(+) are ok." readonly="false" keyboard-type="EmailAddress" />
+            <ui:Button text="Add Identity" parse-escape-sequences="true" display-tooltip-when-elided="true" name="identityAddBtn" tooltip="Create a new, default newIdentity for the selected server" style="height: 25px; padding-bottom: 2px;" />
+            <ui:Label tabindex="-1" text="{identityStatusLabel}" parse-escape-sequences="true" display-tooltip-when-elided="true" name="identityStatusLabel" style="color: rgb(182, 192, 207); font-size: 14px; -unity-text-align: upper-center; display: flex; white-space: normal; -unity-font-style: normal;" />
+        </ui:GroupBox>
+    </ui:Foldout>
+</ui:UXML>

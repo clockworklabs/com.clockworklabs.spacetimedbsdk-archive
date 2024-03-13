@@ -1,0 +1,4 @@
+#PublishResultIsOptimizedBuildToggle > Label:disabled {
+    color: rgb(76, 244, 144);
+    opacity: 1;
+}

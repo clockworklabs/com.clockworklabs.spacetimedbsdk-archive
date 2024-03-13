@@ -1,13 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-// This attribute is recognised by C# compilers but doesn't exist in .NET standard.
+#if UNITY_5_3_OR_NEWER
+// This attribute is recognised by C# compilers either way but doesn't exist in Unity runtime.
 namespace System.Runtime.CompilerServices
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class ModuleInitializerAttribute : Attribute { }
 }
+#endif
 
 namespace SpacetimeDB
 {

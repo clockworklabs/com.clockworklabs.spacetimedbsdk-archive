@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -69,9 +69,12 @@ namespace SpacetimeDB
 
         public int GetHashCode(byte[] obj)
         {
-            var hash = new HashCode();
-            hash.AddBytes(obj);
-            return hash.ToHashCode();
+            int hash = 17;
+            foreach (byte b in obj)
+            {
+                hash = hash * 31 + b;
+            }
+            return hash;
         }
     }
 }

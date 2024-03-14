@@ -1,7 +1,0 @@
-#actionTxt > Label {
-    margin-right: -80px;
-    margin-left: -19.5px;
-}
-
-#unity-content-container Label {
-}

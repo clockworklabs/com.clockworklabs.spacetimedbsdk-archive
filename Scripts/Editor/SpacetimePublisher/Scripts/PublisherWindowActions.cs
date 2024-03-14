@@ -456,7 +456,8 @@ namespace SpacetimeDB.Editor
 
             PublishRequest publishRequest = new(
                 publishModuleNameTxt.value, 
-                publishModulePathTxt.value);
+                publishModulePathTxt.value,
+                publishModuleClearDataToggle.value);
             
             // Run CLI cmd [can cancel]
             PublishResult publishResult = await SpacetimeDbPublisherCli.PublishAsync(

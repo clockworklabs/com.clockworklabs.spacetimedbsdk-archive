@@ -60,10 +60,11 @@ namespace SpacetimeDB.Editor
         private TextField publishModuleNameTxt; // Always has a val (fallback system)
 
         private GroupBox publishGroupBox;
-        private ProgressBar publishInstallProgressBar;
-        private Label publishStatusLabel;
+        private Toggle publishModuleClearDataToggle;
         private Button publishBtn;
         private Button publishCancelBtn;
+        private ProgressBar publishInstallProgressBar;
+        private Label publishStatusLabel;
 
         private TextField publishResultDateTimeTxt; // readonly
         private Foldout publishResultFoldout;
@@ -173,11 +174,12 @@ namespace SpacetimeDB.Editor
             publishModulePathTxt = rootVisualElement.Q<TextField>(nameof(publishModulePathTxt));
 
             publishGroupBox = rootVisualElement.Q<GroupBox>(nameof(publishGroupBox));
-            publishInstallProgressBar = rootVisualElement.Q<ProgressBar>(nameof(publishInstallProgressBar));
-            publishStatusLabel = rootVisualElement.Q<Label>(nameof(publishStatusLabel));
+            publishModuleClearDataToggle = rootVisualElement.Q<Toggle>(nameof(publishModuleClearDataToggle));
             publishBtn = rootVisualElement.Q<Button>(nameof(publishBtn));
             publishCancelBtn = rootVisualElement.Q<Button>(nameof(publishCancelBtn));
-            
+            publishInstallProgressBar = rootVisualElement.Q<ProgressBar>(nameof(publishInstallProgressBar));
+            publishStatusLabel = rootVisualElement.Q<Label>(nameof(publishStatusLabel));
+
             publishResultDateTimeTxt = rootVisualElement.Q<TextField>(nameof(publishResultDateTimeTxt));
             publishResultFoldout = rootVisualElement.Q<Foldout>(nameof(publishResultFoldout));
             publishResultHostTxt = rootVisualElement.Q<TextField>(nameof(publishResultHostTxt));
@@ -225,11 +227,12 @@ namespace SpacetimeDB.Editor
                 Assert.IsNotNull(publishModuleNameTxt, $"Expected `#{nameof(publishModuleNameTxt)}`");
                 
                 Assert.IsNotNull(publishGroupBox, $"Expected `#{nameof(publishGroupBox)}`");
-                Assert.IsNotNull(publishInstallProgressBar, $"Expected `#{nameof(publishInstallProgressBar)}`");
-                Assert.IsNotNull(publishStatusLabel, $"Expected `#{nameof(publishStatusLabel)}`");
+                Assert.IsNotNull(publishModuleClearDataToggle, $"Expected `#{nameof(publishModuleClearDataToggle)}`");
                 Assert.IsNotNull(publishBtn, $"Expected `#{nameof(publishBtn)}`");
                 Assert.IsNotNull(publishCancelBtn, $"Expected `#{nameof(publishCancelBtn)}`");
-                
+                Assert.IsNotNull(publishInstallProgressBar, $"Expected `#{nameof(publishInstallProgressBar)}`");
+                Assert.IsNotNull(publishStatusLabel, $"Expected `#{nameof(publishStatusLabel)}`");
+
                 Assert.IsNotNull(publishResultDateTimeTxt, $"Expected `#{nameof(publishResultDateTimeTxt)}`");
                 Assert.IsNotNull(publishResultFoldout, $"Expected `#{nameof(publishResultFoldout)}`");
                 Assert.IsNotNull(publishResultHostTxt, $"Expected `#{nameof(publishResultHostTxt)}`");

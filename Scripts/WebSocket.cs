@@ -240,7 +240,10 @@ class OnSendErrorMessage : MainThreadDispatch
 
         public Task Close(WebSocketCloseStatus code = WebSocketCloseStatus.NormalClosure, string reason = null)
         {
-            Ws?.CloseAsync(code, "Disconnecting normally.", CancellationToken.None);
+            if (Ws?.State is WebSocketState.Open or WebSocketState.Connecting)
+            {
+                Ws?.CloseAsync(code, "Disconnecting normally.", CancellationToken.None);
+            }
 
             return Task.CompletedTask;
         }

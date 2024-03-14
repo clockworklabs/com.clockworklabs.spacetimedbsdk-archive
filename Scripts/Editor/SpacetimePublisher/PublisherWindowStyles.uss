@@ -2,3 +2,7 @@
     color: rgb(76, 244, 144);
     opacity: 1;
 }
+
+#publishModuleClearDataToggle > Label {
+    color: rgb(76, 244, 144);
+}

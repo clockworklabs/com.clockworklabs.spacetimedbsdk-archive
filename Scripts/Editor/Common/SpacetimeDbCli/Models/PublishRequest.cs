@@ -9,16 +9,26 @@ namespace SpacetimeDB.Editor
 
         /// Usage: "absolute/path/to/server/module/dir"
         public string ServerModulePath { get; private set; }
+        
+        /// When true, appends -c to clear the db data
+        public bool ClearDbData { get; set; }
 
-        /// Returns what's sent to the CLI: "--project-path {path} {module-name}"
-        public override string ToString() => 
-            $"--project-path \"{ServerModulePath}\" {ServerModuleName}";
+        /// Returns what's sent to the CLI: "{clearDbStr}--project-path {path} {module-name}"
+        public override string ToString()
+        {
+            string clearDbDataStr = ClearDbData ? "-c " : "";
+            return $"{clearDbDataStr}--project-path \"{ServerModulePath}\" {ServerModuleName}";
+        }
         
 
-        public PublishRequest(string serverModuleName, string serverModulePath)
+        public PublishRequest(
+            string serverModuleName, 
+            string serverModulePath,
+            bool clearDbData)
         {
             this.ServerModuleName = serverModuleName;
             this.ServerModulePath = serverModulePath;
+            this.ClearDbData = clearDbData;
         }
     }
 }

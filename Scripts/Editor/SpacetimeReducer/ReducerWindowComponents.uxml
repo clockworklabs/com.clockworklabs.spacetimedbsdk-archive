@@ -23,7 +23,7 @@
             <ui:Foldout text="&lt;b&gt;Actions&lt;/b&gt;" name="actionsFoldout" value="true">
                 <ui:GroupBox name="actionsGroupBox" style="margin-top: 0; padding-top: 0;">
                     <ui:TextField picking-mode="Ignore" name="actionArgsTxt" readonly="false" label="Args" style="flex-direction: column; align-items: stretch; justify-content: center; align-self: stretch;" />
-                    <ui:Label tabindex="-1" text="&lt;color=#FDBE01&gt;{&lt;/color&gt;actionsSyntaxHintLabel&lt;color=#FDBE01&gt;}&lt;/color&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="actionsSyntaxHintLabel" style="-unity-text-align: upper-right; -unity-font-style: normal; -unity-font: url(&quot;project://database/Assets/UnityDefaultRuntimeTheme.tss?fileID=2230732570650464555&amp;guid=a65ef4ff44de5f34c955224bb125488b&amp;type=3#NotInter-Regular&quot;);" />
+                    <ui:Label tabindex="-1" text="&lt;color=#FDBE01&gt;{&lt;/color&gt;actionsSyntaxHintLabel&lt;color=#FDBE01&gt;}&lt;/color&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="actionsSyntaxHintLabel" style="-unity-text-align: upper-left; -unity-font-style: normal; -unity-font: url(&quot;project://database/Assets/UnityDefaultRuntimeTheme.tss?fileID=2230732570650464555&amp;guid=a65ef4ff44de5f34c955224bb125488b&amp;type=3#NotInter-Regular&quot;); white-space: normal; text-overflow: ellipsis;" />
                     <ui:VisualElement name="spacer10" style="height: 10px;" />
                     <ui:Button text="&lt;b&gt;Call Reducer&lt;/b&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="actionsCallReducerBtn" style="height: 50px;" />
                 </ui:GroupBox>

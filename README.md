@@ -1,5 +1,13 @@
 # SpacetimeDB SDK for Unity Engine
 
+## Forked
+This adds two editor tools:
+
+- STDB "Publisher" editor tool
+- STDB "Reducer" editor tool
+
+➡️ Find them via top menu `Window/SpacetimeDB/`
+
 ## Overview
 
 This repository contains the [Unity](https://unity.com/) SDK for SpacetimeDB. The SDK allows to interact with the database server and is prepared to work with code generated from a SpacetimeDB backend code.

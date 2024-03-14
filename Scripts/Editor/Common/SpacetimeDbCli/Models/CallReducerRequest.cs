@@ -7,36 +7,27 @@ namespace SpacetimeDB.Editor
         public string ModuleName { get; }
         public string ReducerName { get; }
         
-        /// Appends --as-identity {identity}
-        /// (name || address)
-        public string CallAsAltIdentity { get; }
-        
-        /// Optional, implicit args to append
+        /// Sometimes optional
         public string Args { get; }
 
         /// <summary>Returns what's sent to the CLI after the initial command</summary>
-        /// <returns>"{moduleName} {reducerName}[ {callAsAltIdentity}][ {args}]"</returns>
+        /// <returns>"{moduleName} {reducerName}[ {args}]"</returns>
         public override string ToString()
         {
-            bool hasAltIdentity = !string.IsNullOrEmpty(CallAsAltIdentity);
-            string callAsAltIdentity = hasAltIdentity ? $" --as-identity {CallAsAltIdentity}" : "";
-            
             bool hasArgs = !string.IsNullOrEmpty(Args);
             string cliArgs = hasArgs ? $" {Args}" : "";
 
-            return $"\"{ModuleName}\" \"{ReducerName}\"{callAsAltIdentity}{cliArgs}";
+            return $"\"{ModuleName}\" \"{ReducerName}\"{cliArgs}";
         }
 
         /// Sets ModuleName + ReducerName [+ Args]
         public CallReducerRequest(
             string moduleName, 
             string reducerName,
-            string callAsAltIdentity = null,
             string args = "")
         {
             this.ModuleName = moduleName;
             this.ReducerName = reducerName;
-            this.CallAsAltIdentity = callAsAltIdentity;
             this.Args = args;
         }
     }

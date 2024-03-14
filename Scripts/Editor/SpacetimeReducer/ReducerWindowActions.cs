@@ -364,7 +364,6 @@ namespace SpacetimeDB.Editor
             CallReducerRequest request = new CallReducerRequest(
                 moduleNameTxt.value,
                 reducerName,
-                actionCallAsIdentityTxt.value,
                 actionArgsTxt.value);
             
             SpacetimeCliResult cliResult = await SpacetimeDbReducerCli.CallReducerAsync(request);

@@ -166,7 +166,7 @@ namespace SpacetimeDB.Editor
             {
                 // There may be only a CliError and no CliOutput, depending on the type of error.
                 if (!string.IsNullOrEmpty(cliResult.CliOutput))
-                    Debug.LogError($"CLI Output (with verbose errors): {prettyOutput}");
+                    Debug.Log($"CLI Output: {prettyOutput}");
                 
                 Debug.LogError($"CLI Error: {cliResult.CliError}\n" +
                     "(For +details, see output err above)");

@@ -367,6 +367,9 @@ namespace SpacetimeDB.Editor
             publishFoldout.style.display = DisplayStyle.Flex;
             publishModuleNameTxt.Focus();
             publishModuleNameTxt.SelectNone();
+            
+            // If we have a cached result, show that (minimized)
+            revealPublishResultCacheIfHostExists(openFoldout: false);
         }
 
         /// Set the selected server dropdown. If servers found but no default, [0] will be set.

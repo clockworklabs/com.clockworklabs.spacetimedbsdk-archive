@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
@@ -57,16 +58,9 @@ namespace SpacetimeDB.Editor
             // Hide publish
             publishGroupBox.style.display = DisplayStyle.None;
             publishCancelBtn.style.display = DisplayStyle.None;
-            
-            // Hide publish result
-            publishResultDateTimeTxt.value = "";
-            publishResultHostTxt.value = "";
-            publishResultDbAddressTxt.value = "";
-            publishResultIsOptimizedBuildToggle.value = false;
-            publishResultStatusLabel.style.display = DisplayStyle.None;
-            publishResultFoldout.value = false;
             publishInstallProgressBar.style.display = DisplayStyle.None;
-            
+            publishStatusLabel.style.display = DisplayStyle.None;
+
             resetPublishResultCache();
         }
         
@@ -523,6 +517,8 @@ namespace SpacetimeDB.Editor
             installWasmOptBtn.style.display = isOptimizedBuildUsingWasmOpt
                 ? DisplayStyle.None // If it's already installed, no need to show it
                 : DisplayStyle.Flex;
+
+            resetGenerateUi();
             
             // Show the result group and expand the foldout
             revealPublishResultCacheIfHostExists(openFoldout: true);
@@ -756,12 +752,14 @@ namespace SpacetimeDB.Editor
 
         private void resetPublishResultCache()
         {
+            publishResultFoldout.value = false;
             publishResultDateTimeTxt.value = "";
             publishResultHostTxt.value = "";
             publishResultDbAddressTxt.value = "";
             publishResultIsOptimizedBuildToggle.value = false;
             installWasmOptBtn.style.display = DisplayStyle.None;
             installWasmOptProgressBar.style.display = DisplayStyle.None;
+            publishResultStatusLabel.style.display = DisplayStyle.None;
             
             // Hacky readonly Toggle feat workaround
             publishResultIsOptimizedBuildToggle.SetEnabled(false);
@@ -878,6 +876,12 @@ namespace SpacetimeDB.Editor
             
             Assert.IsTrue(!string.IsNullOrEmpty(serverModulePath),
                 $"Expected {nameof(serverModulePath)}");
+
+            if (generatedFilesExist())
+            {
+                // Wipe old files
+                Directory.Delete(PathToAutogenDir, recursive:true);
+            }
             
             GenerateRequest request = new(
                 serverModulePath,
@@ -897,7 +901,7 @@ namespace SpacetimeDB.Editor
                 onGenerateClientFilesFail(generateResult);
             }
             
-            onGenerateClientFilesDone();
+            resetGenerateUi();
         }
 
         private void onGenerateClientFilesFail(SpacetimeCliResult cliResult)
@@ -919,11 +923,16 @@ namespace SpacetimeDB.Editor
                 SpacetimeMeta.StringStyle.Success,
                 "Generated to dir: <color=white>Assets/Autogen/</color>");
         }
+        
+        bool generatedFilesExist() => Directory.Exists(PathToAutogenDir);
 
-        /// Shared Ui changes after success/fail
-        private void onGenerateClientFilesDone()
+        /// Shared Ui changes after success/fail, or init on ui reset
+        private void resetGenerateUi()
         {
-            publishResultGenerateClientFilesBtn.text = "Generate Client Files";
+            publishResultGenerateClientFilesBtn.text = generatedFilesExist()
+                ? "Regenerate Client Typings"
+                : "Generate Client Typings";
+            
             publishResultStatusLabel.style.display = DisplayStyle.Flex;
             publishResultGenerateClientFilesBtn.SetEnabled(true);
         }

@@ -23,7 +23,9 @@ namespace SpacetimeDB.Editor
         public SpacetimeCliResult(string cliOutput, string cliError)
         {
             this.CliOutput = cliOutput;
-            this.CliError = cliError;
+            
+            // To prevent strange log formatting when paths are present, we replace `\` with `/`
+            this.CliError = cliError?.Replace("\\", "/");
 
             if (CliError == "Canceled")
                 this.Cancelled = true;

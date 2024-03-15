@@ -16,7 +16,7 @@ namespace SpacetimeDB.Editor
         {
             string argSuffix = $"spacetime publish {publishRequest}";
             SpacetimeCliResult cliResult = await SpacetimeDbCli.runCliCommandAsync(argSuffix, cancelToken);
-            PublishResult publishResult = new(cliResult);
+            PublishResult publishResult = new(publishRequest, cliResult);
             return publishResult;
         }
         
@@ -62,6 +62,16 @@ namespace SpacetimeDB.Editor
             string argSuffix = $"spacetime server set-default {serverNicknameOrHost}";
             SpacetimeCliResult cliResult = await SpacetimeDbCli.runCliCommandAsync(argSuffix);
             return cliResult;
+        }
+        
+        /// Uses the `spacetime generate` CLI command
+        public static async Task<GenerateResult> GenerateClientFilesAsync(
+            GenerateRequest generateRequest)
+        {
+            string argSuffix = $"spacetime generate {generateRequest}";
+            SpacetimeCliResult cliResult = await SpacetimeDbCli.runCliCommandAsync(argSuffix);
+            GenerateResult generateResult = new(cliResult);
+            return generateResult;
         }
         #endregion // High Level CLI Actions
     }

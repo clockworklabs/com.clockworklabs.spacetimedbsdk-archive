@@ -24,6 +24,10 @@ namespace SpacetimeDB.Editor
         private bool _isRegeneratingDefaultServers;
 
         private CancellationTokenSource _cts;
+        
+        /// This will be null on init (window may still load limited cache)
+        /// We'll prioritize this over the path, in case it was changed post-publish
+        private PublishResult _cachedPublishResult;
         #endregion // Operational State Vars
         
 
@@ -73,6 +77,8 @@ namespace SpacetimeDB.Editor
         private Toggle publishResultIsOptimizedBuildToggle; // Set readonly via hacky workaround (SetEnabled @ ResetUi)
         private Button installWasmOptBtn; // Only shows after a publishAsync where wasm-opt was !found
         private ProgressBar installWasmOptProgressBar; // Shows after installWasmOptBtn clicked
+        private Button publishResultGenerateClientFilesBtn;
+        private Label publishResultStatusLabel;
         
         private VisualElement errorCover;
         #endregion // UI Visual Elements
@@ -187,6 +193,8 @@ namespace SpacetimeDB.Editor
             publishResultIsOptimizedBuildToggle = rootVisualElement.Q<Toggle>(nameof(publishResultIsOptimizedBuildToggle));
             installWasmOptBtn = rootVisualElement.Q<Button>(nameof(installWasmOptBtn));
             installWasmOptProgressBar = rootVisualElement.Q<ProgressBar>(nameof(installWasmOptProgressBar));
+            publishResultGenerateClientFilesBtn = rootVisualElement.Q<Button>(nameof(publishResultGenerateClientFilesBtn));
+            publishResultStatusLabel = rootVisualElement.Q<Label>(nameof(publishResultStatusLabel));
         }
 
         /// Changing implicit names can easily cause unexpected nulls
@@ -239,7 +247,9 @@ namespace SpacetimeDB.Editor
                 Assert.IsNotNull(publishResultDbAddressTxt, $"Expected `#{nameof(publishResultDbAddressTxt)}`");
                 Assert.IsNotNull(publishResultIsOptimizedBuildToggle, $"Expected `#{nameof(publishResultIsOptimizedBuildToggle)}`");
                 Assert.IsNotNull(installWasmOptBtn, $"Expected `#{nameof(installWasmOptBtn)}`");
-                Assert.IsNotNull(installWasmOptProgressBar, $"Expected `#{nameof(installWasmOptProgressBar)}`");   
+                Assert.IsNotNull(installWasmOptProgressBar, $"Expected `#{nameof(installWasmOptProgressBar)}`");
+                Assert.IsNotNull(publishResultGenerateClientFilesBtn, $"Expected `#{nameof(publishResultGenerateClientFilesBtn)}`");
+                Assert.IsNotNull(publishResultStatusLabel, $"Expected `#{nameof(publishResultStatusLabel)}`");
             }
             catch (Exception e)
             {

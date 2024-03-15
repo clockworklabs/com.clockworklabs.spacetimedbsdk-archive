@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.UIElements;
 using static SpacetimeDB.Editor.PublisherMeta;
 
@@ -58,6 +59,11 @@ namespace SpacetimeDB.Editor
             publishCancelBtn.style.display = DisplayStyle.None;
             
             // Hide publish result
+            publishResultDateTimeTxt.value = "";
+            publishResultHostTxt.value = "";
+            publishResultDbAddressTxt.value = "";
+            publishResultIsOptimizedBuildToggle.value = false;
+            publishResultStatusLabel.style.display = DisplayStyle.None;
             publishResultFoldout.value = false;
             publishInstallProgressBar.style.display = DisplayStyle.None;
             
@@ -479,14 +485,18 @@ namespace SpacetimeDB.Editor
         /// Critical err - show label
         private void onPublishFail(PublishResult publishResult)
         {
-            updatePublishStatus(SpacetimeMeta.StringStyle.Error, publishResult.StyledFriendlyErrorMessage 
-                ?? publishResult.CliError);
+            _cachedPublishResult = null;
+            updatePublishStatus(
+                SpacetimeMeta.StringStyle.Error, 
+                publishResult.StyledFriendlyErrorMessage ?? publishResult.CliError);
         }
         
         /// There may be a false-positive wasm-opt err here; in which case, we'd still run success.
         /// Caches the module name into EditorPrefs for other tools to use. 
         private void onPublishSuccess(PublishResult publishResult)
         {
+            _cachedPublishResult = publishResult;
+            
             // Success - reset UI back to normal
             setPublishReadyStatus();
             setPublishResultGroupUi(publishResult);
@@ -846,6 +856,76 @@ namespace SpacetimeDB.Editor
         {
             await getIdentitiesSetDropdown(); // Process and reveal the next UI group
             serverSelectedDropdown.SetEnabled(true);
+        }
+
+        /// Disable generate btn, show "GGenerating..." label
+        private void setGenerateClientFilesUi()
+        {
+            publishResultStatusLabel.style.display = DisplayStyle.None;
+            publishResultGenerateClientFilesBtn.SetEnabled(false);
+            publishResultGenerateClientFilesBtn.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Action,
+                "Generating ...");
+        }
+
+        private async Task generateClientFilesAsync()
+        {
+            setGenerateClientFilesUi();
+            
+            // Prioritize result cache, if any - else use the input field
+            string serverModulePath = _cachedPublishResult?.Request?.ServerModulePath 
+                ?? publishModulePathTxt.value;
+            
+            Assert.IsTrue(!string.IsNullOrEmpty(serverModulePath),
+                $"Expected {nameof(serverModulePath)}");
+            
+            GenerateRequest request = new(
+                serverModulePath,
+                PathToAutogenDir,
+                deleteOutdatedFiles: true);
+
+            GenerateResult generateResult = await SpacetimeDbPublisherCli
+                .GenerateClientFilesAsync(request);
+
+            bool isSuccess = generateResult.IsSuccessfulGenerate;
+            if (isSuccess)
+            {
+                onGenerateClientFilesSuccess(serverModulePath);
+            }
+            else
+            {
+                onGenerateClientFilesFail(generateResult);
+            }
+            
+            onGenerateClientFilesDone();
+        }
+
+        private void onGenerateClientFilesFail(SpacetimeCliResult cliResult)
+        {
+            Debug.LogError($"Failed to generate client files: {cliResult.CliError}");
+            
+            publishResultStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error,
+                $"<b>Generate Error:</b>\n{cliResult.CliError}");
+            publishResultStatusLabel.style.display = DisplayStyle.Flex;
+        }
+
+        private void onGenerateClientFilesSuccess(string serverModulePath)
+        {
+            Debug.Log($"Generated SpacetimeDB client files from:" +
+                $"\n`{serverModulePath}`\n\nto:\n`{PathToAutogenDir}`");
+                
+            publishResultStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Success,
+                "Generated to dir: <color=white>Assets/Autogen/</color>");
+        }
+
+        /// Shared Ui changes after success/fail
+        private void onGenerateClientFilesDone()
+        {
+            publishResultGenerateClientFilesBtn.text = "Generate Client Files";
+            publishResultStatusLabel.style.display = DisplayStyle.Flex;
+            publishResultGenerateClientFilesBtn.SetEnabled(true);
         }
     }
 }

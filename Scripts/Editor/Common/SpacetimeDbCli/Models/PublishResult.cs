@@ -8,9 +8,12 @@ namespace SpacetimeDB.Editor
     /// Extends SpacetimeCliResult to catch specific `spacetime publish` results
     public class PublishResult : SpacetimeCliResult
     {
+        /// Still contains useful information to use later, such as path to module
+        public PublishRequest Request { get; }
+        
         #region Success
         /// The errors may have false-positive warnings; this is the true success checker
-        public bool IsSuccessfulPublish { get; private set; }
+        public bool IsSuccessfulPublish { get; }
         
         public DateTime PublishedAt { get; private set; } 
         
@@ -65,9 +68,10 @@ namespace SpacetimeDB.Editor
         #endregion // Errs
 
 
-        public PublishResult(SpacetimeCliResult cliResult)
+        public PublishResult(PublishRequest request, SpacetimeCliResult cliResult)
             : base(cliResult.CliOutput, cliResult.CliError)
         {
+            this.Request = request;
             bool hasOutputErr = CliOutput.Contains("Error:");
 
             if (cliResult.HasCliErr || hasOutputErr)

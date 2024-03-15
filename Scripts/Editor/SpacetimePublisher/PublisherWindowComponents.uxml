@@ -44,7 +44,7 @@
                         <ui:Button text="..." parse-escape-sequences="true" display-tooltip-when-elided="true" name="publishPathSetDirectoryBtn" tooltip="Browse for your server module project dir path" style="height: auto; width: 35px;" />
                     </ui:TextField>
                 </ui:GroupBox>
-                <ui:Toggle label="Clear All Data?" name="publishModuleClearDataToggle" view-data-key="publishModuleClearDataToggle" />
+                <ui:Toggle label="Clear All Data?" name="publishModuleClearDataToggle" view-data-key="publishModuleClearDataToggle" tooltip="(!) This cannot be undone" />
                 <ui:VisualElement name="spacer10" style="height: 10px;" />
                 <ui:GroupBox name="publishGroupBox" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;">
                     <ui:Button text="Publish" parse-escape-sequences="true" display-tooltip-when-elided="true" name="publishBtn" tooltip="This will issue a `spacetime publish` using your module name+path" style="height: 50px; -unity-font-style: bold; font-size: 16px; display: flex;" />
@@ -62,10 +62,15 @@
                 <ui:TextField picking-mode="Ignore" label="DB Address:" name="publishResultDbAddressTxt" multiline="true" tooltip="The DB Address mapped to your Server Module Name" view-data-key="publishResultDbAddressTxt" readonly="true" focusable="false" />
                 <ui:VisualElement name="optimizedHorizontal" style="flex-grow: 1; flex-direction: row;">
                     <ui:Toggle label="Optimized Build:" name="publishResultIsOptimizedBuildToggle" view-data-key="publishResultIsOptimizedBuildToggle" tooltip="via `opt-wasm`" value="false" focusable="false" style="flex-direction: row; align-self: center;" />
-                    <ui:Button text="Install Package" parse-escape-sequences="true" display-tooltip-when-elided="true" name="installWasmOptBtn" tooltip="Set &amp; Forget: Globally install `wasm-opt` via npm." style="flex-grow: 1; font-size: 14px;" />
+                    <ui:Button text="Install Package" parse-escape-sequences="true" display-tooltip-when-elided="true" name="installWasmOptBtn" tooltip="Set &amp; Forget: Globally install `wasm-opt` via npm." style="flex-grow: 1; font-size: 12px;" />
                 </ui:VisualElement>
+                <ui:VisualElement name="horizWrapper" style="flex-grow: 1; flex-direction: row;">
+                    <ui:Button text="Generate Client FIles" parse-escape-sequences="true" display-tooltip-when-elided="true" name="publishResultGenerateClientFilesBtn" tooltip="Outputs to `Assets/StdbAutogen`" style="flex-grow: 1; font-size: 12px; width: 130px;" />
+                </ui:VisualElement>
+                <ui:Label tabindex="-1" text="{publishResultStatusLabel}" parse-escape-sequences="true" display-tooltip-when-elided="true" name="publishResultStatusLabel" style="color: rgb(182, 192, 207); font-size: 14px; -unity-text-align: upper-center; display: flex; white-space: normal; -unity-font-style: normal;" />
                 <ui:ProgressBar value="5" title="Installing `wasm-opt` via npm ..." name="installWasmOptProgressBar" tooltip="Installing npm `wasm-opt` for future publish optimization" low-value="5" style="display: flex;" />
             </ui:Foldout>
+            <ui:VisualElement name="spacer10" style="height: 10px;" />
         </ui:ScrollView>
         <ui:VisualElement name="errorCover" focusable="false" style="flex-grow: 1; background-color: rgb(22, 22, 22); position: absolute; width: 100%; height: 100%; top: 80px; display: none;">
             <ui:Label tabindex="-1" text="&lt;color=#FDBE01&gt;&lt;b&gt;VisualElement Integrity Failed:&lt;/b&gt; See Logs\n(Perhaps a USS #id was renamed?)&lt;/color&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="errorCoverLabel" style="font-size: 15px; -unity-text-align: upper-center;" />

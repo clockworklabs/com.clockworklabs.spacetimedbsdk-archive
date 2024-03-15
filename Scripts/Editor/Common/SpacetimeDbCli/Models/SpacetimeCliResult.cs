@@ -30,5 +30,16 @@ namespace SpacetimeDB.Editor
             if (CliError == "Canceled")
                 this.Cancelled = true;
         }
+        
+        public SpacetimeCliResult(SpacetimeCliResult cliResult)
+        {
+            this.CliOutput = cliResult.CliOutput;
+            
+            // To prevent strange log formatting when paths are present, we replace `\` with `/`
+            this.CliError = cliResult.CliError?.Replace("\\", "/");
+
+            if (CliError == "Canceled")
+                this.Cancelled = true;
+        }
     }
 }

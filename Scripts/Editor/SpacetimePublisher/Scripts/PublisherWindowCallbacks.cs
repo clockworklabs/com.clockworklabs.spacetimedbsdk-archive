@@ -146,8 +146,13 @@ namespace SpacetimeDB.Editor
                 // Curry to an async Task => install `wasm-opt` npm pkg
                 installWasmOptBtn.clicked += onInstallWasmOptBtnClick;
             }
+            if (publishResultGenerateClientFilesBtn != null)
+            {
+                // Generate SDK via CLI `spacetime generate`
+                publishResultGenerateClientFilesBtn.clicked += onPublishResultGenerateClientFilesBtnClick;
+            }
         }
-        
+
         /// Cleanup: This should parity the opposite of setOnActionEvents()
         private void unsetOnActionEvents()
         {
@@ -409,6 +414,20 @@ namespace SpacetimeDB.Editor
             {
                 installWasmOptProgressBar.style.display = DisplayStyle.None;
                 publishBtn.SetEnabled(true);
+            }
+        }
+        
+        /// Run CLI cmd `spacetime generate`
+        private async void onPublishResultGenerateClientFilesBtnClick()
+        {
+            try
+            {
+                await generateClientFilesAsync();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error: {e}");
+                throw;
             }
         }
         

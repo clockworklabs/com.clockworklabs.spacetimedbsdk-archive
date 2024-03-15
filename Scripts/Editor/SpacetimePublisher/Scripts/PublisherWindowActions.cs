@@ -504,7 +504,8 @@ namespace SpacetimeDB.Editor
 
         private void setPublishResultGroupUi(PublishResult publishResult)
         {
-            // Load the result data
+            // Hide old status -> Load the result data
+            publishResultStatusLabel.style.display = DisplayStyle.None;
             publishResultDateTimeTxt.value = $"{publishResult.PublishedAt:G} (Local)";
             publishResultHostTxt.value = publishResult.UploadedToHost;
             publishResultDbAddressTxt.value = publishResult.DatabaseAddressHash;
@@ -900,17 +901,17 @@ namespace SpacetimeDB.Editor
             {
                 onGenerateClientFilesFail(generateResult);
             }
-            
-            resetGenerateUi();
         }
 
         private void onGenerateClientFilesFail(SpacetimeCliResult cliResult)
         {
             Debug.LogError($"Failed to generate client files: {cliResult.CliError}");
-            
+
+            resetGenerateUi();
             publishResultStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error,
                 $"<b>Generate Error:</b>\n{cliResult.CliError}");
+            
             publishResultStatusLabel.style.display = DisplayStyle.Flex;
         }
 
@@ -918,10 +919,12 @@ namespace SpacetimeDB.Editor
         {
             Debug.Log($"Generated SpacetimeDB client files from:" +
                 $"\n`{serverModulePath}`\n\nto:\n`{PathToAutogenDir}`");
-                
+         
+            resetGenerateUi();
             publishResultStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Success,
                 "Generated to dir: <color=white>Assets/Autogen/</color>");
+            publishResultStatusLabel.style.display = DisplayStyle.Flex;
         }
         
         bool generatedFilesExist() => Directory.Exists(PathToAutogenDir);
@@ -933,7 +936,7 @@ namespace SpacetimeDB.Editor
                 ? "Regenerate Client Typings"
                 : "Generate Client Typings";
             
-            publishResultStatusLabel.style.display = DisplayStyle.Flex;
+            publishResultStatusLabel.style.display = DisplayStyle.None;
             publishResultGenerateClientFilesBtn.SetEnabled(true);
         }
     }

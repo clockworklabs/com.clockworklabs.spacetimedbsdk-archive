@@ -1,17 +1,17 @@
 namespace SpacetimeDB.Editor
 {
-    /// Info passed from the UI to CLI during the CLI `spacetime publish
+    /// Info passed from the UI to CLI during the CLI `spacetime publish`
     /// Print ToString to get the CLI "--project-path {path} {module-name}"
     public class PublishRequest
     {
         /// Usage: "my-server-module-name"
-        public string ServerModuleName { get; private set; }
+        public string ServerModuleName { get; }
 
         /// Usage: "absolute/path/to/server/module/dir"
-        public string ServerModulePath { get; private set; }
+        public string ServerModulePath { get; }
         
         /// When true, appends -c to clear the db data
-        public bool ClearDbData { get; set; }
+        public bool ClearDbData { get; }
 
         /// Returns what's sent to the CLI: "{clearDbStr}--project-path {path} {module-name}"
         public override string ToString()

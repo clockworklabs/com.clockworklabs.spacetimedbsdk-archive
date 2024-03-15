@@ -18,5 +18,6 @@ namespace SpacetimeDB.Editor
         public const string PUBLISHER_DIR_PATH = "Packages/" + SDK_PACKAGE_NAME + "/Scripts/Editor/SpacetimePublisher";
         public static string PathToUxml => $"{PUBLISHER_DIR_PATH}/PublisherWindowComponents.uxml";
         public static string PathToUss => $"{PUBLISHER_DIR_PATH}/PublisherWindowStyles.uss";
+        public static string PathToAutogenDir => $"{UnityEngine.Application.dataPath}/StdbAutogen";
     }
 }

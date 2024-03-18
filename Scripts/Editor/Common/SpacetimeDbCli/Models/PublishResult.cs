@@ -83,13 +83,12 @@ namespace SpacetimeDB.Editor
                 // CLI resulted success, but what about an internal error specific to publisher?
                 if (cliResult.CliError.Contains("Error:"))
                     onPublisherError(cliResult);
-
-                // Check for false-positive errs (that are more-so warnings)
-                // "created new database with domain" || "updated database with domain"
-                this.IsSuccessfulPublish = CliOutput.Contains("database with domain");
-                if (!IsSuccessfulPublish)
-                    return;
             }
+            
+            // "created new database with domain" || "updated database with domain"
+            this.IsSuccessfulPublish = CliOutput.Contains("database with domain");
+            if (!IsSuccessfulPublish)
+                return;
 
             onSuccess();
         }

@@ -65,6 +65,7 @@ namespace SpacetimeDB.Editor
 
         private GroupBox publishGroupBox;
         private Toggle publishModuleClearDataToggle;
+        private Toggle publishModuleDebugModeToggle;
         private Button publishBtn;
         private Button publishCancelBtn;
         private ProgressBar publishInstallProgressBar;
@@ -181,6 +182,7 @@ namespace SpacetimeDB.Editor
 
             publishGroupBox = rootVisualElement.Q<GroupBox>(nameof(publishGroupBox));
             publishModuleClearDataToggle = rootVisualElement.Q<Toggle>(nameof(publishModuleClearDataToggle));
+            publishModuleDebugModeToggle = rootVisualElement.Q<Toggle>(nameof(publishModuleDebugModeToggle));
             publishBtn = rootVisualElement.Q<Button>(nameof(publishBtn));
             publishCancelBtn = rootVisualElement.Q<Button>(nameof(publishCancelBtn));
             publishInstallProgressBar = rootVisualElement.Q<ProgressBar>(nameof(publishInstallProgressBar));
@@ -236,6 +238,7 @@ namespace SpacetimeDB.Editor
                 
                 Assert.IsNotNull(publishGroupBox, $"Expected `#{nameof(publishGroupBox)}`");
                 Assert.IsNotNull(publishModuleClearDataToggle, $"Expected `#{nameof(publishModuleClearDataToggle)}`");
+                Assert.IsNotNull(publishModuleDebugModeToggle, $"Expected `#{nameof(publishModuleDebugModeToggle)}`");
                 Assert.IsNotNull(publishBtn, $"Expected `#{nameof(publishBtn)}`");
                 Assert.IsNotNull(publishCancelBtn, $"Expected `#{nameof(publishCancelBtn)}`");
                 Assert.IsNotNull(publishInstallProgressBar, $"Expected `#{nameof(publishInstallProgressBar)}`");

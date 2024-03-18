@@ -4,31 +4,52 @@ namespace SpacetimeDB.Editor
     /// Print ToString to get the CLI "--project-path {path} {module-name}"
     public class PublishRequest
     {
+        public class AdvancedOpts
+        {
+            /// When true, appends --clear-database to clear the db data
+            public bool ClearDbData { get; }
+            
+            /// When true, appends --debug and --skip_clippy 
+            public bool IsDebugMode { get; }
+            
+            public AdvancedOpts(bool clearDbData, bool isDebugMode)
+            {
+                this.ClearDbData = clearDbData;
+                this.IsDebugMode = isDebugMode;
+            }
+            
+            public AdvancedOpts(AdvancedOpts advancedOpts)
+            {
+                this.ClearDbData = advancedOpts.ClearDbData;
+                this.IsDebugMode = advancedOpts.IsDebugMode;
+            }
+        }
+        
+        public AdvancedOpts Advanced { get; }
+        
         /// Usage: "my-server-module-name"
         public string ServerModuleName { get; }
 
         /// Usage: "absolute/path/to/server/module/dir"
         public string ServerModulePath { get; }
         
-        /// When true, appends -c to clear the db data
-        public bool ClearDbData { get; }
-
         /// Returns what's sent to the CLI: "{clearDbStr}--project-path {path} {module-name}"
         public override string ToString()
         {
-            string clearDbDataStr = ClearDbData ? "-c " : "";
-            return $"{clearDbDataStr}--project-path \"{ServerModulePath}\" {ServerModuleName}";
+            string clearDbDataStr = Advanced.ClearDbData ? "--clear-database " : "";
+            string debugModeStr = Advanced.IsDebugMode ? "--debug --skip_clippy " : "";
+            return $"{clearDbDataStr}{debugModeStr}--project-path \"{ServerModulePath}\" {ServerModuleName}";
         }
         
 
         public PublishRequest(
             string serverModuleName, 
             string serverModulePath,
-            bool clearDbData)
+            AdvancedOpts advancedOpts)
         {
             this.ServerModuleName = serverModuleName;
             this.ServerModulePath = serverModulePath;
-            this.ClearDbData = clearDbData;
+            this.Advanced = new AdvancedOpts(advancedOpts);
         }
     }
 }

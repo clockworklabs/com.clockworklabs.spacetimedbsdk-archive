@@ -3,7 +3,7 @@ namespace SpacetimeDB.Editor
     /// Extends SpacetimeCliResult to catch specific `spacetime publish` results
     public class GenerateResult : SpacetimeCliResult
     {
-        /// False positive CliError: Success if CliOutput "Generate finished successfully"
+        /// Detects false-positive CliError: Success if CliOutput "Generate finished successfully"
         public bool IsSuccessfulGenerate { get; }
 
         public GenerateResult(SpacetimeCliResult cliResult)

@@ -514,11 +514,10 @@ namespace SpacetimeDB.Editor
             publishResultDbAddressTxt.value = publishResult.DatabaseAddressHash;
             
             // Set via ValueWithoutNotify since this is a hacky "readonly" Toggle (no official feat for this, yet)
-            bool isOptimizedBuildUsingWasmOpt = publishResult.PublishedWithoutWasmOptOptimization;
-            publishResultIsOptimizedBuildToggle.value = isOptimizedBuildUsingWasmOpt;
+            publishResultIsOptimizedBuildToggle.value = publishResult.IsPublishWasmOptimized;
             
             // Show install pkg button, to optionally optimize next publish
-            installWasmOptBtn.style.display = isOptimizedBuildUsingWasmOpt
+            installWasmOptBtn.style.display = publishResult.IsPublishWasmOptimized
                 ? DisplayStyle.None // If it's already installed, no need to show it
                 : DisplayStyle.Flex;
 

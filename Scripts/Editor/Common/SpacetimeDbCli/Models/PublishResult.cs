@@ -19,7 +19,7 @@ namespace SpacetimeDB.Editor
         public DateTime PublishedAt { get; private set; } 
         
         /// Warning: `wasm-opt` !found, so the module continued with an "unoptimised" version
-        public bool PublishedWithoutWasmOptOptimization { get; private set; }
+        public bool IsPublishWasmOptimized { get; private set; }
 
         /// Eg: "http://localhost:3000" || "https://testnet.spacetimedb.com"
         public string UploadedToHost { get; private set; }
@@ -96,7 +96,7 @@ namespace SpacetimeDB.Editor
         private void onSuccess()
         {
             this.PublishedAt = DateTime.Now;
-            this.PublishedWithoutWasmOptOptimization = CliError.Contains("Could not find wasm-opt");
+            this.IsPublishWasmOptimized = !CliError.Contains("Could not find wasm-opt");
             this.IsLocal = CliOutput.Contains("Uploading to local =>");
             this.DatabaseAddressHash = getDatabaseAddressHash();
             setUploadedToInfo();

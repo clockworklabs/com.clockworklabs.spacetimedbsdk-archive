@@ -152,7 +152,7 @@ namespace SpacetimeDB.Editor
                 string iteratedErrs = string.Join("\n\n", cliResult.ErrsFoundFromCliOutput);
                 this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
                     SpacetimeMeta.StringStyle.Error,
-                    $"<b>Failed:</b>\n{iteratedErrs}");
+                    $"<b>Failed to Publish:</b>\n{iteratedErrs}");
             }
             else
             {

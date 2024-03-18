@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -132,19 +133,31 @@ namespace SpacetimeDB.Editor
         private void onPublisherError(SpacetimeCliResult cliResult)
         {
             bool isServerNotRunning = cliResult.CliError.Contains("os error 10061");
-
+            bool isErrBuriedInOutput = !isServerNotRunning && cliResult.HasErrsFoundFromCliOutput;
+                
             if (isServerNotRunning)
             {
                 this.PublishErrCode = PublishErrorCode.OS10061_ServerHostNotRunning;
                 this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
                     SpacetimeMeta.StringStyle.Error,
-                    "<b>Failed:</b> Server host not running\n<align=left>" +
+                    "<b>Failed to Publish:</b> Server host not running\n<align=left>" +
                     "(1) Open terminal\n" +
                     "(2) `spacetime start`\n" +
                     "(3) Try again</align>");
             }
-            else
+            else if (isErrBuriedInOutput)
+            {
                 this.PublishErrCode = PublishErrorCode.UnknownError;
+
+                string iteratedErrs = string.Join("\n\n", cliResult.ErrsFoundFromCliOutput);
+                this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
+                    SpacetimeMeta.StringStyle.Error,
+                    $"<b>Failed:</b>\n{iteratedErrs}");
+            }
+            else
+            {
+                this.PublishErrCode = PublishErrorCode.UnknownError;
+            }
         }
 
         private void onCliError(SpacetimeCliResult cliResult)

@@ -22,11 +22,12 @@ namespace SpacetimeDB.Editor
         
         /// Uses the `npm install -g wasm-opt` CLI command
         /// Success results from !CliError and "changed {numPkgs} packages in {numSecs}s" output
-        public static async Task<SpacetimeCliResult> InstallWasmOptPkgAsync()
+        public static async Task<InstallWasmResult> InstallWasmOptPkgAsync()
         {
             const string argSuffix = "npm install -g wasm-opt";
             SpacetimeCliResult cliResult = await SpacetimeDbCli.runCliCommandAsync(argSuffix);
-            return cliResult;
+            InstallWasmResult installWasmResult = new(cliResult);
+            return installWasmResult;
         }
         
         /// Uses the `spacetime identity new` CLI command, then set as default.

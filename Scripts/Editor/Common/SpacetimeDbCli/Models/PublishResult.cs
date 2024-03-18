@@ -19,7 +19,7 @@ namespace SpacetimeDB.Editor
         public DateTime PublishedAt { get; private set; } 
         
         /// Warning: `wasm-opt` !found, so the module continued with an "unoptimised" version
-        public bool PublishedWithoutWasmOptOptimization { get; private set; }
+        public bool IsPublishWasmOptimized { get; private set; }
 
         /// Eg: "http://localhost:3000" || "https://testnet.spacetimedb.com"
         public string UploadedToHost { get; private set; }
@@ -83,13 +83,12 @@ namespace SpacetimeDB.Editor
                 // CLI resulted success, but what about an internal error specific to publisher?
                 if (cliResult.CliError.Contains("Error:"))
                     onPublisherError(cliResult);
-
-                // Check for false-positive errs (that are more-so warnings)
-                // "created new database with domain" || "updated database with domain"
-                this.IsSuccessfulPublish = CliOutput.Contains("database with domain");
-                if (!IsSuccessfulPublish)
-                    return;
             }
+            
+            // "created new database with domain" || "updated database with domain"
+            this.IsSuccessfulPublish = CliOutput.Contains("database with domain");
+            if (!IsSuccessfulPublish)
+                return;
 
             onSuccess();
         }
@@ -97,7 +96,7 @@ namespace SpacetimeDB.Editor
         private void onSuccess()
         {
             this.PublishedAt = DateTime.Now;
-            this.PublishedWithoutWasmOptOptimization = CliError.Contains("Could not find wasm-opt");
+            this.IsPublishWasmOptimized = !CliError.Contains("Could not find wasm-opt");
             this.IsLocal = CliOutput.Contains("Uploading to local =>");
             this.DatabaseAddressHash = getDatabaseAddressHash();
             setUploadedToInfo();

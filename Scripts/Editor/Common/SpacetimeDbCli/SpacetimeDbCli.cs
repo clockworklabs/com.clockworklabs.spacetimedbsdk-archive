@@ -158,18 +158,31 @@ namespace SpacetimeDB.Editor
             bool hasOutput = !string.IsNullOrEmpty(cliResult.CliOutput);
             bool hasLogLevelInfoNoErr = CLI_LOG_LEVEL == CliLogLevel.Info && !cliResult.HasCliErr;
             string prettyOutput = $"\n```\n<color=yellow>{cliResult.CliOutput}</color>\n```\n";
-            
+
             if (hasOutput && hasLogLevelInfoNoErr)
+            {
                 Debug.Log($"CLI Output: {prettyOutput}");
+            }
 
             if (cliResult.HasCliErr)
             {
                 // There may be only a CliError and no CliOutput, depending on the type of error.
                 if (!string.IsNullOrEmpty(cliResult.CliOutput))
+                {
                     Debug.Log($"CLI Output: {prettyOutput}");
+                }
                 
                 Debug.LogError($"CLI Error: {cliResult.CliError}\n" +
                     "(For +details, see output err above)");
+
+                if (cliResult.HasErrsFoundFromCliOutput)
+                {
+                    for (int i = 0; i < cliResult.ErrsFoundFromCliOutput.Count; i++)
+                    {
+                        string err = cliResult.ErrsFoundFromCliOutput[i];
+                        Debug.LogError($"CLI Error Summary[{i}]: {err}");
+                    }
+                }
             }
         }
         

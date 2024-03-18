@@ -44,7 +44,10 @@
                         <ui:Button text="..." parse-escape-sequences="true" display-tooltip-when-elided="true" name="publishPathSetDirectoryBtn" tooltip="Browse for your server module project dir path" style="height: auto; width: 35px;" />
                     </ui:TextField>
                 </ui:GroupBox>
-                <ui:Toggle label="Clear All Data?" name="publishModuleClearDataToggle" view-data-key="publishModuleClearDataToggle" tooltip="(!) This cannot be undone" />
+                <ui:Foldout text="Advanced" name="publishModuleDebugFoldout" view-data-key="publishModuleDebugFoldout">
+                    <ui:Toggle label="Debug Mode?" name="publishModuleDebugModeToggle" view-data-key="publishModuleDebugModeToggle" tooltip="Appends -" />
+                    <ui:Toggle label="Clear All Data?" name="publishModuleClearDataToggle" view-data-key="publishModuleClearDataToggle" tooltip="(!) This cannot be undone" />
+                </ui:Foldout>
                 <ui:VisualElement name="spacer10" style="height: 10px;" />
                 <ui:GroupBox name="publishGroupBox" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;">
                     <ui:Button text="Publish" parse-escape-sequences="true" display-tooltip-when-elided="true" name="publishBtn" tooltip="This will issue a `spacetime publish` using your module name+path" style="height: 50px; -unity-font-style: bold; font-size: 16px; display: flex;" />

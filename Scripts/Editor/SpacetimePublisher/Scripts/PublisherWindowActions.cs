@@ -460,7 +460,10 @@ namespace SpacetimeDB.Editor
             PublishRequest publishRequest = new(
                 publishModuleNameTxt.value, 
                 publishModulePathTxt.value,
-                publishModuleClearDataToggle.value);
+                new PublishRequest.AdvancedOpts(
+                    publishModuleClearDataToggle.value,
+                    publishModuleDebugModeToggle.value
+                ));
             
             // Run CLI cmd [can cancel]
             PublishResult publishResult = await SpacetimeDbPublisherCli.PublishAsync(
@@ -638,14 +641,14 @@ namespace SpacetimeDB.Editor
             setinstallWasmOptPackageViaNpmUi();
             
             // Run CLI cmd
-            SpacetimeCliResult cliResult = await SpacetimeDbPublisherCli.InstallWasmOptPkgAsync();
+            InstallWasmResult installWasmResult = await SpacetimeDbPublisherCli.InstallWasmOptPkgAsync();
 
             // Process result -> Update UI
-            bool isSuccess = !cliResult.HasCliErr;
+            bool isSuccess = installWasmResult.IsSuccessfulInstall;
             if (isSuccess)
                 onInstallWasmOptPackageViaNpmSuccess();
             else
-                onInstallWasmOptPackageViaNpmFail(cliResult);
+                onInstallWasmOptPackageViaNpmFail(installWasmResult);
         }
 
         /// UI: Disable btn + show installing status to id label

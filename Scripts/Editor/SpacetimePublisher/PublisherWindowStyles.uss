@@ -6,3 +6,7 @@
 #publishModuleClearDataToggle > Label {
     color: rgb(76, 244, 144);
 }
+
+#publishModuleDebugModeToggle > Label {
+    color: rgb(76, 244, 144);
+}

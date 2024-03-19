@@ -23,6 +23,9 @@ namespace SpacetimeDB.BSATN
 
     public interface IReadWrite<T>
     {
+        // Ideally this should be a static method, but C# doesn't
+        // allow static methods in interfaces until C# 11
+        // and we have to target C# 9 for Unity.
         T Read(BinaryReader reader);
 
         void Write(BinaryWriter writer, T value);

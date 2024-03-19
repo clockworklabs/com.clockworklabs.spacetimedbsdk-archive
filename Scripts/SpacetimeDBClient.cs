@@ -123,7 +123,6 @@ namespace SpacetimeDB
 
         private bool isClosing;
         private Thread networkMessageProcessThread;
-        private Thread stateDiffProcessThread;
 
         public static SpacetimeDBClient instance;
 
@@ -249,10 +248,6 @@ namespace SpacetimeDB
             _preProcessCancellationToken = _preProcessCancellationTokenSource.Token;
             networkMessageProcessThread = new Thread(PreProcessMessages);
             networkMessageProcessThread.Start();
-
-            // _stateDiffCancellationToken = _stateDiffCancellationTokenSource.Token;
-            // stateDiffProcessThread = new Thread(ExecuteStateDiff);
-            // stateDiffProcessThread.Start();
         }
 
         struct PreProcessedMessage

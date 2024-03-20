@@ -13,7 +13,9 @@ namespace SpacetimeDB
         void OnDeleteEvent(ClientApi.Event dbEvent);
     }
 
-    public abstract class DatabaseTable<T, ReducerEvent> : IDatabaseTable where T : IDatabaseTable where ReducerEvent : ReducerEventBase
+    public abstract class DatabaseTable<T, ReducerEvent> : IDatabaseTable
+        where T : DatabaseTable<T, ReducerEvent>
+        where ReducerEvent : ReducerEventBase
     {
         public virtual void InternalOnValueInserted() { }
 
@@ -21,7 +23,7 @@ namespace SpacetimeDB
 
         public static IEnumerable<T> Iter()
         {
-            return SpacetimeDBClient.clientDB.GetObjects<T>();
+            return ClientCache.TableEntries<T>.Entries.Values;
         }
 
         public static IEnumerable<T> Query(Func<T, bool> filter)
@@ -31,7 +33,7 @@ namespace SpacetimeDB
 
         public static int Count()
         {
-            return SpacetimeDBClient.clientDB.Count<T>();
+            return ClientCache.TableEntries<T>.Entries.Count;
         }
 
         public delegate void InsertEventHandler(T insertedValue, ReducerEvent? dbEvent);
@@ -41,22 +43,19 @@ namespace SpacetimeDB
         public static event DeleteEventHandler? OnBeforeDelete;
         public static event DeleteEventHandler? OnDelete;
 
-        // We need this because C# doesn't allow to refer to self type.
-        protected abstract T GetThis();
-
         public void OnInsertEvent(ClientApi.Event dbEvent)
         {
-            OnInsert?.Invoke(GetThis(), (ReducerEvent?)dbEvent?.FunctionCall.CallInfo);
+            OnInsert?.Invoke((T)this, (ReducerEvent?)dbEvent?.FunctionCall.CallInfo);
         }
 
         public void OnBeforeDeleteEvent(ClientApi.Event dbEvent)
         {
-            OnBeforeDelete?.Invoke(GetThis(), (ReducerEvent?)dbEvent?.FunctionCall.CallInfo);
+            OnBeforeDelete?.Invoke((T)this, (ReducerEvent?)dbEvent?.FunctionCall.CallInfo);
         }
 
         public void OnDeleteEvent(ClientApi.Event dbEvent)
         {
-            OnDelete?.Invoke(GetThis(), (ReducerEvent?)dbEvent?.FunctionCall.CallInfo);
+            OnDelete?.Invoke((T)this, (ReducerEvent?)dbEvent?.FunctionCall.CallInfo);
         }
     }
 
@@ -67,7 +66,7 @@ namespace SpacetimeDB
     }
 
     public abstract class DatabaseTableWithPrimaryKey<T, ReducerEvent> : DatabaseTable<T, ReducerEvent>, IDatabaseTableWithPrimaryKey
-        where T : IDatabaseTableWithPrimaryKey
+        where T : DatabaseTableWithPrimaryKey<T, ReducerEvent>
         where ReducerEvent : ReducerEventBase
     {
         public abstract object GetPrimaryKeyValue();
@@ -77,7 +76,7 @@ namespace SpacetimeDB
 
         public void OnUpdateEvent(IDatabaseTableWithPrimaryKey newValue, ClientApi.Event dbEvent)
         {
-            OnUpdate?.Invoke(GetThis(), (T)newValue, (ReducerEvent?)dbEvent?.FunctionCall.CallInfo);
+            OnUpdate?.Invoke((T)this, (T)newValue, (ReducerEvent?)dbEvent?.FunctionCall.CallInfo);
         }
     }
 }

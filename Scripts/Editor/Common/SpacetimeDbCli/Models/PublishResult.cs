@@ -141,8 +141,8 @@ namespace SpacetimeDB.Editor
                     SpacetimeMeta.StringStyle.Error,
                     "<b>Failed to Publish:</b> Server host not running\n<align=left>" +
                     "(1) Open terminal\n" +
-                    "(2) `spacetime start`\n" +
-                    "(3) Try again</align>");
+                    "(2) Enter command: `<color=white>spacetime start</color>`\n" +
+                    "(3) Try again");
             }
             else if (isErrBuriedInOutput)
             {

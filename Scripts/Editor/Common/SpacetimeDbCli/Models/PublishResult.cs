@@ -148,10 +148,12 @@ namespace SpacetimeDB.Editor
             {
                 this.PublishErrCode = PublishErrorCode.UnknownError;
 
-                string iteratedErrs = string.Join("\n\n", cliResult.ErrsFoundFromCliOutput);
+                string clippedIteratedErrs = string.Join("\n\n", cliResult.ErrsFoundFromCliOutput);
+                clippedIteratedErrs = Utils.ClipString(clippedIteratedErrs, maxLength: 4000);
+
                 this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
                     SpacetimeMeta.StringStyle.Error,
-                    $"<b>Failed to Publish:</b>\n{iteratedErrs}");
+                    $"<b>Failed to Publish:</b>\n{clippedIteratedErrs}");
             }
             else
             {

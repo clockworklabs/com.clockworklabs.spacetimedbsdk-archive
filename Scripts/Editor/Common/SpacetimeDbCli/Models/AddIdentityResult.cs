@@ -38,9 +38,11 @@ namespace SpacetimeDB.Editor
             
             // Unknown error
             this.AddIdentityError = AddIdentityErrorType.Unknown;
+
+            string clippedFriendlyErr = Utils.ClipString(CliError, maxLength: 4000);
             this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error, 
-                CliError);
+                clippedFriendlyErr);
         }
 
         private bool checkIsTimedOutError()

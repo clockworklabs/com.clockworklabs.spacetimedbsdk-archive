@@ -175,7 +175,10 @@ namespace SpacetimeDB.Editor
                 Debug.LogError($"CLI Error: {cliResult.CliError}\n" +
                     "(For +details, see output err above)");
 
-                if (cliResult.HasErrsFoundFromCliOutput)
+                // Separate the errs found from the CLI output so the user doesn't need to dig
+                bool logCliResultErrsSeparately = cliResult.ErrsFoundFromCliOutput?.Count is > 0 and < 5;
+                
+                if (cliResult.HasErrsFoundFromCliOutput & logCliResultErrsSeparately) // If not too many
                 {
                     for (int i = 0; i < cliResult.ErrsFoundFromCliOutput.Count; i++)
                     {

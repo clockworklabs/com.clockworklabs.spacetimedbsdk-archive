@@ -485,7 +485,8 @@ namespace SpacetimeDB.Editor
             _cachedPublishResult = null;
             updatePublishStatus(
                 SpacetimeMeta.StringStyle.Error, 
-                publishResult.StyledFriendlyErrorMessage ?? publishResult.CliError);
+                publishResult.StyledFriendlyErrorMessage 
+                    ?? Utils.ClipString(publishResult.CliError, maxLength: 4000));
         }
         
         /// There may be a false-positive wasm-opt err here; in which case, we'd still run success.
@@ -567,7 +568,7 @@ namespace SpacetimeDB.Editor
         {
             installCliStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error,
-                $"<b>Failed:</b> Could not install Spacetime CLI\n{friendlyFailMsg}");
+                $"<b>Failed to Install Spacetime CLI:</b>\n{friendlyFailMsg}");
             
             installCliStatusLabel.style.display = DisplayStyle.Flex;
             installCliGroupBox.style.display = DisplayStyle.Flex;
@@ -847,9 +848,11 @@ namespace SpacetimeDB.Editor
         private void onChangeDefaultServerFail(SpacetimeCliResult cliResult)
         {
             serverSelectedDropdown.SetEnabled(true);
+
+            string clippedCliErr = Utils.ClipString(cliResult.CliError, maxLength: 4000);
             serverStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error,
-                $"<b>Failed:</b> Could not change servers\n{cliResult.CliError}");
+                $"<b>Failed to Change Servers:</b>\n{clippedCliErr}");
         }
         
         /// Invalidate identities
@@ -910,9 +913,11 @@ namespace SpacetimeDB.Editor
             Debug.LogError($"Failed to generate client files: {cliResult.CliError}");
 
             resetGenerateUi();
+            
+            string clippedCliErr = Utils.ClipString(cliResult.CliError, maxLength: 4000);
             publishResultStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error,
-                $"<b>Generate Error:</b>\n{cliResult.CliError}");
+                $"<b>Failed to Generate:</b>\n{clippedCliErr}");
             
             publishResultStatusLabel.style.display = DisplayStyle.Flex;
         }

@@ -7,7 +7,8 @@ namespace SpacetimeDB.Editor
         public bool HasAddServerError { get; private set; }
         
         /// You may pass this raw string to the UI, if a known err is caught.
-        /// This err won't be friendly, if uncaught (we pass CliError)
+        /// This err won't be friendly, if uncaught (we pass CliError).
+        /// Clipped, if too long.
         public string StyledFriendlyErrorMessage { get; private set; }
         
         /// Known/caught error type
@@ -38,9 +39,11 @@ namespace SpacetimeDB.Editor
             
             // Unknown error
             this.AddServerError = AddServerErrorType.Unknown;
+            
+            string clippedFriendlyErr = Utils.ClipString(CliError, maxLength: 4000);
             this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error, 
-                CliError);
+                clippedFriendlyErr);
         }
 
         /// <returns>hasErr</returns>

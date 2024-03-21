@@ -409,13 +409,13 @@ namespace SpacetimeDB.Editor
             CallReducerRequest request, 
             SpacetimeCliResult cliResult)
         {
-            string parsedError = string.IsNullOrWhiteSpace(cliResult.CliError)
+            string clippedParsedError = string.IsNullOrWhiteSpace(cliResult.CliError)
                 ? "(No error message)"
-                : cliResult.CliError;
+                : Utils.ClipString(cliResult.CliError, 4000);
             
             actionsResultLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error,
-                $"<b>Error:</b> {parsedError}");
+                $"<b>Error:</b> {clippedParsedError}");
         }
     }
 }

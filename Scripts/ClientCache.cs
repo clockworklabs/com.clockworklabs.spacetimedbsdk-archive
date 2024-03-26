@@ -62,13 +62,6 @@ namespace SpacetimeDB
             public IEnumerator<KeyValuePair<byte[], IDatabaseTable>> GetEnumerator() => Entries.Select(kv => new KeyValuePair<byte[], IDatabaseTable>(kv.Key, kv.Value)).GetEnumerator();
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-            public readonly ISpacetimeDBLogger Logger;
-
-            public TableCache(ISpacetimeDBLogger loggerToUse)
-            {
-                Logger = loggerToUse;
-            }
         }
 
         private readonly Dictionary<string, ITableCache> tables = new();
@@ -78,7 +71,7 @@ namespace SpacetimeDB
         {
             string name = typeof(T).Name;
 
-            if (!tables.TryAdd(name, new TableCache<T>(Logger)))
+            if (!tables.TryAdd(name, new TableCache<T>()))
             {
                 Logger.LogError($"Table with name already exists: {name}");
             }
@@ -96,12 +89,5 @@ namespace SpacetimeDB
         }
 
         public IEnumerable<ITableCache> GetTables() => tables.Values;
-
-        public readonly ISpacetimeDBLogger Logger;
-
-        public ClientCache(ISpacetimeDBLogger loggerToUse)
-        {
-            Logger = loggerToUse;
-        }
     }
 }

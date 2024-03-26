@@ -88,7 +88,7 @@ namespace SpacetimeDB
 
         private SpacetimeDB.WebSocket webSocket;
         private bool connectionClosed;
-        public readonly ClientCache clientDB;
+        public readonly ClientCache clientDB = new();
 
         protected abstract ReducerEventBase ReducerEventFromDbEvent(ClientApi.Event dbEvent);
 
@@ -98,21 +98,17 @@ namespace SpacetimeDB
         private readonly Thread networkMessageProcessThread;
         private readonly Thread stateDiffProcessThread;
 
-        public readonly ISpacetimeDBLogger Logger;
         private readonly Stats stats = new();
 
-        protected SpacetimeDBClientBase(ISpacetimeDBLogger loggerToUse)
+        protected SpacetimeDBClientBase()
         {
-            Logger = loggerToUse;
-            clientDB = new(Logger);
-
             var options = new SpacetimeDB.ConnectOptions
             {
                 //v1.bin.spacetimedb
                 //v1.text.spacetimedb
                 Protocol = "v1.bin.spacetimedb",
             };
-            webSocket = new SpacetimeDB.WebSocket(Logger, options);
+            webSocket = new SpacetimeDB.WebSocket(options);
             webSocket.OnMessage += OnMessageReceived;
             webSocket.OnClose += (code, error) => onDisconnect?.Invoke(code, error);
             webSocket.OnConnect += () => onConnect?.Invoke();

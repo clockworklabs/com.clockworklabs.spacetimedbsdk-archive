@@ -127,14 +127,10 @@ namespace SpacetimeDB
         private readonly byte[] _receiveBuffer = new byte[MAXMessageSize];
         private readonly ConcurrentQueue<MainThreadDispatch> dispatchQueue = new();
 
-        protected ClientWebSocket Ws;
+        protected ClientWebSocket Ws = new();
 
-        private ISpacetimeDBLogger _logger;
-
-        public WebSocket(ISpacetimeDBLogger logger, ConnectOptions options)
+        public WebSocket(ConnectOptions options)
         {
-            Ws = new ClientWebSocket();
-            _logger = logger;
             _options = options;
         }
 
@@ -176,13 +172,13 @@ namespace SpacetimeDB
                     // not a websocket happens when there is no module published under the address specified
                     message = $"{message} Did you forget to publish your module?";
                 }
-                _logger.LogException(ex);
+                Logger.LogException(ex);
                 if (OnConnectError != null) dispatchQueue.Enqueue(new OnConnectErrorMessage(OnConnectError, ex.WebSocketErrorCode, message));
                 return;
             }
             catch (Exception e)
             {
-                _logger.LogException(e);
+                Logger.LogException(e);
                 if (OnConnectError != null) dispatchQueue.Enqueue(new OnConnectErrorMessage(OnConnectError, null, e.Message));
                 return;
             }

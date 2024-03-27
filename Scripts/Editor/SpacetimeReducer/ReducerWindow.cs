@@ -58,20 +58,24 @@ namespace SpacetimeDB.Editor
 
         /// Add style to the UI window; subscribe to click actions.
         /// High-level event chain handler.
-        /// (!) Persistent vals will NOT load immediately here; await them at setOnActionEvents
+        /// (!) Persistent vals loaded from a ViewDataKey prop will NOT
+        ///     load immediately here; await them elsewhere.
         public async void CreateGUI()
         {
-            // Init styles, bind fields to ui, sub to events
+            // Init styles, bind fields to ui, validate integrity
             initVisualTreeStyles();
             setUiElements();
             sanityCheckUiElements();
 
-            // Fields set from here
-            resetUi(); // @ ReducerWindowActions.cs
+            // Reset the UI (since all UI shown in UI Builder), sub to click/interaction events
+            resetUi(); // (!) ViewDataKey persistence loads sometime *after* CreateGUI().
             setOnActionEvents(); // @ ReducerWindowCallbacks.cs
 
             try
             {
+                // Async init chain (pulling data from Publisher cache):
+                // Ensure CLI is installed -> Load last-published server -> Load last-published identity ->
+                // Get list of reducers -> Populate reducers list UI
                 await initDynamicEventsFromReducerWindow(); // @ ReducerWindowActions
             }
             catch (Exception e)

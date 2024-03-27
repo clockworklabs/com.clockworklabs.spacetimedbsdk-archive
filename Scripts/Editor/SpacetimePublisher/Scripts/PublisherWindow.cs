@@ -100,17 +100,19 @@ namespace SpacetimeDB.Editor
         ///     load immediately here; await them elsewhere.
         public async void CreateGUI()
         {
-            // Init styles, bind fields to ui, sub to events
+            // Init styles, bind fields to ui, validate integrity
             initVisualTreeStyles();
             setUiElements();
             sanityCheckUiElements();
 
-            // Fields set from here
-            resetUi();
+            // Reset the UI (since all UI shown in UI Builder), sub to click/interaction events
+            resetUi(); // (!) ViewDataKey persistence loads sometime *after* CreateGUI().
             setOnActionEvents(); // @ PublisherWindowCallbacks.cs
 
             try
             {
+                // Async init chain: Ensure CLI is installed -> Load default servers ->
+                // Load default identities -> Load cached publish result, if any
                 await initDynamicEventsFromPublisherWindow(); // @ PublisherWindowActions
             }
             catch (Exception e)

@@ -294,7 +294,7 @@ namespace SpacetimeDB
                 var message = Message.Parser.ParseFrom(decompressedStream);
                 decompressionTime.Stop();
                 if (message.TypeCase == Message.TypeOneofCase.SubscriptionUpdate) {
-                  logger.Log($"Decompressed and Protobuf parsed SubscriptionUpdate message in {decompressionTime.ElapsedMilliseconds} ms");
+                  logger.Log($"[{DateTime.Now:HH:mm:ss.fff}] Decompressed and Protobuf parsed SubscriptionUpdate message in {decompressionTime.ElapsedMilliseconds} ms");
                 }
                 using var stream = new MemoryStream();
                 using var reader = new BinaryReader(stream);
@@ -389,7 +389,7 @@ namespace SpacetimeDB
                             }
                         }
                         preproccessSubscriptionTime.Stop();
-                        logger.Log($"Preprocessing subscription update took {preproccessSubscriptionTime.ElapsedMilliseconds} ms");
+                        logger.Log($"[{DateTime.Now:HH:mm:ss.fff}] Preprocessing subscription update took {preproccessSubscriptionTime.ElapsedMilliseconds} ms");
                         break;
 
                     case ClientApi.Message.TypeOneofCase.TransactionUpdate:
@@ -893,7 +893,7 @@ namespace SpacetimeDB
 
                     if (applySubscriptionTime != null) {
                       applySubscriptionTime.Stop();
-                      logger.Log($"Took {applySubscriptionTime.ElapsedMilliseconds} ms to apply SubscriptionUpdate before invoking onSubscriptionApplied");
+                      logger.Log($"[{DateTime.Now:HH:mm:ss.fff}] Took {applySubscriptionTime.ElapsedMilliseconds} ms to apply SubscriptionUpdate before invoking onSubscriptionApplied");
                     }
 
                     switch (message.TypeCase)

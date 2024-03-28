@@ -88,22 +88,24 @@ class OnSendErrorMessage : MainThreadDispatch
     {
         private WebSocketMessageEventHandler receiver;
         private byte[] message;
+        private DateTime timestamp;
 
-        public OnMessage(WebSocketMessageEventHandler receiver, byte[] message)
+        public OnMessage(WebSocketMessageEventHandler receiver, byte[] message, DateTime timestamp)
         {
             this.receiver = receiver;
             this.message = message;
+            this.timestamp = timestamp;
         }
 
         public override void Execute()
         {
-            receiver.Invoke(message);
+            receiver.Invoke(message, timestamp);
         }
     }
 
     public delegate void WebSocketOpenEventHandler();
 
-    public delegate void WebSocketMessageEventHandler(byte[] message);
+    public delegate void WebSocketMessageEventHandler(byte[] message, DateTime timestamp);
 
     public delegate void WebSocketCloseEventHandler(WebSocketCloseStatus? code, WebSocketError? error);
 
@@ -203,6 +205,7 @@ class OnSendErrorMessage : MainThreadDispatch
                         return;
                     }
 
+                    var startReceive = DateTime.Now;
                     var count = receiveResult.Count;
                     while (receiveResult.EndOfMessage == false)
                     {
@@ -225,7 +228,7 @@ class OnSendErrorMessage : MainThreadDispatch
                     var buffCopy = new byte[count];
                     for (var x = 0; x < count; x++)
                         buffCopy[x] = _receiveBuffer[x];
-                    dispatchQueue.Enqueue(new OnMessage(OnMessage, buffCopy));
+                    dispatchQueue.Enqueue(new OnMessage(OnMessage, buffCopy, startReceive));
                 }
                 catch (WebSocketException ex)
                 {

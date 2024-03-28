@@ -889,7 +889,7 @@ namespace SpacetimeDB
                         }
                     }
 
-                    if (applySubscriptionTime) {
+                    if (applySubscriptionTime != null) {
                       applySubscriptionTime.Stop();
                       logger.Log($"Took {applySubscriptionTime.ElapsedMilliseconds} to apply SubscriptionUpdate before invoking onSubscriptionApplied");
                     }

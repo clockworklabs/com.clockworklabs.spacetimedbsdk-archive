@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Reflection;
@@ -214,14 +215,14 @@ namespace SpacetimeDB
                                          a.GetParameters().Length > 0 &&
                                          a.GetParameters()[0].ParameterType ==
                                          typeof(AlgebraicValue));
-                var decodeDelegate = (Func<AlgebraicValue, object>)conversionFunc.CreateDelegate(typeof(Func<AlgebraicValue, object>));  
+                var decodeDelegate = (Func<AlgebraicValue, object>)conversionFunc.CreateDelegate(typeof(Func<AlgebraicValue, object>));
                 clientDB.AddTable(@class, algebraicValue, decodeDelegate);
             }
 
             var reducerType = FindReducerType();
             if (reducerType != null)
             {
-                // cache all our reducer events by their function name 
+                // cache all our reducer events by their function name
                 foreach (var methodInfo in reducerType.GetMethods())
                 {
                     if (methodInfo.GetCustomAttribute<ReducerCallbackAttribute>() is
@@ -287,7 +288,9 @@ namespace SpacetimeDB
             PreProcessedMessage PreProcessMessage(byte[] bytes, DateTime timestamp)
             {
                 var dbOps = new List<DbOp>();
-                var message = Message.Parser.ParseFrom(bytes);
+                using var compressedStream = new MemoryStream(bytes);
+                using var decompressedStream = new BrotliStream(compressedStream, CompressionMode.Decompress);
+                var message = Message.Parser.ParseFrom(decompressedStream);
                 using var stream = new MemoryStream();
                 using var reader = new BinaryReader(stream);
 

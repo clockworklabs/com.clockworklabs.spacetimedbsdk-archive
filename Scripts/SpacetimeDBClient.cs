@@ -328,6 +328,7 @@ namespace SpacetimeDB
                 switch (message.TypeCase)
                 {
                     case ClientApi.Message.TypeOneofCase.SubscriptionUpdate:
+                        var preproccessSubscriptionTime = System.Diagonstics.Stopwatch.StartNew();
                         subscriptionUpdate = message.SubscriptionUpdate;
                         subscriptionInserts = new Dictionary<string, HashSet<byte[]>>(
                             capacity: subscriptionUpdate.TableUpdates.Sum(a => a.TableRowOperations.Count));
@@ -385,7 +386,8 @@ namespace SpacetimeDB
                                 }
                             }
                         }
-
+                        preproccessSubscriptionTime.Stop();
+                        logger.Log($"Preprocessing subscription update took {preprocessSubscriptionTime.ElapsedMilliseconds} ms");
                         break;
 
                     case ClientApi.Message.TypeOneofCase.TransactionUpdate:
@@ -650,9 +652,12 @@ namespace SpacetimeDB
                     break;
             }
 
+            var applySubscriptionTime = null;
+
             switch (message.TypeCase)
             {
                 case Message.TypeOneofCase.SubscriptionUpdate:
+                  applySubscriptionTime = System.Diagnostics.Stopwatch.StartNew();
                 case Message.TypeOneofCase.TransactionUpdate:
                     // First trigger OnBeforeDelete
                     foreach (var update in dbOps)
@@ -880,6 +885,11 @@ namespace SpacetimeDB
                             onRowUpdate?.Invoke(table.Name, tableOp, oldValue, newValue,
                                 message.Event?.FunctionCall.CallInfo);
                         }
+                    }
+
+                    if (applySubscriptionTime) {
+                      applySubscriptionTime.Stop();
+                      logger.Log($"Took {applySubscriptionTime.ElapsedMilliseconds} to apply SubscriptionUpdate before invoking onSubscriptionApplied");
                     }
 
                     switch (message.TypeCase)

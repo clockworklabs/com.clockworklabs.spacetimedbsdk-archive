@@ -289,8 +289,11 @@ namespace SpacetimeDB
             {
                 var dbOps = new List<DbOp>();
                 using var compressedStream = new MemoryStream(bytes);
+                var decompressionTime = System.Diagnostics.Stopwatch.StartNew();
                 using var decompressedStream = new BrotliStream(compressedStream, CompressionMode.Decompress);
                 var message = Message.Parser.ParseFrom(decompressedStream);
+                decompressionTime.Stop();
+                logger.Log($"Decompressed and Protobuf parsed {message.TypeCase} message in {decompressionTime.ElapsedMilliseconds} ms");
                 using var stream = new MemoryStream();
                 using var reader = new BinaryReader(stream);
 

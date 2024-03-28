@@ -652,13 +652,15 @@ namespace SpacetimeDB
                     break;
             }
 
-            var applySubscriptionTime = null;
-
             switch (message.TypeCase)
             {
                 case Message.TypeOneofCase.SubscriptionUpdate:
-                  applySubscriptionTime = System.Diagnostics.Stopwatch.StartNew();
                 case Message.TypeOneofCase.TransactionUpdate:
+                    var applySubscriptionTime = null;
+
+                    if (message.TypeCase == Message.TypeOneofCase.SubscriptionUpdate) {
+                      applySubscriptionTime = System.Diagnostics.Stopwatch.StartNew(); 
+                    }
                     // First trigger OnBeforeDelete
                     foreach (var update in dbOps)
                     {

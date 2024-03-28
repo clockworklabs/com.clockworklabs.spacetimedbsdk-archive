@@ -289,7 +289,7 @@ namespace SpacetimeDB
             {
                 var dbOps = new List<DbOp>();
                 using var compressedStream = new MemoryStream(bytes);
-                var decompressionTime = System.Diagnostics.Stopwatch.StartNew();
+                var decompressionTime = Stopwatch.StartNew();
                 using var decompressedStream = new BrotliStream(compressedStream, CompressionMode.Decompress);
                 var message = Message.Parser.ParseFrom(decompressedStream);
                 decompressionTime.Stop();
@@ -328,7 +328,7 @@ namespace SpacetimeDB
                 switch (message.TypeCase)
                 {
                     case ClientApi.Message.TypeOneofCase.SubscriptionUpdate:
-                        var preproccessSubscriptionTime = System.Diagonstics.Stopwatch.StartNew();
+                        var preproccessSubscriptionTime = Stopwatch.StartNew();
                         subscriptionUpdate = message.SubscriptionUpdate;
                         subscriptionInserts = new Dictionary<string, HashSet<byte[]>>(
                             capacity: subscriptionUpdate.TableUpdates.Sum(a => a.TableRowOperations.Count));
@@ -387,7 +387,7 @@ namespace SpacetimeDB
                             }
                         }
                         preproccessSubscriptionTime.Stop();
-                        logger.Log($"Preprocessing subscription update took {preprocessSubscriptionTime.ElapsedMilliseconds} ms");
+                        logger.Log($"Preprocessing subscription update took {preproccessSubscriptionTime.ElapsedMilliseconds} ms");
                         break;
 
                     case ClientApi.Message.TypeOneofCase.TransactionUpdate:
@@ -656,10 +656,10 @@ namespace SpacetimeDB
             {
                 case Message.TypeOneofCase.SubscriptionUpdate:
                 case Message.TypeOneofCase.TransactionUpdate:
-                    System.Diagnostics.Stopwatch? applySubscriptionTime = null;
+                    Stopwatch? applySubscriptionTime = null;
 
                     if (message.TypeCase == Message.TypeOneofCase.SubscriptionUpdate) {
-                      applySubscriptionTime = System.Diagnostics.Stopwatch.StartNew(); 
+                      applySubscriptionTime = Stopwatch.StartNew();
                     }
                     // First trigger OnBeforeDelete
                     foreach (var update in dbOps)

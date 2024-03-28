@@ -1,3 +1,4 @@
 {
-	"name": "NewAssembly"
+    "name": "com.clockworklabs.spacetimedbsdk",
+    "allowUnsafeCode": true
 }

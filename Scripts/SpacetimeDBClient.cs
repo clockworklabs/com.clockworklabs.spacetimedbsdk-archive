@@ -656,7 +656,7 @@ namespace SpacetimeDB
             {
                 case Message.TypeOneofCase.SubscriptionUpdate:
                 case Message.TypeOneofCase.TransactionUpdate:
-                    var applySubscriptionTime = null;
+                    System.Diagnostics.Stopwatch? applySubscriptionTime = null;
 
                     if (message.TypeCase == Message.TypeOneofCase.SubscriptionUpdate) {
                       applySubscriptionTime = System.Diagnostics.Stopwatch.StartNew(); 

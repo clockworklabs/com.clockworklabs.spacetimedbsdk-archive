@@ -293,7 +293,9 @@ namespace SpacetimeDB
                 using var decompressedStream = new BrotliStream(compressedStream, CompressionMode.Decompress);
                 var message = Message.Parser.ParseFrom(decompressedStream);
                 decompressionTime.Stop();
-                logger.Log($"Decompressed and Protobuf parsed {message.TypeCase} message in {decompressionTime.ElapsedMilliseconds} ms");
+                if (message.TypeCase == Message.TypeOneofCase.SubscriptionUpdate) {
+                  logger.Log($"Decompressed and Protobuf parsed SubscriptionUpdate message in {decompressionTime.ElapsedMilliseconds} ms");
+                }
                 using var stream = new MemoryStream();
                 using var reader = new BinaryReader(stream);
 
@@ -891,7 +893,7 @@ namespace SpacetimeDB
 
                     if (applySubscriptionTime != null) {
                       applySubscriptionTime.Stop();
-                      logger.Log($"Took {applySubscriptionTime.ElapsedMilliseconds} to apply SubscriptionUpdate before invoking onSubscriptionApplied");
+                      logger.Log($"Took {applySubscriptionTime.ElapsedMilliseconds} ms to apply SubscriptionUpdate before invoking onSubscriptionApplied");
                     }
 
                     switch (message.TypeCase)

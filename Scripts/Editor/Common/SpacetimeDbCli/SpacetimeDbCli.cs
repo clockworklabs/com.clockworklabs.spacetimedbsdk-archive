@@ -252,13 +252,11 @@ namespace SpacetimeDB.Editor
             GetServersResult getServersResult = new(cliResult);
             return getServersResult;
         }
-        #endregion // High Level CLI Actions
-
-
+        
         /// Uses the `spacetime list {identity}` CLI command.
         /// (!) This only returns the addresses.
         ///     For nicknames, see the chained call: GetDbAddressesWithNicknames
-        public static async Task<GetDbAddressesResult> GetDbAddresses(string identity)
+        public static async Task<GetDbAddressesResult> GetDbAddressesAsync(string identity)
         {
             string argSuffix = $"spacetime list {identity}";
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
@@ -267,7 +265,7 @@ namespace SpacetimeDB.Editor
         }
         
         /// [Slow] Uses the `spacetime describe {moduleName} [--as-identity {identity}]` CLI command
-        public static async Task<GetEntityStructureResult> GetEntityStructure(
+        public static async Task<GetEntityStructureResult> GetEntityStructureAsync(
             string moduleName,
             string asIdentity = null)
         {

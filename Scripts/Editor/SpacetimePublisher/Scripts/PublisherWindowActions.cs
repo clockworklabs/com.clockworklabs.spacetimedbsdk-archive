@@ -760,10 +760,15 @@ namespace SpacetimeDB.Editor
             publishResultDateTimeTxt.value = "";
             publishResultHostTxt.value = "";
             publishResultDbAddressTxt.value = "";
+            
             publishResultIsOptimizedBuildToggle.value = false;
             installWasmOptBtn.style.display = DisplayStyle.None;
             installWasmOptProgressBar.style.display = DisplayStyle.None;
+            
             publishResultStatusLabel.style.display = DisplayStyle.None;
+            
+            publishResultGenerateClientFilesBtn.SetEnabled(true);
+            publishResultGenerateClientFilesBtn.text = "Generate Client Typings";
             
             // Hacky readonly Toggle feat workaround
             publishResultIsOptimizedBuildToggle.SetEnabled(false);

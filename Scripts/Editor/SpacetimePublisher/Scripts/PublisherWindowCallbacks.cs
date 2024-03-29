@@ -254,6 +254,10 @@ namespace SpacetimeDB.Editor
             {
                 installWasmOptBtn.clicked -= onInstallWasmOptBtnClick;
             }
+            if (publishResultGenerateClientFilesBtn != null)
+            {
+                publishResultGenerateClientFilesBtn.clicked -= onPublishResultGenerateClientFilesBtnClick;
+            }
         }
 
         /// Cleanup when the UI is out-of-scope

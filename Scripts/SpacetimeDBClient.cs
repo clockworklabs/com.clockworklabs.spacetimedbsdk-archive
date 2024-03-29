@@ -289,7 +289,7 @@ namespace SpacetimeDB
             {
                 var dbOps = new List<DbOp>();
                 // using var compressedStream = new MemoryStream(bytes);
-                // var decompressionTime = Stopwatch.StartNew();
+                var decompressionTime = Stopwatch.StartNew();
                 // using var decompressedStream = new BrotliStream(compressedStream, CompressionMode.Decompress);
                 var message = Message.Parser.ParseFrom(
                 // decompressedStream

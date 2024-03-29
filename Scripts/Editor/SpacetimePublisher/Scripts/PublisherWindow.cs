@@ -79,6 +79,7 @@ namespace SpacetimeDB.Editor
         private Button installWasmOptBtn; // Only shows after a publishAsync where wasm-opt was !found
         private ProgressBar installWasmOptProgressBar; // Shows after installWasmOptBtn clicked
         private Button publishResultGenerateClientFilesBtn;
+        private Button publishResultGetServerLogsBtn;
         private Label publishResultStatusLabel;
         
         private VisualElement errorCover;
@@ -198,6 +199,7 @@ namespace SpacetimeDB.Editor
             installWasmOptBtn = rootVisualElement.Q<Button>(nameof(installWasmOptBtn));
             installWasmOptProgressBar = rootVisualElement.Q<ProgressBar>(nameof(installWasmOptProgressBar));
             publishResultGenerateClientFilesBtn = rootVisualElement.Q<Button>(nameof(publishResultGenerateClientFilesBtn));
+            publishResultGetServerLogsBtn = rootVisualElement.Q<Button>(nameof(publishResultGetServerLogsBtn));
             publishResultStatusLabel = rootVisualElement.Q<Label>(nameof(publishResultStatusLabel));
         }
 
@@ -254,6 +256,7 @@ namespace SpacetimeDB.Editor
                 Assert.IsNotNull(installWasmOptBtn, $"Expected `#{nameof(installWasmOptBtn)}`");
                 Assert.IsNotNull(installWasmOptProgressBar, $"Expected `#{nameof(installWasmOptProgressBar)}`");
                 Assert.IsNotNull(publishResultGenerateClientFilesBtn, $"Expected `#{nameof(publishResultGenerateClientFilesBtn)}`");
+                Assert.IsNotNull(publishResultGetServerLogsBtn, $"Expected `#{nameof(publishResultGetServerLogsBtn)}`");
                 Assert.IsNotNull(publishResultStatusLabel, $"Expected `#{nameof(publishResultStatusLabel)}`");
             }
             catch (Exception e)

@@ -151,6 +151,11 @@ namespace SpacetimeDB.Editor
                 // Generate SDK via CLI `spacetime generate`
                 publishResultGenerateClientFilesBtn.clicked += onPublishResultGenerateClientFilesBtnClick;
             }
+            if (publishResultGetServerLogsBtn != null)
+            {
+                // Generate SDK via CLI `spacetime logs`
+                publishResultGetServerLogsBtn.clicked += onGetServerLogsBtnClick;
+            }
         }
 
         /// Cleanup: This should parity the opposite of setOnActionEvents()
@@ -257,6 +262,10 @@ namespace SpacetimeDB.Editor
             if (publishResultGenerateClientFilesBtn != null)
             {
                 publishResultGenerateClientFilesBtn.clicked -= onPublishResultGenerateClientFilesBtnClick;
+            }
+            if (publishResultGetServerLogsBtn != null)
+            {
+                publishResultGetServerLogsBtn.clicked -= onGetServerLogsBtnClick;
             }
         }
 
@@ -420,6 +429,20 @@ namespace SpacetimeDB.Editor
                 publishBtn.SetEnabled(true);
             }
         }
+        
+        /// Run CLI cmd `spacetime logs`
+        private async void onGetServerLogsBtnClick()
+        {
+            try
+            {
+                await getServerLogsAsync();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error: {e}");
+                throw;
+            }
+        }        
         
         /// Run CLI cmd `spacetime generate`
         private async void onPublishResultGenerateClientFilesBtnClick()

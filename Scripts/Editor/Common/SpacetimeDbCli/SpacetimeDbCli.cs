@@ -277,5 +277,15 @@ namespace SpacetimeDB.Editor
             GetEntityStructureResult getEntityStructureResult = new(cliResult);
             return getEntityStructureResult;
         }
+
+        /// Uses the `spacetime logs` CLI command.
+        /// <param name="serverName"></param>
+        public static async Task<SpacetimeCliResult> GetLogsAsync(string serverName)
+        {
+            string argSuffix = $"spacetime logs {serverName}";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
+            return cliResult;
+        }
+        #endregion // High Level CLI Actions
     }
 }

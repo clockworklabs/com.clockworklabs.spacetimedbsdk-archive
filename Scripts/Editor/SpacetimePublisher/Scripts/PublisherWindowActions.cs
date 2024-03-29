@@ -774,6 +774,12 @@ namespace SpacetimeDB.Editor
             publishResultIsOptimizedBuildToggle.SetEnabled(false);
             publishResultIsOptimizedBuildToggle.style.opacity = 1;
         }
+
+        private void resetGetServerLogsUi()
+        {
+            publishResultGetServerLogsBtn.SetEnabled(true);
+            publishResultGetServerLogsBtn.text = "Server Logs";
+        }
         
         /// Toggles the group visibility of the foldouts. Labels also hide if !show.
         /// Toggles ripple downwards from top. Checks for nulls
@@ -911,6 +917,49 @@ namespace SpacetimeDB.Editor
             {
                 onGenerateClientFilesFail(generateResult);
             }
+        }
+
+        /// Disable get logs btn, show action text
+        private void setGetServerLogsAsyncUi()
+        {
+            publishResultGetServerLogsBtn.SetEnabled(false);
+            publishResultGetServerLogsBtn.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Action, "Fetching ...");
+        }
+        
+        /// Gets server logs of selected server name
+        private async Task getServerLogsAsync()
+        {
+            setGetServerLogsAsyncUi();
+
+            string serverName = publishModuleNameTxt.text;
+            SpacetimeCliResult cliResult = await SpacetimeDbCli.GetLogsAsync(serverName);
+        
+            resetGetServerLogsUi();
+            if (cliResult.HasCliErr)
+            {
+                Debug.LogError($"Failed to get server logs: {cliResult.CliError}");
+                return;
+            }
+
+            onGetServerLogsSuccess(cliResult);
+        }
+
+        /// Output logs to console, with some basic style
+        private void onGetServerLogsSuccess(SpacetimeCliResult cliResult)
+        {
+            string infoColor = SpacetimeMeta.INPUT_TEXT_COLOR;
+            string warnColor = SpacetimeMeta.ACTION_COLOR_HEX;
+            string errColor = SpacetimeMeta.ERROR_COLOR_HEX;
+            
+            // Just color the log types for easier reading
+            string styledLogs = cliResult.CliOutput
+                .Replace("INFO:", $"<color={infoColor}><b>INFO:</b></color>")
+                .Replace("WARNING:", SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Action, "<b>WARNING:</b>"))
+                .Replace("ERROR:", SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Action, "<b>ERROR:</b>"));
+
+            Debug.Log($"<color={SpacetimeMeta.ACTION_COLOR_HEX}><b>Formatted Server Logs:</b></color>\n" +
+                $"```bash\n{styledLogs}\n```");
         }
 
         private void onGenerateClientFilesFail(SpacetimeCliResult cliResult)

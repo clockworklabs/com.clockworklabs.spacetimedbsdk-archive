@@ -288,13 +288,16 @@ namespace SpacetimeDB
             PreProcessedMessage PreProcessMessage(byte[] bytes, DateTime timestamp)
             {
                 var dbOps = new List<DbOp>();
-                using var compressedStream = new MemoryStream(bytes);
-                var decompressionTime = Stopwatch.StartNew();
-                using var decompressedStream = new BrotliStream(compressedStream, CompressionMode.Decompress);
-                var message = Message.Parser.ParseFrom(decompressedStream);
+                // using var compressedStream = new MemoryStream(bytes);
+                // var decompressionTime = Stopwatch.StartNew();
+                // using var decompressedStream = new BrotliStream(compressedStream, CompressionMode.Decompress);
+                var message = Message.Parser.ParseFrom(
+                // decompressedStream
+                bytes
+                );
                 decompressionTime.Stop();
                 if (message.TypeCase == Message.TypeOneofCase.SubscriptionUpdate) {
-                  logger.Log($"[{DateTime.Now:HH:mm:ss.fff}] Decompressed and Protobuf parsed SubscriptionUpdate message in {decompressionTime.ElapsedMilliseconds} ms");
+                  logger.Log($"[{DateTime.Now:HH:mm:ss.fff}] Protobuf parsed SubscriptionUpdate message in {decompressionTime.ElapsedMilliseconds} ms");
                 }
                 using var stream = new MemoryStream();
                 using var reader = new BinaryReader(stream);

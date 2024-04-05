@@ -45,14 +45,14 @@ namespace SpacetimeDB.Editor
             serverNewGroupBox.style.display = DisplayStyle.None;
             resetServerDropdown();
             serverSelectedDropdown.value = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Action, "Searching ...");
+                SpacetimeMeta.StringStyle.Action, "Discovering ...");
             
             // Hide identity
             identityAddNewShowUiBtn.style.display = DisplayStyle.None;
             identityNewGroupBox.style.display = DisplayStyle.None;
             resetIdentityDropdown();
             identitySelectedDropdown.value = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Action, "Searching ..."); 
+                SpacetimeMeta.StringStyle.Action, "Discovering ..."); 
             identityAddBtn.SetEnabled(false);
              
             // Hide publish

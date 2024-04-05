@@ -58,7 +58,7 @@ namespace SpacetimeDB.Editor
             
             // TODO: Cache the vals using ViewDataKey -> add a refresh btn
             string moduleName = moduleNameTxt.value;
-            GetEntityStructureResult entityStructureResult = await SpacetimeDbCli.GetEntityStructure(moduleName);
+            GetEntityStructureResult entityStructureResult = await SpacetimeDbCli.GetEntityStructureAsync(moduleName);
             
             bool isSuccess = entityStructureResult is { HasEntityStructure: true };
             if (!isSuccess)

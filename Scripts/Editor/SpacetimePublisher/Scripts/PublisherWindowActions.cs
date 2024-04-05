@@ -100,18 +100,75 @@ namespace SpacetimeDB.Editor
             setInstallSpacetimeDbCliUi();
             
             // Run CLI cmd
-            SpacetimeCliResult installResult = await SpacetimeDbCli.InstallSpacetimeCliAsync();
+            SpacetimeCliResult cliResult = await SpacetimeDbCli.InstallSpacetimeCliAsync();
             
             // Process result -> Update UI
-            bool isSpacetimeDbCliInstalled = !installResult.HasCliErr;
-            if (isSpacetimeDbCliInstalled)
+            bool isSpacetimeDbCliInstalled = !cliResult.HasCliErr;
+            if (!isSpacetimeDbCliInstalled)
             {
-                installCliGroupBox.style.display = DisplayStyle.None;
+                // Critical error: Spacetime CLI !installed and failed install attempt
+                onInstallSpacetimeDbCliFail(cliResult);
                 return;
             }
             
-            // Critical error: Spacetime CLI !installed and failed install attempt
-            onInstallSpacetimeDbCliFail(friendlyFailMsg: "See logs");
+            await onInstallSpacetimeDbCliSuccess();
+        }
+
+        /// We may need to restart Unity, due to env var refreshes,
+        /// since child Processes use Unity's launched env vars
+        private async Task onInstallSpacetimeDbCliSuccess()
+        {
+            // Validate
+            installCliProgressBar.title = "Validating SpacetimeDB CLI Installation ...";
+            
+            SpacetimeCliResult cliResult = await SpacetimeDbCli.GetIsSpacetimeCliInstalledAsync();
+            bool isNotRecognizedCmd = cliResult.HasCliErr && cliResult.CliError.Contains("'spacetime' is not recognized");
+            if (isNotRecognizedCmd)
+            {
+                // This is only a "partial" error: We probably installed, but the env vars didn't refresh
+                // We need to restart Unity to refresh the spawned child Process env vars
+                onInstallSpacetimeDbCliSoftFail(); // Throws
+            }
+            
+            installCliGroupBox.style.display = DisplayStyle.None;
+        }
+
+        /// Set common fail UI, shared between hard and soft fail funcs
+        private void onInstallSpacetimeDbFailUi()
+        {
+            installCliStatusLabel.style.display = DisplayStyle.Flex;
+            installCliGroupBox.style.display = DisplayStyle.Flex;
+            installCliProgressBar.style.display = DisplayStyle.None;
+        }
+
+        /// Technically success, but we need to restart Unity to refresh PATH env vars
+        /// Throws to prevent further execution in the init chain
+        private void onInstallSpacetimeDbCliSoftFail()
+        {
+            onInstallSpacetimeDbFailUi();
+            
+            // TODO: Cross-platform refresh env vars without having to restart Unity (surprisingly advanced)
+            string successButRestartMsg = "<b>Successfully Installed SpacetimeDB CLI:</b>\n" +
+                "Please restart Unity to refresh the CLI env vars";
+
+            serverSelectedDropdown.SetEnabled(false);
+            serverSelectedDropdown.SetValueWithoutNotify("Awaiting PATH Update (Unity Restart)");
+            installCliStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Success, successButRestartMsg);
+
+            throw new Exception("Successful install, but Unity must restart (to refresh PATH env vars)");
+        }
+        
+        /// Throws Exception
+        private void onInstallSpacetimeDbCliFail(SpacetimeCliResult cliResult)
+        {
+            onInstallSpacetimeDbFailUi();
+
+            string errMsg = "<b>Failed to Install Spacetime CLI:</b>\nSee logs";
+            installCliStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error, errMsg);
+            
+            throw new Exception(errMsg);
         }
 
         /// Try to get get list of Servers from CLI.
@@ -562,16 +619,6 @@ namespace SpacetimeDB.Editor
             
             if (autoHideOnComplete)
                 progressBar.style.display = DisplayStyle.None;
-        }
-
-        private void onInstallSpacetimeDbCliFail(string friendlyFailMsg)
-        {
-            installCliStatusLabel.text = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Error,
-                $"<b>Failed to Install Spacetime CLI:</b>\n{friendlyFailMsg}");
-            
-            installCliStatusLabel.style.display = DisplayStyle.Flex;
-            installCliGroupBox.style.display = DisplayStyle.Flex;
         }
 
         /// Hide CLI group

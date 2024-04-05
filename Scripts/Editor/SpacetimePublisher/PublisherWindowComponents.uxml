@@ -69,6 +69,7 @@
                 </ui:VisualElement>
                 <ui:VisualElement name="horizWrapper" style="flex-grow: 1; flex-direction: row;">
                     <ui:Button text="Generate Client Typings" parse-escape-sequences="true" display-tooltip-when-elided="true" name="publishResultGenerateClientFilesBtn" tooltip="Outputs client files to `Assets/StdbAutogen`" style="flex-grow: 1; font-size: 12px; width: 130px;" />
+                    <ui:Button text="Server Logs" parse-escape-sequences="true" display-tooltip-when-elided="true" name="publishResultGetServerLogsBtn" tooltip="Gets server logs since published =&gt; outputs to console" style="flex-grow: 1; font-size: 12px; width: 130px; flex-shrink: 0.5;" />
                 </ui:VisualElement>
                 <ui:Label tabindex="-1" text="{publishResultStatusLabel}" parse-escape-sequences="true" display-tooltip-when-elided="true" name="publishResultStatusLabel" style="color: rgb(182, 192, 207); font-size: 14px; -unity-text-align: upper-center; display: flex; white-space: normal; -unity-font-style: normal;" />
                 <ui:ProgressBar value="5" title="Installing `wasm-opt` via npm ..." name="installWasmOptProgressBar" tooltip="Installing npm `wasm-opt` for future publish optimization" low-value="5" style="display: flex;" />

@@ -45,14 +45,14 @@ namespace SpacetimeDB.Editor
             serverNewGroupBox.style.display = DisplayStyle.None;
             resetServerDropdown();
             serverSelectedDropdown.value = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Action, "Searching ...");
+                SpacetimeMeta.StringStyle.Action, "Discovering ...");
             
             // Hide identity
             identityAddNewShowUiBtn.style.display = DisplayStyle.None;
             identityNewGroupBox.style.display = DisplayStyle.None;
             resetIdentityDropdown();
             identitySelectedDropdown.value = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Action, "Searching ..."); 
+                SpacetimeMeta.StringStyle.Action, "Discovering ..."); 
             identityAddBtn.SetEnabled(false);
              
             // Hide publish
@@ -100,18 +100,76 @@ namespace SpacetimeDB.Editor
             setInstallSpacetimeDbCliUi();
             
             // Run CLI cmd
-            SpacetimeCliResult installResult = await SpacetimeDbCli.InstallSpacetimeCliAsync();
+            InstallSpacetimeDbCliResult installResult = await SpacetimeDbCli.InstallSpacetimeCliAsync();
             
             // Process result -> Update UI
-            bool isSpacetimeDbCliInstalled = !installResult.HasCliErr;
-            if (isSpacetimeDbCliInstalled)
+            bool isSpacetimeDbCliInstalled = installResult.IsInstalled;
+            if (!isSpacetimeDbCliInstalled)
             {
-                installCliGroupBox.style.display = DisplayStyle.None;
+                // Critical error: Spacetime CLI !installed and failed install attempt
+                onInstallSpacetimeDbCliFail();
                 return;
             }
             
-            // Critical error: Spacetime CLI !installed and failed install attempt
-            onInstallSpacetimeDbCliFail(friendlyFailMsg: "See logs");
+            await onInstallSpacetimeDbCliSuccess();
+        }
+
+        /// We may need to restart Unity, due to env var refreshes, 
+        /// since child Processes use Unity's launched env vars
+        private async Task onInstallSpacetimeDbCliSuccess()
+         {
+            // Validate
+            installCliProgressBar.title = "Validating SpacetimeDB CLI Installation ...";
+            
+            SpacetimeCliResult validateCliResult = await SpacetimeDbCli.GetIsSpacetimeCliInstalledAsync();
+            bool isNotRecognizedCmd = validateCliResult.HasCliErr && validateCliResult.CliError.Contains("'spacetime' is not recognized");
+            if (isNotRecognizedCmd)
+            {
+                // This is only a "partial" error: We probably installed, but the env vars didn't refresh
+                // We need to restart Unity to refresh the spawned child Process env vars since manual refresh failed
+                onInstallSpacetimeDbCliSoftFail(); // Throws
+                return;
+            }
+
+            installCliGroupBox.style.display = DisplayStyle.None;
+        }
+
+        /// Set common fail UI, shared between hard and soft fail funcs
+        private void onInstallSpacetimeDbFailUi()
+        {
+            installCliStatusLabel.style.display = DisplayStyle.Flex;
+            installCliGroupBox.style.display = DisplayStyle.Flex;
+            installCliProgressBar.style.display = DisplayStyle.None;
+        }
+
+        /// Technically success, but we need to restart Unity to refresh PATH env vars
+        /// Throws to prevent further execution in the init chain
+        private void onInstallSpacetimeDbCliSoftFail()
+        {
+            onInstallSpacetimeDbFailUi();
+            
+            // TODO: Cross-platform refresh env vars without having to restart Unity (surprisingly advanced)
+            string successButRestartMsg = "<b>Successfully Installed SpacetimeDB CLI:</b>\n" +
+                "Please restart Unity to refresh the CLI env vars";
+
+            serverSelectedDropdown.SetEnabled(false);
+            serverSelectedDropdown.SetValueWithoutNotify("Awaiting PATH Update (Unity Restart)");
+            installCliStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Success, successButRestartMsg);
+
+            throw new Exception("Successful install, but Unity must restart (to refresh PATH env vars)");
+        }
+        
+        /// Throws Exception
+        private void onInstallSpacetimeDbCliFail()
+        {
+            onInstallSpacetimeDbFailUi();
+
+            string errMsg = "<b>Failed to Install Spacetime CLI:</b>\nSee logs";
+            installCliStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error, errMsg);
+            
+            throw new Exception(errMsg);
         }
 
         /// Try to get get list of Servers from CLI.
@@ -564,16 +622,6 @@ namespace SpacetimeDB.Editor
                 progressBar.style.display = DisplayStyle.None;
         }
 
-        private void onInstallSpacetimeDbCliFail(string friendlyFailMsg)
-        {
-            installCliStatusLabel.text = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Error,
-                $"<b>Failed to Install Spacetime CLI:</b>\n{friendlyFailMsg}");
-            
-            installCliStatusLabel.style.display = DisplayStyle.Flex;
-            installCliGroupBox.style.display = DisplayStyle.Flex;
-        }
-
         /// Hide CLI group
         private void onSpacetimeCliAlreadyInstalled()
         {
@@ -760,14 +808,25 @@ namespace SpacetimeDB.Editor
             publishResultDateTimeTxt.value = "";
             publishResultHostTxt.value = "";
             publishResultDbAddressTxt.value = "";
+            
             publishResultIsOptimizedBuildToggle.value = false;
             installWasmOptBtn.style.display = DisplayStyle.None;
             installWasmOptProgressBar.style.display = DisplayStyle.None;
+            
             publishResultStatusLabel.style.display = DisplayStyle.None;
+            
+            publishResultGenerateClientFilesBtn.SetEnabled(true);
+            publishResultGenerateClientFilesBtn.text = "Generate Client Typings";
             
             // Hacky readonly Toggle feat workaround
             publishResultIsOptimizedBuildToggle.SetEnabled(false);
             publishResultIsOptimizedBuildToggle.style.opacity = 1;
+        }
+
+        private void resetGetServerLogsUi()
+        {
+            publishResultGetServerLogsBtn.SetEnabled(true);
+            publishResultGetServerLogsBtn.text = "Server Logs";
         }
         
         /// Toggles the group visibility of the foldouts. Labels also hide if !show.
@@ -906,6 +965,49 @@ namespace SpacetimeDB.Editor
             {
                 onGenerateClientFilesFail(generateResult);
             }
+        }
+
+        /// Disable get logs btn, show action text
+        private void setGetServerLogsAsyncUi()
+        {
+            publishResultGetServerLogsBtn.SetEnabled(false);
+            publishResultGetServerLogsBtn.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Action, "Fetching ...");
+        }
+        
+        /// Gets server logs of selected server name
+        private async Task getServerLogsAsync()
+        {
+            setGetServerLogsAsyncUi();
+
+            string serverName = publishModuleNameTxt.text;
+            SpacetimeCliResult cliResult = await SpacetimeDbCli.GetLogsAsync(serverName);
+        
+            resetGetServerLogsUi();
+            if (cliResult.HasCliErr)
+            {
+                Debug.LogError($"Failed to get server logs: {cliResult.CliError}");
+                return;
+            }
+
+            onGetServerLogsSuccess(cliResult);
+        }
+
+        /// Output logs to console, with some basic style
+        private void onGetServerLogsSuccess(SpacetimeCliResult cliResult)
+        {
+            string infoColor = SpacetimeMeta.INPUT_TEXT_COLOR;
+            string warnColor = SpacetimeMeta.ACTION_COLOR_HEX;
+            string errColor = SpacetimeMeta.ERROR_COLOR_HEX;
+            
+            // Just color the log types for easier reading
+            string styledLogs = cliResult.CliOutput
+                .Replace("INFO:", $"<color={infoColor}><b>INFO:</b></color>")
+                .Replace("WARNING:", SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Action, "<b>WARNING:</b>"))
+                .Replace("ERROR:", SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Action, "<b>ERROR:</b>"));
+
+            Debug.Log($"<color={SpacetimeMeta.ACTION_COLOR_HEX}><b>Formatted Server Logs:</b></color>\n" +
+                $"```bash\n{styledLogs}\n```");
         }
 
         private void onGenerateClientFilesFail(SpacetimeCliResult cliResult)

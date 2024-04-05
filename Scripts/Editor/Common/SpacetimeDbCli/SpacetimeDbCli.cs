@@ -1,7 +1,7 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Debug = UnityEngine.Debug;
@@ -21,41 +21,52 @@ namespace SpacetimeDB.Editor
             Info,
             Error,
         }
+
+        /// If you *just* installed SpacetimeDB CLI, this will update PATH in the spawned Process.
+        /// Prevents restarting Unity to refresh paths (UX).
+        public static string NewlyInstalledCliEnvDirPath { get; set; }
         #endregion // Static Options
 
         
         #region Init
         /// Install the SpacetimeDB CLI | https://spacetimedb.com/install 
-        public static async Task<SpacetimeCliResult> InstallSpacetimeCliAsync()
+        public static async Task<InstallSpacetimeDbCliResult> InstallSpacetimeCliAsync()
         {
             if (CLI_LOG_LEVEL == CliLogLevel.Info)
                 Debug.Log("Installing SpacetimeDB CLI tool...");
             
-            SpacetimeCliResult result; 
-            
+            string argSuffix = null;
             switch (Application.platform)
             {
                 case RuntimePlatform.WindowsEditor:
-                    result = await runCliCommandAsync("powershell -Command \"iwr " +
-                        "https://windows.spacetimedb.com -UseBasicParsing | iex\"\n");
+                    argSuffix = "powershell -Command \"iwr https://windows.spacetimedb.com -UseBasicParsing | iex\"\n";
                     break;
                 
                 case RuntimePlatform.OSXEditor:
-                    result = await runCliCommandAsync("brew install clockworklabs/tap/spacetime");
+                    argSuffix = "brew install clockworklabs/tap/spacetime";
                     break;
                 
                 case RuntimePlatform.LinuxEditor:
-                    result = await runCliCommandAsync("curl -sSf https://install.spacetimedb.com | sh");
                     break;
                 
                 default:
                     throw new NotImplementedException("Unsupported OS");
             }
             
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
+            
             if (CLI_LOG_LEVEL == CliLogLevel.Info)
                 Debug.Log($"Installed spacetimeDB CLI tool | {PublisherMeta.DOCS_URL}");
             
-            return result;
+            InstallSpacetimeDbCliResult installResult = new(cliResult);
+            
+            // Update PATH env var override to prevent having to restart Unity for the next cmd
+            if (installResult.IsInstalled)
+            {
+                NewlyInstalledCliEnvDirPath = installResult.GetNormalizedPathToSpacetimeDir();
+            }
+            
+            return installResult;
         }
         #endregion // Init
         
@@ -65,8 +76,11 @@ namespace SpacetimeDB.Editor
         /// as the CLI "command" and some arg prefixes for compatibility.
         /// Usage: Pass an argSuffix, such as "spacetime version",
         ///        along with an optional cancel token
+        /// <param name="envPath">
+        /// Include if you just installed SpacetimeDB CLI to workaround restarting to refresh PATH
+        /// </param>
         public static async Task<SpacetimeCliResult> runCliCommandAsync(
-            string argSuffix, 
+            string argSuffix,
             CancellationToken cancelToken = default)
         {
             string output = string.Empty;
@@ -80,12 +94,22 @@ namespace SpacetimeDB.Editor
                 string argPrefix = getCommandPrefix(); // Determine command prefix (cmd /c, etc.)
                 string fullParsedArgs = $"{argPrefix} \"{argSuffix}\"";
 
-                process.StartInfo.FileName = terminal;
-                process.StartInfo.Arguments = fullParsedArgs;
-                process.StartInfo.RedirectStandardError = true;
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.CreateNoWindow = true;
+                ProcessStartInfo startInfo = process.StartInfo;
+                startInfo.FileName = terminal;
+                startInfo.Arguments = fullParsedArgs;
+                startInfo.RedirectStandardError = true;
+                startInfo.RedirectStandardOutput = true;
+                startInfo.UseShellExecute = false;
+                startInfo.CreateNoWindow = true;
+
+                // If we *just* installed SpacetimeDB CLI, PATH is not yet refreshed
+                bool hasEnvPathOverride = !string.IsNullOrEmpty(NewlyInstalledCliEnvDirPath);
+                if (hasEnvPathOverride)
+                {
+                    string keyName = Application.platform == RuntimePlatform.WindowsEditor ? "Path" : "PATH"; 
+                    string pathAddendum = Path.PathSeparator + NewlyInstalledCliEnvDirPath;
+                    startInfo.EnvironmentVariables[keyName] += pathAddendum;
+                }
                 
                 // Input Logs
                 if (CLI_LOG_LEVEL == CliLogLevel.Info)
@@ -252,13 +276,11 @@ namespace SpacetimeDB.Editor
             GetServersResult getServersResult = new(cliResult);
             return getServersResult;
         }
-        #endregion // High Level CLI Actions
-
-
+        
         /// Uses the `spacetime list {identity}` CLI command.
         /// (!) This only returns the addresses.
         ///     For nicknames, see the chained call: GetDbAddressesWithNicknames
-        public static async Task<GetDbAddressesResult> GetDbAddresses(string identity)
+        public static async Task<GetDbAddressesResult> GetDbAddressesAsync(string identity)
         {
             string argSuffix = $"spacetime list {identity}";
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
@@ -267,7 +289,7 @@ namespace SpacetimeDB.Editor
         }
         
         /// [Slow] Uses the `spacetime describe {moduleName} [--as-identity {identity}]` CLI command
-        public static async Task<GetEntityStructureResult> GetEntityStructure(
+        public static async Task<GetEntityStructureResult> GetEntityStructureAsync(
             string moduleName,
             string asIdentity = null)
         {
@@ -279,5 +301,15 @@ namespace SpacetimeDB.Editor
             GetEntityStructureResult getEntityStructureResult = new(cliResult);
             return getEntityStructureResult;
         }
+
+        /// Uses the `spacetime logs` CLI command.
+        /// <param name="serverName"></param>
+        public static async Task<SpacetimeCliResult> GetLogsAsync(string serverName)
+        {
+            string argSuffix = $"spacetime logs {serverName}";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
+            return cliResult;
+        }
+        #endregion // High Level CLI Actions
     }
 }

@@ -100,36 +100,37 @@ namespace SpacetimeDB.Editor
             setInstallSpacetimeDbCliUi();
             
             // Run CLI cmd
-            SpacetimeCliResult cliResult = await SpacetimeDbCli.InstallSpacetimeCliAsync();
+            InstallSpacetimeDbCliResult installResult = await SpacetimeDbCli.InstallSpacetimeCliAsync();
             
             // Process result -> Update UI
-            bool isSpacetimeDbCliInstalled = !cliResult.HasCliErr;
+            bool isSpacetimeDbCliInstalled = installResult.IsInstalled;
             if (!isSpacetimeDbCliInstalled)
             {
                 // Critical error: Spacetime CLI !installed and failed install attempt
-                onInstallSpacetimeDbCliFail(cliResult);
+                onInstallSpacetimeDbCliFail();
                 return;
             }
             
             await onInstallSpacetimeDbCliSuccess();
         }
 
-        /// We may need to restart Unity, due to env var refreshes,
+        /// We may need to restart Unity, due to env var refreshes, 
         /// since child Processes use Unity's launched env vars
         private async Task onInstallSpacetimeDbCliSuccess()
-        {
+         {
             // Validate
             installCliProgressBar.title = "Validating SpacetimeDB CLI Installation ...";
             
-            SpacetimeCliResult cliResult = await SpacetimeDbCli.GetIsSpacetimeCliInstalledAsync();
-            bool isNotRecognizedCmd = cliResult.HasCliErr && cliResult.CliError.Contains("'spacetime' is not recognized");
+            SpacetimeCliResult validateCliResult = await SpacetimeDbCli.GetIsSpacetimeCliInstalledAsync();
+            bool isNotRecognizedCmd = validateCliResult.HasCliErr && validateCliResult.CliError.Contains("'spacetime' is not recognized");
             if (isNotRecognizedCmd)
             {
                 // This is only a "partial" error: We probably installed, but the env vars didn't refresh
-                // We need to restart Unity to refresh the spawned child Process env vars
+                // We need to restart Unity to refresh the spawned child Process env vars since manual refresh failed
                 onInstallSpacetimeDbCliSoftFail(); // Throws
+                return;
             }
-            
+
             installCliGroupBox.style.display = DisplayStyle.None;
         }
 
@@ -160,7 +161,7 @@ namespace SpacetimeDB.Editor
         }
         
         /// Throws Exception
-        private void onInstallSpacetimeDbCliFail(SpacetimeCliResult cliResult)
+        private void onInstallSpacetimeDbCliFail()
         {
             onInstallSpacetimeDbFailUi();
 

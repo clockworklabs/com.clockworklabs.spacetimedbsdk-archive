@@ -32,38 +32,58 @@ namespace SpacetimeDB.Editor
         ///       any persistence from `ViewDataKey`s may override this.
         private void resetUi()
         {
-            // Hide install CLI
-            installCliGroupBox.style.display = DisplayStyle.None;
-            installCliProgressBar.style.display = DisplayStyle.None;
-            installCliStatusLabel.style.display = DisplayStyle.None;
+            resetInstallCli();
+            resetServer();
+            resetIdentity();
+            resetPublish();
+            resetPublishResultCache();
             
             // Hide all foldouts and labels from Identity+ (show Server)
             toggleFoldoutRipple(startRippleFrom: FoldoutGroupType.Identity, show:false);
-            
-            // Hide server
-            serverAddNewShowUiBtn.style.display = DisplayStyle.None;
-            serverNewGroupBox.style.display = DisplayStyle.None;
-            resetServerDropdown();
-            serverSelectedDropdown.value = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Action, "Discovering ...");
-            
-            // Hide identity
+        }
+
+        private void resetPublish()
+        {
+            // Hide publish
+            publishGroupBox.style.display = DisplayStyle.None;
+            publishCancelBtn.style.display = DisplayStyle.None;
+            publishInstallProgressBar.style.display = DisplayStyle.None;
+            publishStatusLabel.style.display = DisplayStyle.None;
+            resetPublishAdvanced();
+        }
+
+        private void resetPublishAdvanced()
+        {
+            publishModuleDebugModeToggle.value = false;
+            publishModuleClearDataToggle.value = false;
+        }
+
+        private void resetIdentity()
+        {
             identityAddNewShowUiBtn.style.display = DisplayStyle.None;
             identityNewGroupBox.style.display = DisplayStyle.None;
             resetIdentityDropdown();
             identitySelectedDropdown.value = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, "Discovering ..."); 
             identityAddBtn.SetEnabled(false);
-             
-            // Hide publish
-            publishGroupBox.style.display = DisplayStyle.None;
-            publishCancelBtn.style.display = DisplayStyle.None;
-            publishInstallProgressBar.style.display = DisplayStyle.None;
-            publishStatusLabel.style.display = DisplayStyle.None;
-
-            resetPublishResultCache();
         }
-        
+
+        private void resetServer()
+        {
+            serverAddNewShowUiBtn.style.display = DisplayStyle.None;
+            serverNewGroupBox.style.display = DisplayStyle.None;
+            resetServerDropdown();
+            serverSelectedDropdown.value = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Action, "Discovering ...");
+        }
+
+        private void resetInstallCli()
+        {
+            installCliGroupBox.style.display = DisplayStyle.None;
+            installCliProgressBar.style.display = DisplayStyle.None;
+            installCliStatusLabel.style.display = DisplayStyle.None;
+        }
+
         /// Check for install => Install if !found -> Throw if err
         private async Task ensureSpacetimeCliInstalledAsync()
         {

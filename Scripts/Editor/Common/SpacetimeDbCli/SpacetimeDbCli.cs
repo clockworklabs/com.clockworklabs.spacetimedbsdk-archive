@@ -80,6 +80,7 @@ namespace SpacetimeDB.Editor
         /// as the CLI "command" and some arg prefixes for compatibility.
         /// Usage: Pass an argSuffix, such as "spacetime version",
         ///        along with an optional cancel token
+        /// - Supports cancellations and timeouts via CancellationToken (create a CancellationTokenSource)
         /// <param name="envPath">
         /// Include if you just installed SpacetimeDB CLI to workaround restarting to refresh PATH
         /// </param>
@@ -317,6 +318,22 @@ namespace SpacetimeDB.Editor
         {
             string argSuffix = $"spacetime logs {serverName}";
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
+            return cliResult;
+        }
+        
+        /// Uses the `spacetime server ping` CLI command.
+        /// For locahost, you probably want to set timeout to something extremely low
+        public static async Task<SpacetimeCliResult> PingServer(TimeSpan? timeout = default)
+        {
+            const string argSuffix = "spacetime server ping";
+            
+            CancellationTokenSource cts = new();
+            if (timeout.HasValue)
+            {
+                cts.CancelAfter(timeout.Value);
+            }
+            
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix, cts.Token);
             return cliResult;
         }
         #endregion // High Level CLI Actions

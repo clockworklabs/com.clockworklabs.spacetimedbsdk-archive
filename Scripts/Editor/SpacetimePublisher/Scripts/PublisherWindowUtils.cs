@@ -67,8 +67,8 @@ namespace SpacetimeDB.Editor
         
         private void resetCancellationTokenSrc()
         {
-            _cts?.Dispose();
-            _cts = new CancellationTokenSource();
+            _publishCts?.Dispose();
+            _publishCts = new CancellationTokenSource();
         }
 
         /// <returns>

@@ -2,8 +2,11 @@
 public static class SpacetimeMeta
 {
     #region Names & Paths
-    public const string LOCALHOST = "http://127.0.0.1:3000";
-    public const string TESTNET = "https://testnet.spacetimedb.com";
+    public const string LOCAL_SERVER_NAME = "local";
+    public const string TESTNET_SERVER_NAME = "testnet";
+    public const string LOCAL_HOST_URL = "http://127.0.0.1:3000";
+    public const string TESTNET_HOST_URL = "https://testnet.spacetimedb.com";
+    
     public const string SDK_PACKAGE_NAME = "com.clockworklabs.spacetimedbsdk";
     public const string COMMON_DIR_PATH = "Packages/" + SDK_PACKAGE_NAME + "/Scripts/Editor/Common";
     
@@ -18,9 +21,9 @@ public static class SpacetimeMeta
     {
         return serverName switch
         {
-            "local" => LOCALHOST,
-            "localhost" => LOCALHOST,
-            "testnet" => TESTNET,
+            "local" => LOCAL_HOST_URL,
+            "localhost" => LOCAL_HOST_URL,
+            "testnet" => TESTNET_HOST_URL,
             _ => serverName
         };
     }

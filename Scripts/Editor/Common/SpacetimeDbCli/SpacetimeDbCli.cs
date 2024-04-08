@@ -322,8 +322,8 @@ namespace SpacetimeDB.Editor
         }
         
         /// Uses the `spacetime server ping` CLI command.
-        /// For locahost, you probably want to set timeout to something extremely low
-        public static async Task<SpacetimeCliResult> PingServer(TimeSpan? timeout = default)
+        /// For localhost, you probably want to set timeout to something extremely low
+        public static async Task<SpacetimeCliResult> PingServerAsync(TimeSpan? timeout = default)
         {
             const string argSuffix = "spacetime server ping";
             

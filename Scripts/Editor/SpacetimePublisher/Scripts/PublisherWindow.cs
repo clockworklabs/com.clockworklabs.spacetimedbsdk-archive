@@ -13,17 +13,25 @@ namespace SpacetimeDB.Editor
     public partial class PublisherWindow : EditorWindow
     {
         #region Operational State Vars
-        /// <summary>
+        /// Before this, the dropdown val will likely contain "Discovering ..."
+        private bool _foundServer;
+
+        /// After _foundServer, we'll check for this right after
+        private bool _isLocalServer;
+
+        /// Before this, the dropdown val will likely contain "Discovering ..."
+        private bool _foundIdentity;
+        
         /// Since we have FocusOut events, this will sometimes trigger
         /// awkwardly if you jump from input to a file picker button
-        /// </summary>
         private bool _isFilePicking;
 
         /// There's a known bug where default servers get wiped with no apparent pattern.
         /// We'll try once to add them back in.
         private bool _isRegeneratingDefaultServers;
 
-        private CancellationTokenSource _cts;
+        /// Supports cancelling the Publish event
+        private CancellationTokenSource _publishCts;
         
         /// This will be null on init (window may still load limited cache)
         /// We'll prioritize this over the path, in case it was changed post-publish
@@ -66,6 +74,9 @@ namespace SpacetimeDB.Editor
         private GroupBox publishGroupBox;
         private Toggle publishModuleClearDataToggle;
         private Toggle publishModuleDebugModeToggle;
+        private VisualElement publishLocalBtnsHoriz;
+        private Button publishStartLocalServerBtn;
+        private Button publishStopLocalServerBtn;
         private Button publishBtn;
         private Button publishCancelBtn;
         private ProgressBar publishInstallProgressBar;
@@ -186,6 +197,9 @@ namespace SpacetimeDB.Editor
             publishGroupBox = rootVisualElement.Q<GroupBox>(nameof(publishGroupBox));
             publishModuleClearDataToggle = rootVisualElement.Q<Toggle>(nameof(publishModuleClearDataToggle));
             publishModuleDebugModeToggle = rootVisualElement.Q<Toggle>(nameof(publishModuleDebugModeToggle));
+            publishLocalBtnsHoriz = rootVisualElement.Q<VisualElement>(nameof(publishLocalBtnsHoriz));
+            publishStartLocalServerBtn = rootVisualElement.Q<Button>(nameof(publishStartLocalServerBtn));
+            publishStopLocalServerBtn = rootVisualElement.Q<Button>(nameof(publishStopLocalServerBtn));
             publishBtn = rootVisualElement.Q<Button>(nameof(publishBtn));
             publishCancelBtn = rootVisualElement.Q<Button>(nameof(publishCancelBtn));
             publishInstallProgressBar = rootVisualElement.Q<ProgressBar>(nameof(publishInstallProgressBar));
@@ -243,6 +257,9 @@ namespace SpacetimeDB.Editor
                 Assert.IsNotNull(publishGroupBox, $"Expected `#{nameof(publishGroupBox)}`");
                 Assert.IsNotNull(publishModuleClearDataToggle, $"Expected `#{nameof(publishModuleClearDataToggle)}`");
                 Assert.IsNotNull(publishModuleDebugModeToggle, $"Expected `#{nameof(publishModuleDebugModeToggle)}`");
+                Assert.IsNotNull(publishLocalBtnsHoriz, $"Expected `#{nameof(publishLocalBtnsHoriz)}`");
+                Assert.IsNotNull(publishStartLocalServerBtn, $"Expected `#{nameof(publishStartLocalServerBtn)}`");
+                Assert.IsNotNull(publishStopLocalServerBtn, $"Expected `#{nameof(publishStopLocalServerBtn)}`");
                 Assert.IsNotNull(publishBtn, $"Expected `#{nameof(publishBtn)}`");
                 Assert.IsNotNull(publishCancelBtn, $"Expected `#{nameof(publishCancelBtn)}`");
                 Assert.IsNotNull(publishInstallProgressBar, $"Expected `#{nameof(publishInstallProgressBar)}`");

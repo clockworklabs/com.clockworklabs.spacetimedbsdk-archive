@@ -116,6 +116,14 @@ namespace SpacetimeDB.Editor
                 publishModuleNameTxt.RegisterValueChangedCallback(
                     onPublishModuleNameTxtChanged);
             }
+            if (publishStartLocalServerBtn != null)
+            {
+                publishStartLocalServerBtn.clicked += onStartLocalServerBtnClick;
+            }
+            if (publishStopLocalServerBtn != null)
+            {
+                publishStopLocalServerBtn.clicked += onStopLocalServerBtnClick;
+            }
             if (publishBtn != null)
             {
                 // Start publishAsync chain
@@ -147,6 +155,16 @@ namespace SpacetimeDB.Editor
                 // Generate SDK via CLI `spacetime logs`
                 publishResultGetServerLogsBtn.clicked += onGetServerLogsBtnClick;
             }
+        }
+
+        private void onStopLocalServerBtnClick()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void onStartLocalServerBtnClick()
+        {
+            throw new NotImplementedException();
         }
 
         /// Cleanup: This should parity the opposite of setOnActionEvents()
@@ -236,6 +254,14 @@ namespace SpacetimeDB.Editor
             if (publishModuleNameTxt != null)
             {
                 publishModuleNameTxt.UnregisterValueChangedCallback(onPublishModuleNameTxtChanged);
+            }
+            if (publishStartLocalServerBtn != null)
+            {
+                publishStartLocalServerBtn.clicked -= onStartLocalServerBtnClick;
+            }
+            if (publishStopLocalServerBtn != null)
+            {
+                publishStopLocalServerBtn.clicked -= onStopLocalServerBtnClick;
             }
             if (publishBtn != null)
             {
@@ -367,9 +393,9 @@ namespace SpacetimeDB.Editor
         }
         
         /// Used for init only, for when the persistent ViewDataKey
-        private void onPublishModulePathTxtInitChanged(ChangeEvent<string> evt)
+        private async void onPublishModulePathTxtInitChanged(ChangeEvent<string> evt)
         {
-            onDirPathSet();
+            await onDirPathSetAsync();
             revealPublishResultCacheIfHostExists(openFoldout: null);
             publishModulePathTxt.UnregisterValueChangedCallback(onPublishModulePathTxtInitChanged);
         }
@@ -406,7 +432,7 @@ namespace SpacetimeDB.Editor
             checkServerReqsToggleServerBtn();
         
         /// Toggle next section if !null
-        private void onPublishModulePathTxtFocusOut(FocusOutEvent evt)
+        private async void onPublishModulePathTxtFocusOut(FocusOutEvent evt)
         {
             // Prevent inadvertent UI showing too early, frozen on modal file picking
             if (_isFilePicking)
@@ -422,7 +448,7 @@ namespace SpacetimeDB.Editor
                 
                 // Normalize, then reveal the next UI group
                 publishModulePathTxt.value = superTrim(publishModulePathTxt.value);
-                revealPublisherGroupUiAsync();
+                await revealPublisherGroupUiAsync();
             }
             else
             {
@@ -525,7 +551,7 @@ namespace SpacetimeDB.Editor
         }
         
         /// Show folder dialog -> Set path label
-        private void OnPublishPathSetDirectoryBtnClick()
+        private async void OnPublishPathSetDirectoryBtnClick()
         {
             string pathBefore = publishModulePathTxt.value;
             // Show folder panel (modal FolderPicker dialog)
@@ -547,7 +573,7 @@ namespace SpacetimeDB.Editor
 
             // Path changed: set path val + reveal next UI group
             publishModulePathTxt.value = selectedPath;
-            onDirPathSet();
+            await onDirPathSetAsync();
         }
         
         /// Show [Install Package] btn if !optimized
@@ -598,8 +624,8 @@ namespace SpacetimeDB.Editor
 
             try
             {
-                _cts.Cancel();
-                _cts.Dispose();
+                _publishCts.Cancel();
+                _publishCts.Dispose();
             }
             catch (ObjectDisposedException e)
             {
@@ -647,7 +673,7 @@ namespace SpacetimeDB.Editor
             finally
             {
                 publishInstallProgressBar.style.display = DisplayStyle.None;
-                _cts?.Dispose();
+                _publishCts?.Dispose();
             }
         }
         #endregion // Direct UI Callbacks
@@ -665,10 +691,10 @@ namespace SpacetimeDB.Editor
 
         /// Success: Add to dropdown + set default + show. Hide the [+] add group.
         /// Don't worry about caching choices; we'll get the new choices via CLI each load
-        private void onAddIdentitySuccess(SpacetimeIdentity identity)
+        private async void onAddIdentitySuccess(SpacetimeIdentity identity)
         {
             Debug.Log($"Add new identity success: {identity.Nickname}");
-            _ = onGetSetIdentitiesSuccessEnsureDefault(new List<SpacetimeIdentity> { identity });
+            await onGetSetIdentitiesSuccessEnsureDefault(new List<SpacetimeIdentity> { identity });
         }
 
         /// Success: Show installed txt, keep button disabled, but don't actually check

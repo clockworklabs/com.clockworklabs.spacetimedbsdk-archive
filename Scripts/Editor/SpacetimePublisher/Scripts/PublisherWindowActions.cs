@@ -22,8 +22,10 @@ namespace SpacetimeDB.Editor
         {
             await ensureSpacetimeCliInstalledAsync();
             await getServersSetDropdown();
+            await pingLocalServerSetBtnsAsync();
             // => Continues @ onGetServersSetDropdownSuccess()
-            // => Continues @ onGetSetIdentitiesSuccessEnsureDefault
+            //     => Localhost? pingLocalServerSetBtnsAsync()
+            // => Continues @ onGetSetIdentitiesSuccessEnsureDefault()
             // => Continues @ onEnsureIdentityDefaultSuccess()
             // => Finishes @ revealPublishResultCacheIfHostExists()
         }
@@ -54,6 +56,9 @@ namespace SpacetimeDB.Editor
             publishInstallProgressBar.style.display = DisplayStyle.None;
             publishStatusLabel.style.display = DisplayStyle.None;
             resetPublishAdvanced();
+            
+            publishLocalBtnsHoriz.style.display = DisplayStyle.None;
+            toggleLocalServerStartOrStopBtn(isOnline: false);
         }
 
         private void resetPublishAdvanced()
@@ -284,7 +289,7 @@ namespace SpacetimeDB.Editor
         /// (1) Suggest module name, if empty
         /// (2) Reveal publisher group
         /// (3) Ensure spacetimeDB CLI is installed async
-        private void onDirPathSet()
+        private async Task onDirPathSetAsync()
         {
             // We just updated the path - hide old publishAsync result cache
             publishResultFoldout.style.display = DisplayStyle.None;
@@ -299,7 +304,16 @@ namespace SpacetimeDB.Editor
             bool hasPathSet = !string.IsNullOrEmpty(publishModulePathTxt.value);
             if (hasPathSet)
             {
-                revealPublisherGroupUiAsync(); // +Ensures SpacetimeDB CLI is installed async
+                try
+                {
+                    // +Ensures SpacetimeDB CLI is installed async
+                    await revealPublisherGroupUiAsync();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError(e.Message);
+                    throw;
+                }
             }
         }
         
@@ -359,11 +373,11 @@ namespace SpacetimeDB.Editor
             AddServerRequest addServerRequest = null;
             
             // Run CLI cmd: Add `local` server (forces `--no-fingerprint` so it doesn't need to be running now)
-            addServerRequest = new("local", SpacetimeMeta.LOCALHOST);
+            addServerRequest = new(SpacetimeMeta.LOCAL_SERVER_NAME, SpacetimeMeta.LOCAL_HOST_URL);
             _ = await SpacetimeDbPublisherCli.AddServerAsync(addServerRequest);
             
             // Run CLI cmd: Add `testnet` server (becomes default)
-            addServerRequest = new("testnet", SpacetimeMeta.TESTNET);
+            addServerRequest = new(SpacetimeMeta.TESTNET_SERVER_NAME, SpacetimeMeta.TESTNET_HOST_URL);
             _ = await SpacetimeDbPublisherCli.AddServerAsync(addServerRequest);
             
             // Success - try again
@@ -466,6 +480,7 @@ namespace SpacetimeDB.Editor
             publishModuleNameTxt.SelectNone();
             
             // If we have a cached result, show that (minimized)
+            _foundServer = true;
             revealPublishResultCacheIfHostExists(openFoldout: false);
         }
 
@@ -529,10 +544,12 @@ namespace SpacetimeDB.Editor
             
             // Show the next section
             identityFoldout.style.display = DisplayStyle.Flex;
+            
+            _foundServer = true;
         }
 
         /// This will reveal the group and initially check for the spacetime cli tool
-        private void revealPublisherGroupUiAsync()
+        private async Task revealPublisherGroupUiAsync()
         {
             // Show and enable group, but disable the publishAsync btn
             // to check/install Spacetime CLI tool
@@ -541,7 +558,58 @@ namespace SpacetimeDB.Editor
             publishStatusLabel.style.display = DisplayStyle.Flex;
             publishGroupBox.style.display = DisplayStyle.Flex;
             toggleDebugModeIfNotLocalhost();
+            
             setPublishReadyStatus();
+            
+            // If localhost, show start|stop server btns async on separate thread
+            if (_foundServer)
+            {
+                await pingLocalServerSetBtnsAsync();
+            }
+        }
+
+        /// 1. Shows or hide localhost btns if localhost
+        /// 2. If localhost:
+        ///     a. Pings the local server to see if it's online
+        ///     b. Shows either Start|Stop local server btn
+        ///     c. If offline, disable Publish btn
+        private async Task pingLocalServerSetBtnsAsync()
+        {
+            publishLocalBtnsHoriz.style.display = DisplayStyle.None;
+            
+            _isLocalServer = checkIsLocalhostServerSelected();
+            publishLocalBtnsHoriz.style.display = _isLocalServer ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!_isLocalServer)
+            {
+                return;
+            }
+            
+            Debug.Log("Localhost server selected: Pinging for online status ...");
+            bool isOnline = await checkIsLocalServerOnlineAsync();
+            Debug.Log("Local server online? " + isOnline);
+
+            toggleLocalServerStartOrStopBtn(isOnline);
+        }
+
+        /// <returns>isOnline (successful ping) with 150ms timeout</returns>
+        private async Task<bool> checkIsLocalServerOnlineAsync()
+        {
+            Assert.IsTrue(checkIsLocalhostServerSelected(), $"Expected {nameof(checkIsLocalhostServerSelected)}");
+
+            TimeSpan shortTimeout = TimeSpan.FromMilliseconds(150);
+            SpacetimeCliResult cliResult = await SpacetimeDbCli.PingServerAsync(shortTimeout);
+            
+            bool isSuccess = !cliResult.HasCliErr;
+            return isSuccess;
+        }
+
+        /// This includes the Publish btn, disabling if !online
+        private void toggleLocalServerStartOrStopBtn(bool isOnline)
+        {
+            publishStartLocalServerBtn.style.display = isOnline ? DisplayStyle.None : DisplayStyle.Flex;
+            publishStopLocalServerBtn.style.display = isOnline ? DisplayStyle.Flex : DisplayStyle.None;
+            publishBtn.SetEnabled(isOnline);
+            publishBtn.text = "Publish"; // From "Pinging local server ..."
         }
 
         /// Sets status label to "Ready" and enables+shows Publisher btn
@@ -574,7 +642,7 @@ namespace SpacetimeDB.Editor
             // Run CLI cmd [can cancel]
             PublishResult publishResult = await SpacetimeDbPublisherCli.PublishAsync(
                 publishRequest,
-                _cts.Token);
+                _publishCts.Token);
 
             // Process result -> Update UI
             bool isSuccess = publishResult.IsSuccessfulPublish;
@@ -696,7 +764,7 @@ namespace SpacetimeDB.Editor
 
             // Error: Hide cancel btn, cancel token, show/enable pub btn
             publishCancelBtn.style.display = DisplayStyle.None;
-            _cts?.Dispose();
+            _publishCts?.Dispose();
             
             publishBtn.style.display = DisplayStyle.Flex;
             publishBtn.SetEnabled(true);
@@ -870,14 +938,13 @@ namespace SpacetimeDB.Editor
 
             // Process result -> Update UI
             bool isSuccess = !cliResult.HasCliErr;
-            if (isSuccess)
-            {
-                Debug.Log($"Changed default identity to: {idNicknameOrDbAddress}");
-            }
-            else
+            if (!isSuccess)
             {
                 Debug.LogError($"Failed to set default identity: {cliResult.CliError}");
+                return;
             }
+            
+            Debug.Log($"Changed default identity to: {idNicknameOrDbAddress}");
         }
 
         private void resetPublishResultCache()
@@ -986,6 +1053,7 @@ namespace SpacetimeDB.Editor
 
             // UI: This invalidates identities, so we'll hide all Foldouts
             toggleFoldoutRipple(FoldoutGroupType.Identity, show:false);
+            toggleSelectedServerProcessing(setEnabled: false);
 
             // Run CLI cmd
             SpacetimeCliResult cliResult = await SpacetimeDbPublisherCli.SetDefaultServerAsync(nicknameOrHost);
@@ -1000,6 +1068,15 @@ namespace SpacetimeDB.Editor
             {
                 await onChangeDefaultServerSuccessAsync();
             }
+            
+            toggleSelectedServerProcessing(setEnabled: true);
+        }
+
+        /// Enables or disables the selected server dropdown + add new btn
+        private void toggleSelectedServerProcessing(bool setEnabled)
+        {
+            serverSelectedDropdown.SetEnabled(setEnabled);
+            serverAddNewShowUiBtn.SetEnabled(setEnabled);
         }
         
         private void onChangeDefaultServerFail(SpacetimeCliResult cliResult)
@@ -1015,6 +1092,7 @@ namespace SpacetimeDB.Editor
         /// Invalidate identities
         private async Task onChangeDefaultServerSuccessAsync()
         {
+            await pingLocalServerSetBtnsAsync();
             await getIdentitiesSetDropdown(); // Process and reveal the next UI group
             serverSelectedDropdown.SetEnabled(true);
         }
@@ -1146,10 +1224,9 @@ namespace SpacetimeDB.Editor
             publishResultStatusLabel.style.display = DisplayStyle.None;
             publishResultGenerateClientFilesBtn.SetEnabled(true);
         }
-        
+
         /// Assuming !https
         private bool checkIsLocalhostServerSelected() =>
-            serverSelectedDropdown.value.StartsWith("local") ||
-            serverSelectedDropdown.value.StartsWith("http://local");
+            serverSelectedDropdown.value.StartsWith(SpacetimeMeta.LOCAL_SERVER_NAME);
     }
 }

@@ -294,13 +294,19 @@ namespace SpacetimeDB.Editor
         private void onIdentityEmailTxtChanged(ChangeEvent<string> evt)
         {
             if (string.IsNullOrWhiteSpace(evt.newValue))
+            {
                 return;
-            
+            }
+
             bool isEmailFormat = tryFormatAsEmail(evt.newValue, out string email);
             if (isEmailFormat)
+            {
                 identityEmailTxt.SetValueWithoutNotify(email);
+            }
             else
+            {
                 identityEmailTxt.SetValueWithoutNotify(evt.previousValue); // Revert non-email attempt
+            }
         }
         
         private async void onServerSelectedDropdownChangedAsync(ChangeEvent<string> evt)
@@ -313,11 +319,15 @@ namespace SpacetimeDB.Editor
             
             // We have "some" server loaded by runtime code; show this dropdown
             if (!selectedAnything || oldValIsPlaceholderStr)
+            {
                 return;
-            
+            }
+
             if (isHidden)
+            {
                 serverSelectedDropdown.style.display = DisplayStyle.Flex;
-            
+            }
+
             // We changed from a known server to another known one.
             // We should change the CLI default.
             string serverNickname = evt.newValue;
@@ -343,11 +353,15 @@ namespace SpacetimeDB.Editor
             
             // We have "some" newIdentity loaded by runtime code; show this dropdown
             if (!selectedAnything)
+            {
                 return;
-            
+            }
+
             if (isHidden)
+            {
                 identitySelectedDropdown.style.display = DisplayStyle.Flex;
-            
+            }
+
             // We changed from a known identity to another known one.
             // We should change the CLI default.
             try
@@ -390,8 +404,10 @@ namespace SpacetimeDB.Editor
         {
             // Prevent inadvertent UI showing too early, frozen on modal file picking
             if (_isFilePicking)
+            {
                 return;
-            
+            }
+
             bool hasPathSet = !string.IsNullOrEmpty(publishModulePathTxt.value);
             if (hasPathSet)
             {
@@ -403,7 +419,9 @@ namespace SpacetimeDB.Editor
                 revealPublisherGroupUiAsync();
             }
             else
+            {
                 publishGroupBox.style.display = DisplayStyle.None;
+            }
         }
         
         /// Explicitly declared and curried so we can unsubscribe
@@ -517,8 +535,10 @@ namespace SpacetimeDB.Editor
             // Canceled or same path?
             bool pathChanged = selectedPath == pathBefore;
             if (string.IsNullOrEmpty(selectedPath) || pathChanged)
+            {
                 return;
-            
+            }
+
             // Path changed: set path val + reveal next UI group
             publishModulePathTxt.value = selectedPath;
             onDirPathSet();

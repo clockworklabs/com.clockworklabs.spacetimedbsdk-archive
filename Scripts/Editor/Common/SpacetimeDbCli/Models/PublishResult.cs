@@ -78,17 +78,23 @@ namespace SpacetimeDB.Editor
             if (cliResult.HasCliErr || hasOutputErr)
             {
                 if (cliResult.HasCliErr)
+                {
                     onCliError(cliResult);
-            
+                }
+
                 // CLI resulted success, but what about an internal error specific to publisher?
                 if (cliResult.CliError.Contains("Error:"))
+                {
                     onPublisherError(cliResult);
+                }
             }
             
             // "created new database with domain" || "updated database with domain"
             this.IsSuccessfulPublish = CliOutput.Contains("database with domain");
             if (!IsSuccessfulPublish)
+            {
                 return;
+            }
 
             onSuccess();
         }
@@ -108,7 +114,9 @@ namespace SpacetimeDB.Editor
             // Eg, from "Uploading to testnet => https://testnet.spacetimedb.com"
             (string url, string port)? urlPortTuple = getHostUrlFromCliOutput();
             if (urlPortTuple == null)
+            {
                 return;
+            }
 
             this.UploadedToHost = $"{urlPortTuple.Value.url}:{urlPortTuple.Value.port}";
             this.UploadedToUrl = urlPortTuple.Value.url;
@@ -209,14 +217,18 @@ namespace SpacetimeDB.Editor
             Match match = Regex.Match(CliOutput, pattern);
 
             if (!match.Success)
+            {
                 return null;
+            }
 
             string url = match.Groups[2].Value;
             string port = match.Groups[3].Value; // Optional
             
             // url sanity check
             if (string.IsNullOrEmpty(url))
+            {
                 Debug.LogError("Failed to parse host url from CliOutput");
+            }
 
             return (url, port);
         }

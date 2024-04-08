@@ -33,8 +33,10 @@ namespace SpacetimeDB.Editor
         public static async Task<InstallSpacetimeDbCliResult> InstallSpacetimeCliAsync()
         {
             if (CLI_LOG_LEVEL == CliLogLevel.Info)
+            {
                 Debug.Log("Installing SpacetimeDB CLI tool...");
-            
+            }
+
             string argSuffix = null;
             switch (Application.platform)
             {
@@ -56,8 +58,10 @@ namespace SpacetimeDB.Editor
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
             
             if (CLI_LOG_LEVEL == CliLogLevel.Info)
+            {
                 Debug.Log($"Installed spacetimeDB CLI tool | {PublisherMeta.DOCS_URL}");
-            
+            }
+
             InstallSpacetimeDbCliResult installResult = new(cliResult);
             
             // Update PATH env var override to prevent having to restart Unity for the next cmd
@@ -148,7 +152,10 @@ namespace SpacetimeDB.Editor
                 // Heavy cleanup
                 await cancellationRegistration.DisposeAsync();
                 if (!process.HasExited)
+                {
                     process.Kill();
+                }
+
                 process.Dispose(); // No async ver for this Dispose
             }
             
@@ -167,7 +174,9 @@ namespace SpacetimeDB.Editor
                 {
                     process.CloseMainWindow();
                     if (!process.WaitForExit(5000)) // Wait up to 5 seconds
+                    {
                         process.Kill(); // Force terminate the process if it hasn't exited
+                    }
                 }
             }
             catch (InvalidOperationException e)

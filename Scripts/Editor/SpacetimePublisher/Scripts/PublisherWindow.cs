@@ -264,8 +264,10 @@ namespace SpacetimeDB.Editor
                 // Show err cover
                 errorCover = rootVisualElement.Q<VisualElement>(nameof(errorCover));
                 if (errorCover != null)
+                {
                     errorCover.style.display = DisplayStyle.Flex;
-                
+                }
+
                 Debug.LogError($"Error: {e}");
                 throw;
             }

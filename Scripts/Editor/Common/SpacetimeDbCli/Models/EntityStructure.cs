@@ -71,8 +71,10 @@ namespace SpacetimeDB.Editor
         {
             Dictionary<string, Entity> reducers = getReducers();
             if (reducers is null)
+            {
                 return;
-            
+            }
+
             this.ReducersInfo = new List<ReducerInfo>();
 
             // For every reducer, create a new ReducerInfo, passing in the Entity

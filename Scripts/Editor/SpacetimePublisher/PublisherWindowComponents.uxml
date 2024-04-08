@@ -45,7 +45,7 @@
                     </ui:TextField>
                 </ui:GroupBox>
                 <ui:Foldout text="Advanced" name="publishModuleDebugFoldout" view-data-key="publishModuleDebugFoldout">
-                    <ui:Toggle label="Debug Mode?" name="publishModuleDebugModeToggle" view-data-key="publishModuleDebugModeToggle" tooltip="Appends -" />
+                    <ui:Toggle label="Debug Mode?" name="publishModuleDebugModeToggle" view-data-key="publishModuleDebugModeToggle" tooltip="Appends --debug to add stacktrace symbols          ⚠ !localhost only" />
                     <ui:Toggle label="Clear All Data?" name="publishModuleClearDataToggle" view-data-key="publishModuleClearDataToggle" tooltip="(!) This cannot be undone" />
                 </ui:Foldout>
                 <ui:VisualElement name="spacer10" style="height: 10px;" />

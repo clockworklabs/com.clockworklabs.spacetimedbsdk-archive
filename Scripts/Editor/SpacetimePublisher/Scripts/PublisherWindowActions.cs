@@ -22,6 +22,10 @@ namespace SpacetimeDB.Editor
         {
             await ensureSpacetimeCliInstalledAsync();
             await getServersSetDropdown();
+            // => Continues @ onGetServersSetDropdownSuccess()
+            // => Continues @ onGetSetIdentitiesSuccessEnsureDefault
+            // => Continues @ onEnsureIdentityDefaultSuccess()
+            // => Finishes @ revealPublishResultCacheIfHostExists()
         }
         
         /// Initially called by PublisherWindow @ CreateGUI
@@ -54,6 +58,7 @@ namespace SpacetimeDB.Editor
 
         private void resetPublishAdvanced()
         {
+            publishModuleDebugModeToggle.SetEnabled(false);
             publishModuleDebugModeToggle.value = false;
             publishModuleClearDataToggle.value = false;
         }
@@ -451,11 +456,20 @@ namespace SpacetimeDB.Editor
             // Show the next section + UX: Focus the 1st field
             identityFoldout.style.display = DisplayStyle.Flex;
             publishFoldout.style.display = DisplayStyle.Flex;
+            toggleDebugModeIfNotLocalhost(); // Always false if called from init
             publishModuleNameTxt.Focus();
             publishModuleNameTxt.SelectNone();
             
             // If we have a cached result, show that (minimized)
             revealPublishResultCacheIfHostExists(openFoldout: false);
+        }
+
+        /// Only allow --debug for !localhost (for numerous reasons, including a buffer overload bug)
+        /// Always false if called from init (since it will be "Discovering ...")
+        private void toggleDebugModeIfNotLocalhost()
+        {
+            bool isLocalhost = checkIsLocalhostServerSelected();
+            publishModuleDebugModeToggle.SetEnabled(!isLocalhost);
         }
 
         /// Set the selected server dropdown. If servers found but no default, [0] will be set.
@@ -521,6 +535,7 @@ namespace SpacetimeDB.Editor
             publishBtn.SetEnabled(false);
             publishStatusLabel.style.display = DisplayStyle.Flex;
             publishGroupBox.style.display = DisplayStyle.Flex;
+            toggleDebugModeIfNotLocalhost();
             setPublishReadyStatus();
         }
 
@@ -1126,5 +1141,9 @@ namespace SpacetimeDB.Editor
             publishResultStatusLabel.style.display = DisplayStyle.None;
             publishResultGenerateClientFilesBtn.SetEnabled(true);
         }
+        
+        /// Assuming !https
+        private bool checkIsLocalhostServerSelected() =>
+            serverSelectedDropdown.value.StartsWith("http://local");
     }
 }

@@ -56,8 +56,10 @@ namespace SpacetimeDB
         {
             bool isMatch = AddressOrName == newDbAddressOrName;
             if (isMatch)
+            {
                 return false; // !isMismatch: Auth token should match
-            
+            }
+
             PlayerPrefs.DeleteKey(AuthToken.GetTokenKey());
             return true; // isMismatch: Deleted the old token PlayerPref
         }

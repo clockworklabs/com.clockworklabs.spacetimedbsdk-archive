@@ -282,8 +282,10 @@ namespace SpacetimeDB.Editor
                 : "<b>Refresh</b>"; // TODO: Mv this to meta
 
             if (!isRefreshing)
+            {
                 return;
-            
+            }
+
             // Refreshing
             reducersTreeView.selectedIndex = -1;
             reducersTreeView.style.display = DisplayStyle.None;
@@ -370,10 +372,14 @@ namespace SpacetimeDB.Editor
             SpacetimeCliResult cliResult = await SpacetimeDbReducerCli.CallReducerAsync(request);
             bool isSuccess = string.IsNullOrEmpty(cliResult.CliError);
             if (!isSuccess)
+            {
                 onCallReducerFail(request, cliResult);
+            }
             else
+            {
                 onCallReducerSuccess(request,cliResult);
-            
+            }
+
             toggleCallReducerUi(callingReducerName: null);
         }
 

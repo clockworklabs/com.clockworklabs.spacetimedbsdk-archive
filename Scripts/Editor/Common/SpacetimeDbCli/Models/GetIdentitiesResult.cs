@@ -37,12 +37,16 @@ namespace SpacetimeDB.Editor
             {
                 Match match = Regex.Match(line, pattern);
                 if (!match.Success || match.Groups.Count <= 1)
+                {
                     continue;
-                
+                }
+
                 // Extract potential match
                 string potentialNickname = match.Groups[1].Value.Trim();
                 if (!string.IsNullOrWhiteSpace(potentialNickname))
+                {
                     onIdentityFound(line, potentialNickname);
+                }
             }
         }
         

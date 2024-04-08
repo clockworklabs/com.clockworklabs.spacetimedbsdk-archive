@@ -18,14 +18,18 @@ namespace SpacetimeDB.Editor
         private static bool tryFormatAsEmail(string input, out string formattedEmail)
         {
             formattedEmail = null;
-            if (string.IsNullOrWhiteSpace(input)) 
+            if (string.IsNullOrWhiteSpace(input))
+            {
                 return false;
-    
+            }
+
             // Simplified regex pattern to allow characters typically found in emails
             const string emailCharPattern = @"^[a-zA-Z0-9@._+-]+$"; // Allowing "+" (email aliases)
             if (!Regex.IsMatch(input, emailCharPattern))
+            {
                 return false;
-    
+            }
+
             formattedEmail = input;
             return true;
         }

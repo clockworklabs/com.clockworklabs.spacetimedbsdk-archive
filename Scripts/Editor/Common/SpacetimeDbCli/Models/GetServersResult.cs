@@ -39,8 +39,10 @@ namespace SpacetimeDB.Editor
                 Match match = Regex.Match(line, pattern);
                 bool isHeader = match.Groups[3].Value == "PROTOCOL";
                 if (!match.Success || isHeader)
+                {
                     continue;
-                
+                }
+
                 SpacetimeServer server = new(
                     nickname: match.Groups[3].Value,
                     host: match.Groups[2].Value,

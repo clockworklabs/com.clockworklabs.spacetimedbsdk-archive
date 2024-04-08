@@ -36,7 +36,9 @@ namespace SpacetimeDB.Editor
             this.ErrsFoundFromCliOutput = getErrsFoundFromCliOutput();
 
             if (CliError == "Canceled")
+            {
                 this.Cancelled = true;
+            }
         }
 
         private List<string> getErrsFoundFromCliOutput()
@@ -63,7 +65,9 @@ namespace SpacetimeDB.Editor
             this.CliError = cliResult.CliError?.Replace("\\", "/");
 
             if (CliError == "Canceled")
+            {
                 this.Cancelled = true;
+            }
         }
     }
 }

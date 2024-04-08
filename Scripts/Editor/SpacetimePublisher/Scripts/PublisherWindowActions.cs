@@ -238,13 +238,17 @@ namespace SpacetimeDB.Editor
             // Sanity check: Ensure host is set
             bool hasVal = !string.IsNullOrWhiteSpace(publishResultHostTxt.value);
             if (!hasVal)
+            {
                 return;
-            
+            }
+
             // Reveal the publishAsync result info cache
             publishResultFoldout.style.display = DisplayStyle.Flex;
             
             if (openFoldout != null)
+            {
                 publishResultFoldout.value = (bool)openFoldout;
+            }
         }
         
         /// (1) Suggest module name, if empty
@@ -264,7 +268,9 @@ namespace SpacetimeDB.Editor
             // ServerModulePathTxt persists: If previously entered, show the publishAsync group
             bool hasPathSet = !string.IsNullOrEmpty(publishModulePathTxt.value);
             if (hasPathSet)
+            {
                 revealPublisherGroupUiAsync(); // +Ensures SpacetimeDB CLI is installed async
+            }
         }
         
         /// Dynamically sets a dashified-project-name placeholder, if empty
@@ -274,8 +280,10 @@ namespace SpacetimeDB.Editor
             // Replace non-alphanumeric chars with dashes
             bool hasName = !string.IsNullOrEmpty(publishModuleNameTxt.value);
             if (hasName)
+            {
                 return; // Keep whatever the user customized
-            
+            }
+
             // Generate dashified-project-name fallback suggestion
             publishModuleNameTxt.value = getSuggestedServerModuleName();
         }
@@ -532,9 +540,13 @@ namespace SpacetimeDB.Editor
             bool isSuccess = publishResult.IsSuccessfulPublish;
             Debug.Log($"PublishAsync success: {isSuccess}");
             if (isSuccess)
+            {
                 onPublishSuccess(publishResult);
+            }
             else
+            {
                 onPublishFail(publishResult);
+            }
         }
         
         /// Critical err - show label
@@ -619,7 +631,9 @@ namespace SpacetimeDB.Editor
             }
             
             if (autoHideOnComplete)
+            {
                 progressBar.style.display = DisplayStyle.None;
+            }
         }
 
         /// Hide CLI group
@@ -636,8 +650,10 @@ namespace SpacetimeDB.Editor
             publishStatusLabel.style.display = DisplayStyle.Flex;
 
             if (style != SpacetimeMeta.StringStyle.Error)
+            {
                 return; // Not an error
-            
+            }
+
             // Error: Hide cancel btn, cancel token, show/enable pub btn
             publishCancelBtn.style.display = DisplayStyle.None;
             _cts?.Dispose();
@@ -694,9 +710,13 @@ namespace SpacetimeDB.Editor
             // Process result -> Update UI
             bool isSuccess = installWasmResult.IsSuccessfulInstall;
             if (isSuccess)
+            {
                 onInstallWasmOptPackageViaNpmSuccess();
+            }
             else
+            {
                 onInstallWasmOptPackageViaNpmFail(installWasmResult);
+            }
         }
 
         /// UI: Disable btn + show installing status to id label
@@ -714,7 +734,9 @@ namespace SpacetimeDB.Editor
         {
             // Sanity check
             if (string.IsNullOrEmpty(nickname) || string.IsNullOrEmpty(email))
+            {
                 return;
+            }
 
             setAddIdentityUi(nickname);
             AddIdentityRequest addIdentityRequestRequest = new(nickname, email);
@@ -725,9 +747,13 @@ namespace SpacetimeDB.Editor
 
             // Process result -> Update UI
             if (addIdentityResult.HasCliErr)
+            {
                 onAddIdentityFail(identity, addIdentityResult);
+            }
             else
+            {
                 onAddIdentitySuccess(identity);
+            }
         }
 
         private void setAddServerUi(string nickname)
@@ -750,7 +776,9 @@ namespace SpacetimeDB.Editor
         {
             // Sanity check
             if (string.IsNullOrEmpty(nickname) || string.IsNullOrEmpty(host))
+            {
                 return;
+            }
 
             setAddServerUi(nickname);
             AddServerRequest request = new(nickname, host);
@@ -762,9 +790,13 @@ namespace SpacetimeDB.Editor
             SpacetimeServer serverAdded = new(nickname, host, isDefault:true);
 
             if (addServerResult.HasCliErr)
+            {
                 onAddServerFail(serverAdded, addServerResult);
+            }
             else
+            {
                 onAddServerSuccess(serverAdded);
+            }
         }
         
         private void onAddServerFail(SpacetimeServer serverAdded, AddServerResult addServerResult)
@@ -789,17 +821,23 @@ namespace SpacetimeDB.Editor
         {
             // Sanity check
             if (string.IsNullOrEmpty(idNicknameOrDbAddress))
+            {
                 return;
-            
+            }
+
             // Run CLI cmd
             SpacetimeCliResult cliResult = await SpacetimeDbPublisherCli.SetDefaultIdentityAsync(idNicknameOrDbAddress);
 
             // Process result -> Update UI
             bool isSuccess = !cliResult.HasCliErr;
             if (isSuccess)
+            {
                 Debug.Log($"Changed default identity to: {idNicknameOrDbAddress}");
+            }
             else
+            {
                 Debug.LogError($"Failed to set default identity: {cliResult.CliError}");
+            }
         }
 
         private void resetPublishResultCache()
@@ -839,7 +877,9 @@ namespace SpacetimeDB.Editor
             {
                 serverFoldout.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
                 if (!show)
+                {
                     serverStatusLabel.style.display = DisplayStyle.None;
+                }
             }
             
             // ---------------
@@ -848,26 +888,36 @@ namespace SpacetimeDB.Editor
             {
                 identityFoldout.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
                 if (!show)
-                    identityStatusLabel.style.display = DisplayStyle.None;    
+                {
+                    identityStatusLabel.style.display = DisplayStyle.None;
+                }
             }
             else
+            {
                 return;
-            
+            }
+
             // ---------------
             // Publish, PublishResult
             if (startRippleFrom <= FoldoutGroupType.Publish)
             {
                 publishFoldout.style.display = DisplayStyle.None;
                 if (!show)
+                {
                     publishStatusLabel.style.display = DisplayStyle.None;
+                }
             }
             else
+            {
                 return;
+            }
 
             // ---------------
             // PublishResult+
             if (startRippleFrom <= FoldoutGroupType.PublishResult)
+            {
                 publishResultFoldout.style.display = DisplayStyle.None;
+            }
         }
 
         /// Great for if you just canceled and you want a slight cooldown
@@ -875,8 +925,10 @@ namespace SpacetimeDB.Editor
         {
             // Sanity check
             if (btn == null)
+            {
                 return;
-            
+            }
+
             await Task.Delay(TimeSpan.FromSeconds(1));
             btn.SetEnabled(true);
         }
@@ -888,8 +940,10 @@ namespace SpacetimeDB.Editor
         {
             // Sanity check
             if (string.IsNullOrEmpty(nicknameOrHost))
+            {
                 return;
-            
+            }
+
             // UI: This invalidates identities, so we'll hide all Foldouts
             toggleFoldoutRipple(FoldoutGroupType.Identity, show:false);
 
@@ -899,9 +953,13 @@ namespace SpacetimeDB.Editor
             // Process result -> Update UI
             bool isSuccess = !cliResult.HasCliErr;
             if (!isSuccess)
+            {
                 onChangeDefaultServerFail(cliResult);
+            }
             else
+            {
                 await onChangeDefaultServerSuccessAsync();
+            }
         }
         
         private void onChangeDefaultServerFail(SpacetimeCliResult cliResult)

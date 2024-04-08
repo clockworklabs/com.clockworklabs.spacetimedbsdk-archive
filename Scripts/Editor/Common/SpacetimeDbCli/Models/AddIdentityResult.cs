@@ -29,13 +29,20 @@ namespace SpacetimeDB.Editor
         {
             // Catch known errors
             if (!HasCliErr)
+            {
                 return;
-            
+            }
+
             if (checkIsIdentityAlreadyExistsError())
+            {
                 return;
+            }
+
             if (checkIsTimedOutError())
+            {
                 return;
-            
+            }
+
             // Unknown error
             this.AddIdentityError = AddIdentityErrorType.Unknown;
 
@@ -50,8 +57,10 @@ namespace SpacetimeDB.Editor
             // Identity testnet already exists
             bool isTimedOutErr = HasCliErr && CliError.Contains("host has failed to respond");
             if (!isTimedOutErr)
+            {
                 return false; // !hasErr
-            
+            }
+
             this.HasAddIdentityError = true;
             this.AddIdentityError = AddIdentityErrorType.TimedOut;
             this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
@@ -66,8 +75,10 @@ namespace SpacetimeDB.Editor
             // Identity testnet already exists
             bool isIdentityAlreadyExistsErr = HasCliErr && CliError.Contains("that name already exists");
             if (!isIdentityAlreadyExistsErr)
+            {
                 return false; // !hasErr
-            
+            }
+
             this.HasAddIdentityError = true;
             this.AddIdentityError = AddIdentityErrorType.IdentityAlreadyExists;
             this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(

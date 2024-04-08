@@ -29,14 +29,20 @@ namespace SpacetimeDB.Editor
         {
             // Catch known errors
             if (!HasCliErr)
+            {
                 return;
-            
+            }
+
             if (checkHasServerNotRunningError())
+            {
                 return;
+            }
 
             if (checkIsNicknameAlreadyInUseError())
+            {
                 return;
-            
+            }
+
             // Unknown error
             this.AddServerError = AddServerErrorType.Unknown;
             
@@ -52,8 +58,10 @@ namespace SpacetimeDB.Editor
             // Server nickname testnet already in use
             bool isNicknameInUseErr = HasCliErr && CliError.Contains("already in use");
             if (!isNicknameInUseErr)
+            {
                 return false; // !hasErr
-            
+            }
+
             this.HasAddServerError = true;
             this.AddServerError = AddServerErrorType.NicknameAlreadyInUse;
             this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
@@ -67,8 +75,10 @@ namespace SpacetimeDB.Editor
         {
             bool hasServerNotRunningErr = HasCliErr && CliError.Contains("Is the server running?");
             if (!hasServerNotRunningErr)
+            {
                 return false; // !hasErr
-            
+            }
+
             this.HasAddServerError = true;
             this.AddServerError = AddServerErrorType.ServerNotRunning;
             this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(

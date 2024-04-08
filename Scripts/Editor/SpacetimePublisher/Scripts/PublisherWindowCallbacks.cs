@@ -38,9 +38,9 @@ namespace SpacetimeDB.Editor
                 // Replace spaces with dashes
                 serverNicknameTxt.RegisterValueChangedCallback(
                     onServerNicknameTxtChanged);
-            }
-            if (serverNicknameTxt != null)
-            {
+                
+                // If using a reserved name, fill host + disable
+                // Reveal the next Publish field, if ready
                 serverNicknameTxt.RegisterCallback<FocusOutEvent>(
                     onServerNicknameFocusOut);
             }
@@ -71,9 +71,7 @@ namespace SpacetimeDB.Editor
                 // Replace spaces with dashes
                 identityNicknameTxt.RegisterValueChangedCallback(
                     onIdentityNicknameTxtChanged);
-            }
-            if (identityNicknameTxt != null)
-            {
+
                 identityNicknameTxt.RegisterCallback<FocusOutEvent>(
                     onIdentityNicknameFocusOut);
             }
@@ -82,9 +80,7 @@ namespace SpacetimeDB.Editor
                 // Normalize email chars
                 identityEmailTxt.RegisterValueChangedCallback(
                     onIdentityEmailTxtChanged);
-            }
-            if (identityEmailTxt != null)
-            {
+ 
                 // If valid, enable Add New Identity btn
                 identityEmailTxt.RegisterCallback<FocusOutEvent>(
                     onIdentityEmailTxtFocusOut);
@@ -100,9 +96,7 @@ namespace SpacetimeDB.Editor
                 // For init only
                 publishModulePathTxt.RegisterValueChangedCallback(
                     onPublishModulePathTxtInitChanged);
-            }
-            if (publishModulePathTxt != null)
-            {
+  
                 // If !empty, Reveal next UI grou
                 publishModulePathTxt.RegisterCallback<FocusOutEvent>(
                     onPublishModulePathTxtFocusOut);
@@ -117,9 +111,7 @@ namespace SpacetimeDB.Editor
                 // Suggest module name if empty
                 publishModuleNameTxt.RegisterCallback<FocusOutEvent>(
                     onPublishModuleNameTxtFocusOut);
-            }
-            if (publishModuleNameTxt != null)
-            {
+ 
                 // Replace spaces with dashes
                 publishModuleNameTxt.RegisterValueChangedCallback(
                     onPublishModuleNameTxtChanged);
@@ -134,7 +126,6 @@ namespace SpacetimeDB.Editor
                 // Cancel publishAsync chain
                 publishCancelBtn.clicked += onCancelPublishBtnClick;
             }
-            
             if (publishResultIsOptimizedBuildToggle != null)
             {
                 // Show [Install Package] btn if !optimized
@@ -388,8 +379,23 @@ namespace SpacetimeDB.Editor
             checkIdentityReqsToggleIdentityBtn();
         
         /// Toggle newServer btn enabled based on email + nickname being valid
-        private void onServerNicknameFocusOut(FocusOutEvent evt) =>
+        private void onServerNicknameFocusOut(FocusOutEvent evt)
+        {
+            // Check for known aliases
+            string normalizedHost = SpacetimeMeta.GetHostFromKnownServerName(serverNicknameTxt.text);
+            bool isKnownAlias = normalizedHost != serverNicknameTxt.text;
+            if (isKnownAlias)
+            {
+                serverHostTxt.value = normalizedHost;
+                serverHostTxt.isReadOnly = true;
+            }
+            else
+            {
+                serverHostTxt.isReadOnly = false;
+            }
+            
             checkServerReqsToggleServerBtn();
+        }
         
         /// Toggle newIdentity btn enabled based on nickname + email being valid
         private void onIdentityEmailTxtFocusOut(FocusOutEvent evt) =>

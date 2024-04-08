@@ -77,6 +77,11 @@ namespace SpacetimeDB.Editor
         {
             serverAddNewShowUiBtn.style.display = DisplayStyle.None;
             serverNewGroupBox.style.display = DisplayStyle.None;
+            serverNicknameTxt.value = "";
+
+            serverHostTxt.value = "";
+            serverHostTxt.isReadOnly = false;
+            
             resetServerDropdown();
             serverSelectedDropdown.value = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, "Discovering ...");
@@ -354,11 +359,11 @@ namespace SpacetimeDB.Editor
             AddServerRequest addServerRequest = null;
             
             // Run CLI cmd: Add `local` server (forces `--no-fingerprint` so it doesn't need to be running now)
-            addServerRequest = new("local", "http://127.0.0.1:3000");
+            addServerRequest = new("local", SpacetimeMeta.LOCALHOST);
             _ = await SpacetimeDbPublisherCli.AddServerAsync(addServerRequest);
             
             // Run CLI cmd: Add `testnet` server (becomes default)
-            addServerRequest = new("testnet", "https://testnet.spacetimedb.com");
+            addServerRequest = new("testnet", SpacetimeMeta.TESTNET);
             _ = await SpacetimeDbPublisherCli.AddServerAsync(addServerRequest);
             
             // Success - try again
@@ -1144,6 +1149,7 @@ namespace SpacetimeDB.Editor
         
         /// Assuming !https
         private bool checkIsLocalhostServerSelected() =>
+            serverSelectedDropdown.value.StartsWith("local") ||
             serverSelectedDropdown.value.StartsWith("http://local");
     }
 }

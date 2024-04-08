@@ -255,8 +255,32 @@ namespace SpacetimeDB.Editor
             }
         }
         #endregion // Core CLI
-            
         
+        
+        #region CLI Utils
+        /// Cross-platform kill cmd for SpacetimeDB Local Server (or technically any port)
+        /// TODO: Needs +review for safety; ran through ChatGPT a couple times
+        private static string getKillCommand(ushort port)
+        {
+            bool isWin = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
+                System.Runtime.InteropServices.OSPlatform.Windows);
+            
+            // For safety, ensures pid != 0
+            if (isWin)
+            {
+                // Windows command to find by port and kill
+                return $"netstat -aon | findstr :{port} && for /f \"tokens=5\" %a " +
+                       $"in ('netstat -aon ^| findstr :{port}') " +
+                       $"do if not %a==0 taskkill /F /PID %a";
+            }
+            
+            // macOS/Linux command to find by port and kill
+            // TODO: Mac|Linux needs testing
+            return $"lsof -ti:{port} | grep -v '^0$' | xargs -r kill -9";
+        }
+        #endregion // CLI Utils
+        
+
         #region High Level CLI Actions
         /// isInstalled = !cliResult.HasCliError 
         public static async Task<SpacetimeCliResult> GetIsSpacetimeCliInstalledAsync()
@@ -331,6 +355,23 @@ namespace SpacetimeDB.Editor
             }
             
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix, cts.Token);
+            return cliResult;
+        }
+        
+        /// Uses the `spacetime start` CLI command.
+        public static async Task<StartLocalServerResult> StartLocalServerAsync()
+        {
+            const string argSuffix = "spacetime start";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
+            StartLocalServerResult startLocalServerResult = new(cliResult);
+            return startLocalServerResult;
+        }
+        
+        /// Cross-platform kills process by port num (there's no universal `stop` command)
+        public static async Task<SpacetimeCliResult> ForceStopLocalServerAsync(ushort port)
+        {
+            string argSuffix = getKillCommand(port);
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
             return cliResult;
         }
         #endregion // High Level CLI Actions

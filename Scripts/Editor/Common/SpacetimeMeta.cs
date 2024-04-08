@@ -1,11 +1,19 @@
 /// Static metadata for SpacetimeDB editor scripts
 public static class SpacetimeMeta
 {
+    #region Flags
+    /// If you want to stop a SpacetimeDB server but don't have the port,
+    /// do you want to try killing the default port process? 
+    public const bool FORCE_STOP_DEFAULT_SERVER_ON_UNKNOWN_PORT = true;
+    #endregion // Flags
+    
+    
     #region Names & Paths
+    public const ushort DEFAULT_PORT = 3000;
     public const string LOCAL_SERVER_NAME = "local";
     public const string TESTNET_SERVER_NAME = "testnet";
-    public const string LOCAL_HOST_URL = "http://127.0.0.1:3000";
     public const string TESTNET_HOST_URL = "https://testnet.spacetimedb.com";
+    public static string LOCAL_HOST_URL => $"http://127.0.0.1:{DEFAULT_PORT}";
     
     public const string SDK_PACKAGE_NAME = "com.clockworklabs.spacetimedbsdk";
     public const string COMMON_DIR_PATH = "Packages/" + SDK_PACKAGE_NAME + "/Scripts/Editor/Common";

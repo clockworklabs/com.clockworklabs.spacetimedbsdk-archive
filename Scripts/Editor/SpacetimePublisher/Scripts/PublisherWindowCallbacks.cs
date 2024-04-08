@@ -157,9 +157,17 @@ namespace SpacetimeDB.Editor
             }
         }
 
-        private void onStopLocalServerBtnClick()
+        private async void onStopLocalServerBtnClick()
         {
-            throw new NotImplementedException();
+            try
+            {
+                await stopLocalServer();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e.Message);
+                throw;
+            }
         }
 
         private async void onStartLocalServerBtnClick()

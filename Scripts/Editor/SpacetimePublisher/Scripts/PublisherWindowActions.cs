@@ -584,7 +584,8 @@ namespace SpacetimeDB.Editor
                 return;
             }
             
-            Debug.Log("Localhost server selected: Pinging for online status ...");
+            Debug.Log("Localhost server selected: Pinging for online status: " +
+                      "(!) will 'Cancel' Process if !responsive within a short duration...");
             
             // Run CLI cmd
             bool isOnline = await checkIsLocalServerOnlineAsync();
@@ -623,10 +624,12 @@ namespace SpacetimeDB.Editor
             publishStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Success, 
                 "Ready");
+            
             publishBtn.SetEnabled(true);
             publishBtn.style.display = DisplayStyle.Flex;
             
             publishCancelBtn.style.display = DisplayStyle.None;
+            publishStopLocalServerBtn.style.display = DisplayStyle.None;
         }
         
         /// Be sure to try/catch this with a try/finally to dispose `_cts
@@ -944,7 +947,7 @@ namespace SpacetimeDB.Editor
             bool isSuccess = !cliResult.HasCliErr;
             if (!isSuccess)
             {
-                Debug.LogError($"Failed to set default identity: {cliResult.CliError}");
+                Debug.LogError($"Failed to {nameof(setDefaultIdentityAsync)}: {cliResult.CliError}");
                 return;
             }
             
@@ -1166,7 +1169,7 @@ namespace SpacetimeDB.Editor
             resetGetServerLogsUi();
             if (cliResult.HasCliErr)
             {
-                Debug.LogError($"Failed to get server logs: {cliResult.CliError}");
+                Debug.LogError($"Failed to {nameof(getServerLogsAsync)}: {cliResult.CliError}");
                 return;
             }
 
@@ -1233,41 +1236,109 @@ namespace SpacetimeDB.Editor
         private bool checkIsLocalhostServerSelected() =>
             serverSelectedDropdown.value.StartsWith(SpacetimeMeta.LOCAL_SERVER_NAME);
 
-        private void setStartLocalServerUi()
+        private void setStartingStoppingLocalServerUi(bool isStarting)
         {
             publishStartLocalServerBtn.SetEnabled(false);
             publishStartLocalServerBtn.text = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Action, "Starting ...");
+                SpacetimeMeta.StringStyle.Action, isStarting ? "Starting ..." : "Stopping ...");
             publishStatusLabel.style.display = DisplayStyle.None;
         }
-
-        private void setStartLocalServerDoneUi()
-        {
-            publishStartLocalServerBtn.SetEnabled(true);
-            publishStartLocalServerBtn.text = "Publish";
-            publishStatusLabel.style.display = DisplayStyle.Flex; // "Ready"
-        }
         
-        /// <summary>Starts the local SpacetimeDB server; sets _localServer state</summary>
+        /// <summary>Starts the local SpacetimeDB server; sets _localServer state.</summary>
         /// <returns>startedServer</returns>
         private async Task<bool> startLocalServer()
         {
-            setStartLocalServerUi();
+            setStartingStoppingLocalServerUi(isStarting: true);
             
             // Run CLI cmd => Save to state cache
             _localServer = await SpacetimeDbCli.StartLocalServerAsync();
             
             // Process result -> Update UI
-            setStartLocalServerDoneUi();
             bool isSuccess = _localServer.StartedServer;
             if (!isSuccess)
             {
-                Debug.LogError($"Failed to start local server: {_localServer.CliError}");
+                onStartLocalServerFail();
                 return false; // !startedServer 
             }
             
-            Debug.Log($"Started local server: `{_localServer}`");
+            onStartLocalServerSuccess();
             return true; // startedServer
+        }
+
+        private void onStartLocalServerSuccess()
+        {
+            Debug.Log($"Started local server: `{_localServer}`");
+            
+            setPublishReadyStatus();
+            publishStartLocalServerBtn.style.display = DisplayStyle.None;
+            publishStopLocalServerBtn.style.display = DisplayStyle.Flex;
+            publishStopLocalServerBtn.SetEnabled(true);
+        }
+
+        private void onStartLocalServerFail()
+        {
+            Debug.LogError($"Failed to {nameof(startLocalServer)}: {_localServer.CliError}");
+
+            publishStartLocalServerBtn.text = "Start Local Server";
+            publishStartLocalServerBtn.SetEnabled(true);
+        }
+
+        /// <summary>
+        /// Either gracefully or forcefully stops the local SpacetimeDB server by port; unsets _localServer state.
+        /// If FORCE_STOP_DEFAULT_SERVER_ON_UNKNOWN_PORT, try default port if unknown.
+        /// </summary>
+        /// <returns>stoppedServer</returns>
+        private async Task<bool> stopLocalServer()
+        {
+            bool isGracefulStop = false;
+            ushort port;
+            
+            // Validate + Logs
+            if (_localServer is null || _localServer.Port == 0)
+            {
+                if (!SpacetimeMeta.FORCE_STOP_DEFAULT_SERVER_ON_UNKNOWN_PORT)
+                {
+                    throw new NullReferenceException($"Expected {nameof(_localServer)}");
+                }
+
+                port = SpacetimeMeta.DEFAULT_PORT;
+            }
+            else
+            {
+                port = _localServer.Port;
+                Assert.IsTrue(port != 0, $"Expected {nameof(port)} to be > 0");
+                isGracefulStop = true;
+            }
+
+            Debug.Log($"Attempting to {(isGracefulStop ? "gracefully" : "force")} stop local server running on port:{port}");   
+
+            setStartingStoppingLocalServerUi(isStarting: false);
+            
+            // Run CLI cmd => Save to state cache
+            SpacetimeCliResult cliResult = await SpacetimeDbCli.ForceStopLocalServerAsync(port);
+            
+            // Process result -> Update UI
+            bool isSuccess = !cliResult.HasCliErr;
+            if (!isSuccess)
+            {
+                Debug.LogError($"Failed to {nameof(stopLocalServer)}: {cliResult.CliError}");
+                throw new Exception("TODO: Handle a rare CLI error on stop server fail");
+                return false; // !stoppedServer 
+            }
+
+            onStopLocalServerSuccess();
+            return true; // stoppedServer
+        }
+
+        /// We stopped -> So now we want to show start (+disable publish)
+        private void onStopLocalServerSuccess()
+        {
+            Debug.Log(SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Error, "Stopped local server"));
+            _localServer = null;
+            
+            publishStartLocalServerBtn.style.display = DisplayStyle.None;
+            publishStopLocalServerBtn.style.display = DisplayStyle.Flex;
+            publishStartLocalServerBtn.SetEnabled(false);
         }
     }
 }

@@ -577,17 +577,19 @@ namespace SpacetimeDB.Editor
         {
             publishLocalBtnsHoriz.style.display = DisplayStyle.None;
             
-            _isLocalServer = checkIsLocalhostServerSelected();
-            publishLocalBtnsHoriz.style.display = _isLocalServer ? DisplayStyle.Flex : DisplayStyle.None;
-            if (!_isLocalServer)
+            bool isLocalServer = checkIsLocalhostServerSelected();
+            publishLocalBtnsHoriz.style.display = isLocalServer ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!isLocalServer)
             {
                 return;
             }
             
             Debug.Log("Localhost server selected: Pinging for online status ...");
+            
+            // Run CLI cmd
             bool isOnline = await checkIsLocalServerOnlineAsync();
+            
             Debug.Log("Local server online? " + isOnline);
-
             toggleLocalServerStartOrStopBtn(isOnline);
         }
 
@@ -596,9 +598,11 @@ namespace SpacetimeDB.Editor
         {
             Assert.IsTrue(checkIsLocalhostServerSelected(), $"Expected {nameof(checkIsLocalhostServerSelected)}");
 
+            // Run CLI command with short timeout
             TimeSpan shortTimeout = TimeSpan.FromMilliseconds(150);
             SpacetimeCliResult cliResult = await SpacetimeDbCli.PingServerAsync(shortTimeout);
             
+            // Process result
             bool isSuccess = !cliResult.HasCliErr;
             return isSuccess;
         }
@@ -1228,5 +1232,42 @@ namespace SpacetimeDB.Editor
         /// Assuming !https
         private bool checkIsLocalhostServerSelected() =>
             serverSelectedDropdown.value.StartsWith(SpacetimeMeta.LOCAL_SERVER_NAME);
+
+        private void setStartLocalServerUi()
+        {
+            publishStartLocalServerBtn.SetEnabled(false);
+            publishStartLocalServerBtn.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Action, "Starting ...");
+            publishStatusLabel.style.display = DisplayStyle.None;
+        }
+
+        private void setStartLocalServerDoneUi()
+        {
+            publishStartLocalServerBtn.SetEnabled(true);
+            publishStartLocalServerBtn.text = "Publish";
+            publishStatusLabel.style.display = DisplayStyle.Flex; // "Ready"
+        }
+        
+        /// <summary>Starts the local SpacetimeDB server; sets _localServer state</summary>
+        /// <returns>startedServer</returns>
+        private async Task<bool> startLocalServer()
+        {
+            setStartLocalServerUi();
+            
+            // Run CLI cmd => Save to state cache
+            _localServer = await SpacetimeDbCli.StartLocalServerAsync();
+            
+            // Process result -> Update UI
+            setStartLocalServerDoneUi();
+            bool isSuccess = _localServer.StartedServer;
+            if (!isSuccess)
+            {
+                Debug.LogError($"Failed to start local server: {_localServer.CliError}");
+                return false; // !startedServer 
+            }
+            
+            Debug.Log($"Started local server: `{_localServer}`");
+            return true; // startedServer
+        }
     }
 }

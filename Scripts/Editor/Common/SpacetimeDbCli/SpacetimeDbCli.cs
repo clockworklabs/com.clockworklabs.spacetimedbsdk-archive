@@ -81,9 +81,6 @@ namespace SpacetimeDB.Editor
         /// Usage: Pass an argSuffix, such as "spacetime version",
         ///        along with an optional cancel token
         /// - Supports cancellations and timeouts via CancellationToken (create a CancellationTokenSource)
-        /// <param name="envPath">
-        /// Include if you just installed SpacetimeDB CLI to workaround restarting to refresh PATH
-        /// </param>
         public static async Task<SpacetimeCliResult> runCliCommandAsync(
             string argSuffix,
             CancellationToken cancelToken = default)

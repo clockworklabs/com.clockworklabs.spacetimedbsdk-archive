@@ -162,9 +162,17 @@ namespace SpacetimeDB.Editor
             throw new NotImplementedException();
         }
 
-        private void onStartLocalServerBtnClick()
+        private async void onStartLocalServerBtnClick()
         {
-            throw new NotImplementedException();
+            try
+            {
+                await startLocalServer();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e.Message);
+                throw;
+            }
         }
 
         /// Cleanup: This should parity the opposite of setOnActionEvents()

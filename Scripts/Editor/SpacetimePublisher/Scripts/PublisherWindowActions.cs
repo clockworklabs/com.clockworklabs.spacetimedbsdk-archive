@@ -900,6 +900,12 @@ namespace SpacetimeDB.Editor
                 SpacetimeMeta.StringStyle.Error, 
                 $"<b>Failed:</b> Couldn't add identity `{identity.Nickname}`\n" +
                 addIdentityResult.StyledFriendlyErrorMessage);
+
+            if (addIdentityResult.AddIdentityError == AddIdentityResult.AddIdentityErrorType.IdentityAlreadyExists)
+            {
+                identityNicknameTxt.Focus();
+                identityNicknameTxt.SelectAll();
+            }
             
             identityStatusLabel.style.display = DisplayStyle.Flex;
         }

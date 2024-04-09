@@ -992,6 +992,7 @@ namespace SpacetimeDB.Editor
             }
             
             Debug.Log($"Changed default identity to: {idNicknameOrDbAddress}");
+            identityAddNewShowUiBtn.text = "+";
         }
 
         private void resetPublishResultCache()
@@ -1129,6 +1130,7 @@ namespace SpacetimeDB.Editor
             await pingLocalServerSetBtnsAsync();
             await getIdentitiesSetDropdown(); // Process and reveal the next UI group
             serverSelectedDropdown.SetEnabled(true);
+            serverAddNewShowUiBtn.text = "+";
         }
 
         /// Disable generate btn, show "GGenerating..." label

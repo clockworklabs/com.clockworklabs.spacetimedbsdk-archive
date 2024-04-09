@@ -1,12 +1,61 @@
+using System;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace SpacetimeDB.Editor
 {
     /// Validations, trimming, special formatting
     public partial class PublisherWindow 
     {
+        /// Checked at OnFocusOut events to ensure both nickname+email txt fields are valid.
+        /// Toggle identityAddBtn enabled based validity of both.
+        private void checkIdentityReqsToggleIdentityBtn()
+        {
+            bool isNicknameValid = !string.IsNullOrWhiteSpace(identityNicknameTxt.value);
+            bool isEmailValid = checkIsValidEmail(identityEmailTxt.value);
+            identityAddBtn.SetEnabled(isNicknameValid && isEmailValid);
+        }
+        
+        /// Checked at OnFocusOut events to ensure both nickname-host txt fields are valid.
+        /// Toggle serverAddBtn enabled based validity of both.
+        private void checkServerReqsToggleServerBtn()
+        {
+            bool isHostValid = checkIsValidUrl(serverHostTxt.value);
+            bool isNicknameValid = !string.IsNullOrWhiteSpace(serverNicknameTxt.value);
+            serverAddBtn.SetEnabled(isNicknameValid && isHostValid);
+        }
+        
+        private void resetCancellationTokenSrc()
+        {
+            _publishCts?.Dispose();
+            _publishCts = new CancellationTokenSource();
+        }
+
+        /// <returns>
+        /// dashified-project-name, suggested based on your project name.
+        /// Swaps out `client` keyword with `server`.</returns>
+        private string getSuggestedServerModuleName()
+        {
+            // Prefix "unity-", dashify the name, replace "client" with "server (if found).
+            // Use Unity's productName
+            string unityProjectName = $"unity-{Application.productName.ToLowerInvariant()}";
+            string projectNameDashed = Regex
+                .Replace(unityProjectName, @"[^a-z0-9]", "-")
+                .Replace("client", "server");
+
+            return projectNameDashed;
+        }
+        
+        /// Great for adding a cooldown to a button, for example after a successful cancel
+        private static async Task WaitEnableElementAsync(VisualElement element, TimeSpan timespan)
+        {
+            await Task.Delay(timespan);
+            element.SetEnabled(true);
+        }
+        
         private static string replaceSpacesWithDashes(string str) =>
             str?.Replace(" ", "-");
         
@@ -46,44 +95,5 @@ namespace SpacetimeDB.Editor
         /// Useful for FocusOut events, checking the entire host for being valid.
         /// At minimum, must start with "http".
         private static bool checkIsValidUrl(string url) => url.StartsWith("http");
-
-        /// Checked at OnFocusOut events to ensure both nickname+email txt fields are valid.
-        /// Toggle identityAddBtn enabled based validity of both.
-        private void checkIdentityReqsToggleIdentityBtn()
-        {
-            bool isNicknameValid = !string.IsNullOrWhiteSpace(identityNicknameTxt.value);
-            bool isEmailValid = checkIsValidEmail(identityEmailTxt.value);
-            identityAddBtn.SetEnabled(isNicknameValid && isEmailValid);
-        }
-        
-        /// Checked at OnFocusOut events to ensure both nickname-host txt fields are valid.
-        /// Toggle serverAddBtn enabled based validity of both.
-        private void checkServerReqsToggleServerBtn()
-        {
-            bool isHostValid = checkIsValidUrl(serverHostTxt.value);
-            bool isNicknameValid = !string.IsNullOrWhiteSpace(serverNicknameTxt.value);
-            serverAddBtn.SetEnabled(isNicknameValid && isHostValid);
-        }
-        
-        private void resetCancellationTokenSrc()
-        {
-            _publishCts?.Dispose();
-            _publishCts = new CancellationTokenSource();
-        }
-
-        /// <returns>
-        /// dashified-project-name, suggested based on your project name.
-        /// Swaps out `client` keyword with `server`.</returns>
-        private string getSuggestedServerModuleName()
-        {
-            // Prefix "unity-", dashify the name, replace "client" with "server (if found).
-            // Use Unity's productName
-            string unityProjectName = $"unity-{Application.productName.ToLowerInvariant()}";
-            string projectNameDashed = Regex
-                .Replace(unityProjectName, @"[^a-z0-9]", "-")
-                .Replace("client", "server");
-
-            return projectNameDashed;
-        }
     }
 }

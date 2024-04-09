@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Debug = UnityEngine.Debug;
@@ -9,11 +10,12 @@ using Debug = UnityEngine.Debug;
 namespace SpacetimeDB.Editor
 {
     /// Common CLI action helper for UI Builder windows.
-    /// Vanilla: Do the action -> return the result -> no more.
-    /// (!) Looking for more actions? See `SpacetimeDbPublisherCli.cs`
+    /// - Vanilla: Do the action -> return the result -> no more.
+    /// - Technically anything here accepts a CancellationToken; just add to arg + pass along!
+    /// - (!) Looking for more actions? See `SpacetimeDbPublisherCli.cs`
     public static class SpacetimeDbCli
     {
-        #region Static Options
+        #region Static state/opts
         private const CliLogLevel CLI_LOG_LEVEL = CliLogLevel.Info;
         
         public enum CliLogLevel
@@ -25,7 +27,9 @@ namespace SpacetimeDB.Editor
         /// If you *just* installed SpacetimeDB CLI, this will update PATH in the spawned Process.
         /// Prevents restarting Unity to refresh paths (UX).
         public static string NewlyInstalledCliEnvDirPath { get; set; }
-        #endregion // Static Options
+
+        private static bool _autoResolvedBugIsTryingAgain;
+        #endregion // Static state/opts
 
         
         #region Init
@@ -76,62 +80,155 @@ namespace SpacetimeDB.Editor
         
         
         #region Core CLI
+
+        private static Process createCliProcess(
+            string terminal,
+            string fullParsedArgs,
+            bool isAsync = false)
+        {
+            Process cliProcess = new();
+            if (isAsync)
+            {
+                cliProcess.EnableRaisingEvents = true; // The secret spice to allowing async CLI =>
+            }
+
+            ProcessStartInfo startInfo = cliProcess.StartInfo;
+            startInfo.FileName = terminal;
+            startInfo.Arguments = fullParsedArgs;
+            startInfo.RedirectStandardError = true;
+            startInfo.RedirectStandardOutput = true;
+            startInfo.UseShellExecute = false;
+            startInfo.CreateNoWindow = true;
+            
+            // If we *just* installed SpacetimeDB CLI, PATH is not yet refreshed
+            checkUpdatePathForNewSpacetimeDbCliInstall(startInfo);
+
+            return cliProcess;
+        }
+
+        /// If we *just* installed SpacetimeDB CLI (NewlyInstalledCliEnvDirPath),
+        /// PATH is not yet refreshed: Update PATH env vars
+        private static void checkUpdatePathForNewSpacetimeDbCliInstall(ProcessStartInfo startInfo)
+        {
+            bool hasEnvPathOverride = !string.IsNullOrEmpty(NewlyInstalledCliEnvDirPath);
+            if (!hasEnvPathOverride)
+            {
+                return;
+            }
+        
+            string keyName = Application.platform == RuntimePlatform.WindowsEditor ? "Path" : "PATH"; 
+            string pathAddendum = Path.PathSeparator + NewlyInstalledCliEnvDirPath;
+            startInfo.EnvironmentVariables[keyName] += pathAddendum;
+        }
+        
+        private static void logInput(string terminal, string fullParsedArgs)
+        {
+            if (CLI_LOG_LEVEL != CliLogLevel.Info)
+            {
+                return;
+            }
+                
+            Debug.Log($"CLI Input: `<color=yellow>{terminal} {fullParsedArgs}</color>`\n");
+        }
+        
+        /// Starts a detached Process, allowing a domain reload to not freeze Unity or kill the process.
+        public static void startDetachedCliProcess(string argSuffix)
+        {
+            // Args
+            string terminal = getTerminalPrefix(); // Determine terminal based on platform
+            string argPrefix = getCommandPrefix(); // Determine command prefix (cmd /c, etc.)
+            string fullParsedArgs = $"{argPrefix} \"{argSuffix}\"";
+            
+            // Process + StartInfo
+            Process asyncCliProcess = createCliProcess(terminal, fullParsedArgs, isAsync: true);
+            asyncCliProcess.StartInfo.UseShellExecute = true; // Detach the process, but we get no logs
+
+            // TODO: Show later just before we start the proc @ SpacetimeAsyncCliResult?
+            logInput(terminal, fullParsedArgs);
+            
+            asyncCliProcess.Start();
+            asyncCliProcess.Dispose();
+        }
+
+        /// Issue a cross-platform *async* (EnableRaisingEvents) CLI cmd, where we'll start with terminal prefixes
+        /// as the CLI "command" and some arg prefixes for compatibility.
+        /// This particular overload is useful for streaming logs or running a cancellable listen server in the background
+        /// For async CLI calls, a CancellationToken is *required* (create a CancellationTokenSource)
+        /// (!) YOU MANUALLY START THIS PROCESS (to give you a chance to subscribe to logs early)
+        /// - Usage: asyncCliResult.Start() 
+        public static Task<SpacetimeStreamingCliResult> runStreamingCliCommand(
+            string argSuffix,
+            bool stopOnError,
+            CancellationTokenSource cancelTokenSrc)
+        {
+            // Args
+            string terminal = getTerminalPrefix(); // Determine terminal based on platform
+            string argPrefix = getCommandPrefix(); // Determine command prefix (cmd /c, etc.)
+            string fullParsedArgs = $"{argPrefix} \"{argSuffix}\"";
+            
+            // Process + StartInfo
+            Process asyncCliProcess = createCliProcess(terminal, fullParsedArgs, isAsync: true);
+
+            // Cancellation Token + Async CLI Result (set early to prepare streaming logs *before* proc start)
+            SpacetimeStreamingCliRequest streamingCliRequest = new(
+                asyncCliProcess, 
+                stopOnError, 
+                continueFollowingLogsAfterDone: true, 
+                cancelTokenSrc);
+            
+            SpacetimeStreamingCliResult streamingCliResult = new(streamingCliRequest);
+            
+            // TODO: Show later just before we start the proc @ SpacetimeAsyncCliResult?
+            logInput(terminal, fullParsedArgs);
+            
+            // (!) Manually start this proc when you want
+            return Task.FromResult(streamingCliResult);
+        }
+        
         /// Issue a cross-platform CLI cmd, where we'll start with terminal prefixes
         /// as the CLI "command" and some arg prefixes for compatibility.
         /// Usage: Pass an argSuffix, such as "spacetime version",
         ///        along with an optional cancel token
         /// - Supports cancellations and timeouts via CancellationToken (create a CancellationTokenSource)
+        /// TODO: runInBackground, with SpacetimeAsyncCliResult, probably supports streaming (--follow) logs: give it a shot!
         public static async Task<SpacetimeCliResult> runCliCommandAsync(
             string argSuffix,
-            CancellationToken cancelToken = default)
+            CancellationToken cancelToken = default,
+            bool runInBackground = false)
         {
+            // Args
+            string terminal = getTerminalPrefix(); // Determine terminal based on platform
+            string argPrefix = getCommandPrefix(); // Determine command prefix (cmd /c, etc.)
+            string fullParsedArgs = $"{argPrefix} \"{argSuffix}\"";
+            
+            // Process + StartInfo
+            Process cliProcess = createCliProcess(terminal, fullParsedArgs);
+
+            // Cancellation Token + Async CLI Result (set early to prepare streaming logs *before* proc start)
+            CancellationTokenRegistration cancellationRegistration = default;
+            logInput(terminal, fullParsedArgs);
+            
+            // Set output+err logs just once after done (!async)
             string output = string.Empty;
             string error = string.Empty;
-            Process process = new();
-            CancellationTokenRegistration cancellationRegistration = default;
 
             try
             {
-                string terminal = getTerminalPrefix(); // Determine terminal based on platform
-                string argPrefix = getCommandPrefix(); // Determine command prefix (cmd /c, etc.)
-                string fullParsedArgs = $"{argPrefix} \"{argSuffix}\"";
-
-                ProcessStartInfo startInfo = process.StartInfo;
-                startInfo.FileName = terminal;
-                startInfo.Arguments = fullParsedArgs;
-                startInfo.RedirectStandardError = true;
-                startInfo.RedirectStandardOutput = true;
-                startInfo.UseShellExecute = false;
-                startInfo.CreateNoWindow = true;
-
-                // If we *just* installed SpacetimeDB CLI, PATH is not yet refreshed
-                bool hasEnvPathOverride = !string.IsNullOrEmpty(NewlyInstalledCliEnvDirPath);
-                if (hasEnvPathOverride)
-                {
-                    string keyName = Application.platform == RuntimePlatform.WindowsEditor ? "Path" : "PATH"; 
-                    string pathAddendum = Path.PathSeparator + NewlyInstalledCliEnvDirPath;
-                    startInfo.EnvironmentVariables[keyName] += pathAddendum;
-                }
-                
-                // Input Logs
-                if (CLI_LOG_LEVEL == CliLogLevel.Info)
-                {
-                    Debug.Log("CLI Input: \n```\n<color=yellow>" +
-                        $"{terminal} {fullParsedArgs}</color>\n```\n");
-                }
-
-                process.Start();
+                cliProcess.Start();
 
                 // Register cancellation token to safely handle process termination
-                cancellationRegistration = cancelToken.Register(() => terminateProcessSafely(process));
+                cancellationRegistration = cancelToken.Register(() => terminateProcessSafely(cliProcess));
 
                 // Asynchronously read output and error
-                Task<string> readOutputTask = process.StandardOutput.ReadToEndAsync();
-                Task<string> readErrorTask = process.StandardError.ReadToEndAsync();
+                Task<string> readOutputTask = cliProcess.StandardOutput.ReadToEndAsync();
+                Task<string> readErrorTask = cliProcess.StandardError.ReadToEndAsync();
 
                 // Wait for the process to exit or be cancelled
-                while (!process.HasExited)
-                    await Task.Delay(100, cancelToken);
+                if (!runInBackground)
+                {
+                    while (!cliProcess.HasExited)
+                        await Task.Delay(100, cancelToken);    
+                }
 
                 // Await the read tasks to ensure output and error are captured
                 output = await readOutputTask;
@@ -149,19 +246,70 @@ namespace SpacetimeDB.Editor
             {
                 // Heavy cleanup
                 await cancellationRegistration.DisposeAsync();
-                if (!process.HasExited)
+                if (!cliProcess.HasExited)
                 {
-                    process.Kill();
+                    cliProcess.Kill();
                 }
 
-                process.Dispose(); // No async ver for this Dispose
+                cliProcess.Dispose(); // No async ver for this Dispose
             }
             
             // Process results, log err (if any), return parsed Result 
             SpacetimeCliResult cliResult = new(output, error);
             logCliResults(cliResult);
 
+            // Can we auto-resolve this issue and try again?
+            if (cliResult.HasCliErr && !_autoResolvedBugIsTryingAgain)
+            {
+                bool isResolvedTryAgain = await autoResolveCommonCliErrors(cliResult);
+                if (isResolvedTryAgain)
+                {
+                    return await runCliCommandAsync(argSuffix, cancelToken);
+                }
+            }
+            _autoResolvedBugIsTryingAgain = false;
+            
             return cliResult;
+        }
+
+        /// <summary>
+        /// Attempts to detect + resolve common cli errors:
+        /// 1. "Error: Cannot list identities for server without a saved fingerprint: local"
+        /// </summary>
+        /// <returns>isResolvedTryAgain</returns>
+        private static async Task<bool> autoResolveCommonCliErrors(SpacetimeCliResult cliResult)
+        {
+            // TODO: Break this up if we catch more than 2
+            _autoResolvedBugIsTryingAgain = true;
+            bool isFingerprintErr = cliResult.CliError.Contains("without a saved fingerprint");
+            if (isFingerprintErr)
+            {
+                string pattern = @"without a saved fingerprint: (?<serverName>\w+)";
+                string serverName = Regex.Match(cliResult.CliError, pattern).Groups["serverName"].Value;
+                if (string.IsNullOrEmpty(serverName))
+                {
+                    return false; // !isResolvedTryAgain
+                }
+                
+                // Ensure the local server is running
+                bool isLocalServerRunning = await PingServerAsync().ContinueWith(t => !t.Result.HasCliErr);
+                StreamingLocalServer tempLocalServer = null;
+                    
+                if (!isLocalServerRunning)
+                {
+                    // Temporarily start the server
+                     tempLocalServer = await StartLocalServerAsync(new CancellationTokenSource());
+                }
+                
+                // Attempt to create a fingerprint for the server
+                SpacetimeCliResult fingerprintResult = await createLocalFingerprintAsync(serverName);
+                tempLocalServer?.StopCancelDispose();
+
+                bool isResolvedTryAgain = !fingerprintResult.HasCliErr;
+                return isResolvedTryAgain;
+            }
+            
+            return false; // !isResolvedTryAgain
         }
 
         public static void terminateProcessSafely(Process process)
@@ -202,9 +350,8 @@ namespace SpacetimeDB.Editor
                 {
                     Debug.Log($"CLI Output: {prettyOutput}");
                 }
-                
-                Debug.LogError($"CLI Error: {cliResult.CliError}\n" +
-                    "(For +details, see output err above)");
+
+                Debug.LogError($"CLI Error: {cliResult.CliError}");
 
                 // Separate the errs found from the CLI output so the user doesn't need to dig
                 bool logCliResultErrsSeparately = cliResult.ErrsFoundFromCliOutput?.Count is > 0 and < 5;
@@ -358,13 +505,20 @@ namespace SpacetimeDB.Editor
             return cliResult;
         }
         
-        /// Uses the `spacetime start` CLI command.
-        public static async Task<StartLocalServerResult> StartLocalServerAsync()
+        /// Uses the `spacetime start` CLI command. Runs in background.
+        /// - Requires CancellationTokenSrc: Cancel via result.StopCancelDispose()
+        public static async Task<StreamingLocalServer> StartLocalServerAsync(CancellationTokenSource cancelTokenSrc)
         {
             const string argSuffix = "spacetime start";
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            StartLocalServerResult startLocalServerResult = new(cliResult);
-            return startLocalServerResult;
+            SpacetimeStreamingCliResult streamingCliResult = await runStreamingCliCommand(
+                argSuffix,
+                stopOnError: true,
+                cancelTokenSrc);
+            
+            StreamingLocalServer streamingLocalServer = new(streamingCliResult);
+            streamingLocalServer.StartProcess();
+            
+            return streamingLocalServer;
         }
         
         /// Cross-platform kills process by port num (there's no universal `stop` command)
@@ -375,5 +529,18 @@ namespace SpacetimeDB.Editor
             return cliResult;
         }
         #endregion // High Level CLI Actions
+        
+        
+        #region // Low Level CLI Actions
+        /// <summary>Uses the `spacetime server ping` CLI command.</summary>
+        /// <param name="serverName">This is most likely "local" || "testnet"</param>
+        private static async Task<SpacetimeCliResult> createLocalFingerprintAsync(string serverName)
+        {
+            string argSuffix = $"spacetime server fingerprint {serverName} --force";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
+            return cliResult;
+        }
+        #endregion // Low Level CLI Actions
+
     }
 }

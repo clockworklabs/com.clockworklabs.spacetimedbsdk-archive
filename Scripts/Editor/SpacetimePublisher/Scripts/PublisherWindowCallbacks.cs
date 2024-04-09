@@ -157,32 +157,6 @@ namespace SpacetimeDB.Editor
             }
         }
 
-        private async void onStopLocalServerBtnClick()
-        {
-            try
-            {
-                await stopLocalServer();
-            }
-            catch (Exception e)
-            {
-                Debug.LogError(e.Message);
-                throw;
-            }
-        }
-
-        private async void onStartLocalServerBtnClick()
-        {
-            try
-            {
-                await startLocalServer();
-            }
-            catch (Exception e)
-            {
-                Debug.LogError(e.Message);
-                throw;
-            }
-        }
-
         /// Cleanup: This should parity the opposite of setOnActionEvents()
         private void unsetOnActionEvents()
         {
@@ -203,9 +177,7 @@ namespace SpacetimeDB.Editor
             {
                 serverNicknameTxt.UnregisterValueChangedCallback(
                     onServerNicknameTxtChanged);
-            }
-            if (serverNicknameTxt != null) 
-            {
+
                 serverNicknameTxt.UnregisterCallback<FocusOutEvent>(
                     onServerNicknameFocusOut);
             }
@@ -227,9 +199,7 @@ namespace SpacetimeDB.Editor
             {
                 identityNicknameTxt.UnregisterValueChangedCallback(
                     onIdentityNicknameTxtChanged);
-            }
-            if (identityNicknameTxt != null)
-            {
+
                 identityNicknameTxt.UnregisterCallback<FocusOutEvent>(
                     onIdentityNicknameFocusOut);
             }
@@ -237,9 +207,7 @@ namespace SpacetimeDB.Editor
             {
                 identityEmailTxt.UnregisterValueChangedCallback(
                     onIdentityEmailTxtChanged);
-            }
-            if (identityEmailTxt != null)
-            {
+
                 identityEmailTxt.UnregisterCallback<FocusOutEvent>(
                     onIdentityEmailTxtFocusOut);
             }
@@ -252,9 +220,7 @@ namespace SpacetimeDB.Editor
                 // For init only; likely already unsub'd itself
                 publishModulePathTxt.UnregisterValueChangedCallback(
                     onPublishModulePathTxtInitChanged);
-            }
-            if (publishModulePathTxt != null)
-            {
+
                 publishModulePathTxt.UnregisterCallback<FocusOutEvent>(
                     onPublishModulePathTxtFocusOut);
             }
@@ -266,9 +232,7 @@ namespace SpacetimeDB.Editor
             {
                 publishModuleNameTxt.UnregisterCallback<FocusOutEvent>(
                     onPublishModuleNameTxtFocusOut);
-            }
-            if (publishModuleNameTxt != null)
-            {
+
                 publishModuleNameTxt.UnregisterValueChangedCallback(onPublishModuleNameTxtChanged);
             }
             if (publishStartLocalServerBtn != null)
@@ -299,6 +263,33 @@ namespace SpacetimeDB.Editor
             if (publishResultGetServerLogsBtn != null)
             {
                 publishResultGetServerLogsBtn.clicked -= onGetServerLogsBtnClick;
+            }
+        }
+        
+        
+        private async void onStopLocalServerBtnClick()
+        {
+            try
+            {
+                await stopLocalServer();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e.Message);
+                throw;
+            }
+        }
+
+        private async void onStartLocalServerBtnClick()
+        {
+            try
+            {
+                await startLocalServer();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e.Message);
+                throw;
             }
         }
 
@@ -663,7 +654,7 @@ namespace SpacetimeDB.Editor
 
             try
             {
-                await enableVisualElementInOneSec(publishBtn);
+                await WaitEnableElementAsync(publishBtn, TimeSpan.FromSeconds(1));
             }
             catch (Exception e)
             {
@@ -693,38 +684,5 @@ namespace SpacetimeDB.Editor
             }
         }
         #endregion // Direct UI Callbacks
-
-        private void onAddIdentityFail(SpacetimeIdentity identity, AddIdentityResult addIdentityResult)
-        {
-            identityAddBtn.SetEnabled(true);
-            identityStatusLabel.text = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Error, 
-                $"<b>Failed:</b> Couldn't add identity `{identity.Nickname}`\n" +
-                addIdentityResult.StyledFriendlyErrorMessage);
-                
-            identityStatusLabel.style.display = DisplayStyle.Flex;
-        }
-
-        /// Success: Add to dropdown + set default + show. Hide the [+] add group.
-        /// Don't worry about caching choices; we'll get the new choices via CLI each load
-        private async void onAddIdentitySuccess(SpacetimeIdentity identity)
-        {
-            Debug.Log($"Add new identity success: {identity.Nickname}");
-            await onGetSetIdentitiesSuccessEnsureDefault(new List<SpacetimeIdentity> { identity });
-        }
-
-        /// Success: Show installed txt, keep button disabled, but don't actually check
-        /// the optimization box since *this* publishAsync is not optimized: Next one will be
-        private void onInstallWasmOptPackageViaNpmSuccess() =>
-            installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Success, "Installed");
-
-        private void onInstallWasmOptPackageViaNpmFail(SpacetimeCliResult cliResult)
-        {
-            installWasmOptBtn.SetEnabled(true);
-            installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Error, 
-                $"<b>Failed:</b> Couldn't install wasm-opt\n{cliResult.CliError}");
-        }
     }
 }

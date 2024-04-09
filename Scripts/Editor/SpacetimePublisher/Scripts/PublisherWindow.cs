@@ -17,7 +17,7 @@ namespace SpacetimeDB.Editor
         private bool _foundServer;
 
         /// After _foundServer, we'll check for this right after: Localhost if exists
-        private StartLocalServerResult _localServer;
+        private StreamingLocalServer _localServer;
 
         /// Before this, the dropdown val will likely contain "Discovering ..."
         private bool _foundIdentity;

@@ -161,7 +161,7 @@ namespace SpacetimeDB.Editor
             SpacetimeCliResult cliResult = new(output, error);
             logCliResults(cliResult);
 
-            return new SpacetimeCliResult(output, error);
+            return cliResult;
         }
 
         public static void terminateProcessSafely(Process process)

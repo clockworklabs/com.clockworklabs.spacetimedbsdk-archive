@@ -833,6 +833,20 @@ namespace SpacetimeDB.Editor
                 onInstallWasmOptPackageViaNpmFail(installWasmResult);
             }
         }
+        
+        /// Success: Show installed txt, keep button disabled, but don't actually check
+        /// the optimization box since *this* publishAsync is not optimized: Next one will be
+        private void onInstallWasmOptPackageViaNpmSuccess() =>
+            installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Success, "Installed");
+
+        private void onInstallWasmOptPackageViaNpmFail(SpacetimeCliResult cliResult)
+        {
+            installWasmOptBtn.SetEnabled(true);
+            installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error, 
+                $"<b>Failed:</b> Couldn't install wasm-opt\n{cliResult.CliError}");
+        }
 
         /// UI: Disable btn + show installing status to id label
         private void setAddIdentityUi(string nickname)
@@ -869,6 +883,25 @@ namespace SpacetimeDB.Editor
             {
                 onAddIdentitySuccess(identity);
             }
+        }
+        
+        /// Success: Add to dropdown + set default + show. Hide the [+] add group.
+        /// Don't worry about caching choices; we'll get the new choices via CLI each load
+        private async void onAddIdentitySuccess(SpacetimeIdentity identity)
+        {
+            Debug.Log($"Add new identity success: {identity.Nickname}");
+            await onGetSetIdentitiesSuccessEnsureDefault(new List<SpacetimeIdentity> { identity });
+        }
+        
+        private void onAddIdentityFail(SpacetimeIdentity identity, AddIdentityResult addIdentityResult)
+        {
+            identityAddBtn.SetEnabled(true);
+            identityStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error, 
+                $"<b>Failed:</b> Couldn't add identity `{identity.Nickname}`\n" +
+                addIdentityResult.StyledFriendlyErrorMessage);
+            
+            identityStatusLabel.style.display = DisplayStyle.Flex;
         }
 
         private void setAddServerUi(string nickname)

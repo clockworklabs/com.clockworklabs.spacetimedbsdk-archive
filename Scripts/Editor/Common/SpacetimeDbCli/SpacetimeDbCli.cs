@@ -84,21 +84,28 @@ namespace SpacetimeDB.Editor
         private static Process createCliProcess(
             string terminal,
             string fullParsedArgs,
-            bool isAsync = false)
+            bool detachedProcess = false)
         {
             Process cliProcess = new();
-            if (isAsync)
-            {
-                cliProcess.EnableRaisingEvents = true; // The secret spice to allowing async CLI =>
-            }
-
+            
             ProcessStartInfo startInfo = cliProcess.StartInfo;
             startInfo.FileName = terminal;
             startInfo.Arguments = fullParsedArgs;
-            startInfo.RedirectStandardError = true;
-            startInfo.RedirectStandardOutput = true;
-            startInfo.UseShellExecute = false;
             startInfo.CreateNoWindow = true;
+
+            if (detachedProcess)
+            {
+                startInfo.RedirectStandardError = false;
+                startInfo.RedirectStandardOutput = false;
+                startInfo.UseShellExecute = true;
+            }
+            else
+            {
+                // Redirect I/O to Unity
+                startInfo.RedirectStandardError = true;
+                startInfo.RedirectStandardOutput = true;
+                startInfo.UseShellExecute = false;
+            }
             
             // If we *just* installed SpacetimeDB CLI, PATH is not yet refreshed
             checkUpdatePathForNewSpacetimeDbCliInstall(startInfo);
@@ -140,50 +147,56 @@ namespace SpacetimeDB.Editor
             string fullParsedArgs = $"{argPrefix} \"{argSuffix}\"";
             
             // Process + StartInfo
-            Process asyncCliProcess = createCliProcess(terminal, fullParsedArgs, isAsync: true);
-            asyncCliProcess.StartInfo.UseShellExecute = true; // Detach the process, but we get no logs
-
-            // TODO: Show later just before we start the proc @ SpacetimeAsyncCliResult?
+            Process asyncCliProcess = createCliProcess(terminal, fullParsedArgs, detachedProcess: true);
             logInput(terminal, fullParsedArgs);
             
-            asyncCliProcess.Start();
-            asyncCliProcess.Dispose();
+            try
+            {
+                asyncCliProcess.Start();
+                asyncCliProcess.Dispose();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to {nameof(startDetachedCliProcess)}: {e.Message}");
+                throw;
+            }
         }
 
-        /// Issue a cross-platform *async* (EnableRaisingEvents) CLI cmd, where we'll start with terminal prefixes
-        /// as the CLI "command" and some arg prefixes for compatibility.
-        /// This particular overload is useful for streaming logs or running a cancellable listen server in the background
-        /// For async CLI calls, a CancellationToken is *required* (create a CancellationTokenSource)
-        /// (!) YOU MANUALLY START THIS PROCESS (to give you a chance to subscribe to logs early)
-        /// - Usage: asyncCliResult.Start() 
-        public static Task<SpacetimeStreamingCliResult> runStreamingCliCommand(
-            string argSuffix,
-            bool stopOnError,
-            CancellationTokenSource cancelTokenSrc)
-        {
-            // Args
-            string terminal = getTerminalPrefix(); // Determine terminal based on platform
-            string argPrefix = getCommandPrefix(); // Determine command prefix (cmd /c, etc.)
-            string fullParsedArgs = $"{argPrefix} \"{argSuffix}\"";
-            
-            // Process + StartInfo
-            Process asyncCliProcess = createCliProcess(terminal, fullParsedArgs, isAsync: true);
-
-            // Cancellation Token + Async CLI Result (set early to prepare streaming logs *before* proc start)
-            SpacetimeStreamingCliRequest streamingCliRequest = new(
-                asyncCliProcess, 
-                stopOnError, 
-                continueFollowingLogsAfterDone: true, 
-                cancelTokenSrc);
-            
-            SpacetimeStreamingCliResult streamingCliResult = new(streamingCliRequest);
-            
-            // TODO: Show later just before we start the proc @ SpacetimeAsyncCliResult?
-            logInput(terminal, fullParsedArgs);
-            
-            // (!) Manually start this proc when you want
-            return Task.FromResult(streamingCliResult);
-        }
+        // /// Issue a cross-platform *async* (EnableRaisingEvents) CLI cmd, where we'll start with terminal prefixes
+        // /// as the CLI "command" and some arg prefixes for compatibility.
+        // /// This particular overload is useful for streaming logs or running a cancellable listen server in the background
+        // /// For async CLI calls, a CancellationToken is *required* (create a CancellationTokenSource)
+        // /// (!) YOU MANUALLY START THIS PROCESS (to give you a chance to subscribe to logs early)
+        // /// - Usage: asyncCliResult.Start() 
+        // [Obsolete("BUG: Domain refresh will both kill the process and freeze Unity")]
+        // public static Task<SpacetimeStreamingCliResult> runStreamingCliCommand(
+        //     string argSuffix,
+        //     bool stopOnError,
+        //     CancellationTokenSource cancelTokenSrc)
+        // {
+        //     // Args
+        //     string terminal = getTerminalPrefix(); // Determine terminal based on platform
+        //     string argPrefix = getCommandPrefix(); // Determine command prefix (cmd /c, etc.)
+        //     string fullParsedArgs = $"{argPrefix} \"{argSuffix}\"";
+        //     
+        //     // Process + StartInfo
+        //     Process asyncCliProcess = createCliProcess(terminal, fullParsedArgs, isAsync: true);
+        //
+        //     // Cancellation Token + Async CLI Result (set early to prepare streaming logs *before* proc start)
+        //     SpacetimeStreamingCliRequest streamingCliRequest = new(
+        //         asyncCliProcess, 
+        //         stopOnError, 
+        //         continueFollowingLogsAfterDone: true, 
+        //         cancelTokenSrc);
+        //     
+        //     SpacetimeStreamingCliResult streamingCliResult = new(streamingCliRequest);
+        //     
+        //     // TODO: Show later just before we start the proc @ SpacetimeAsyncCliResult?
+        //     logInput(terminal, fullParsedArgs);
+        //     
+        //     // (!) Manually start this proc when you want
+        //     return Task.FromResult(streamingCliResult);
+        // }
         
         /// Issue a cross-platform CLI cmd, where we'll start with terminal prefixes
         /// as the CLI "command" and some arg prefixes for compatibility.
@@ -259,7 +272,7 @@ namespace SpacetimeDB.Editor
             logCliResults(cliResult);
 
             // Can we auto-resolve this issue and try again?
-            if (cliResult.HasCliErr && !_autoResolvedBugIsTryingAgain)
+            if (cliResult.HasCliErr && cliResult.CliError != "Canceled" && !_autoResolvedBugIsTryingAgain)
             {
                 bool isResolvedTryAgain = await autoResolveCommonCliErrors(cliResult);
                 if (isResolvedTryAgain)
@@ -279,37 +292,29 @@ namespace SpacetimeDB.Editor
         /// <returns>isResolvedTryAgain</returns>
         private static async Task<bool> autoResolveCommonCliErrors(SpacetimeCliResult cliResult)
         {
-            // TODO: Break this up if we catch more than 2
+            // TODO: Break this up if we catch too many
             _autoResolvedBugIsTryingAgain = true;
-            bool isFingerprintErr = cliResult.CliError.Contains("without a saved fingerprint");
-            if (isFingerprintErr)
-            {
-                string pattern = @"without a saved fingerprint: (?<serverName>\w+)";
-                string serverName = Regex.Match(cliResult.CliError, pattern).Groups["serverName"].Value;
-                if (string.IsNullOrEmpty(serverName))
-                {
-                    return false; // !isResolvedTryAgain
-                }
-                
-                // Ensure the local server is running
-                bool isLocalServerRunning = await PingServerAsync().ContinueWith(t => !t.Result.HasCliErr);
-                StreamingLocalServer tempLocalServer = null;
-                    
-                if (!isLocalServerRunning)
-                {
-                    // Temporarily start the server
-                     tempLocalServer = await StartLocalServerAsync(new CancellationTokenSource());
-                }
-                
-                // Attempt to create a fingerprint for the server
-                SpacetimeCliResult fingerprintResult = await createLocalFingerprintAsync(serverName);
-                tempLocalServer?.StopCancelDispose();
+            bool isLocalFingerprintErr = cliResult.CliError.Contains("without a saved fingerprint: local");
+            bool serverOffline = cliResult.CliError.Contains("target machine actively refused");
 
-                bool isResolvedTryAgain = !fingerprintResult.HasCliErr;
-                return isResolvedTryAgain;
+            if (!serverOffline && !isLocalFingerprintErr)
+            {
+                return false; // !isResolvedTryAgain
             }
             
-            return false; // !isResolvedTryAgain
+            // Ensure the local server is running
+            PingServerResult pingResult = await PingServerAsync();
+            if (!pingResult.IsServerOnline)
+            {
+                 pingResult = await StartDetachedLocalServer(); // Temporarily start the server
+            }
+            
+            // Attempt to create a fingerprint for the server
+            SpacetimeCliResult fingerprintResult = await createFingerprintAsync(SpacetimeMeta.LOCAL_SERVER_NAME);
+            // _ = ForceStopLocalServerAsync(); // No need to await this // Or perhaps it's good to keep it running?
+
+            bool isResolvedTryAgain = !fingerprintResult.HasCliErr;
+            return isResolvedTryAgain;
         }
 
         public static void terminateProcessSafely(Process process)
@@ -489,40 +494,75 @@ namespace SpacetimeDB.Editor
             return cliResult;
         }
         
-        /// Uses the `spacetime server ping` CLI command.
-        /// For localhost, you probably want to set timeout to something extremely low
-        public static async Task<SpacetimeCliResult> PingServerAsync(TimeSpan? timeout = default)
+        /// <summary>Uses the `spacetime server ping` CLI command.</summary>
+        /// <param name="cancelToken">If left default, set to 200ms timeout</param>
+        public static async Task<PingServerResult> PingServerAsync(CancellationToken cancelToken = default)
         {
-            const string argSuffix = "spacetime server ping";
-            
-            CancellationTokenSource cts = new();
-            if (timeout.HasValue)
+            if (cancelToken == default)
             {
-                cts.CancelAfter(timeout.Value);
+                cancelToken = new CancellationTokenSource(TimeSpan.FromMilliseconds(200)).Token;
             }
             
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix, cts.Token);
-            return cliResult;
+            const string argSuffix = "spacetime server ping";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix, cancelToken);
+            PingServerResult pingServerResult = new(cliResult);
+            return pingServerResult;
+        }
+
+        /// <param name="cancelToken">If left default, set to 200ms timeout (2 attempts @ 1 per 100ms)</param>
+        public static async Task<PingServerResult> PingServerUntilOnlineAsync(CancellationToken cancelToken = default)
+        {
+            bool isOnline = false;
+            
+            // If default, set to 200ms timeout
+            using CancellationTokenSource globalTimeoutCts = cancelToken == default
+                ? new CancellationTokenSource(TimeSpan.FromMilliseconds(200)) 
+                : CancellationTokenSource.CreateLinkedTokenSource(cancelToken);
+            
+            try
+            {
+                while (!globalTimeoutCts.Token.IsCancellationRequested)
+                {
+                    using CancellationTokenSource pingIterationCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+                    try
+                    {
+                        // Attempt to ping the server with a per-iteration timeout
+                        PingServerResult pingServerResult = await PingServerAsync(pingIterationCts.Token);
+                        isOnline = !pingServerResult.HasCliErr;
+
+                        if (isOnline)
+                        {
+                            return pingServerResult;
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // If the ping iteration was cancelled, we simply continue to the next iteration until global timeout.
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Global timeout cancellation: Timed out!
+            }
+
+            // Timed out
+            return new PingServerResult(new SpacetimeCliResult("", "Canceled"));
         }
         
-        /// Uses the `spacetime start` CLI command. Runs in background.
-        /// - Requires CancellationTokenSrc: Cancel via result.StopCancelDispose()
-        public static async Task<StreamingLocalServer> StartLocalServerAsync(CancellationTokenSource cancelTokenSrc)
+        /// Uses the `spacetime start` CLI command. Runs in background in a detached service.
+        /// Awaits up to 2s for the server to come online.
+        public static async Task<PingServerResult> StartDetachedLocalServer()
         {
             const string argSuffix = "spacetime start";
-            SpacetimeStreamingCliResult streamingCliResult = await runStreamingCliCommand(
-                argSuffix,
-                stopOnError: true,
-                cancelTokenSrc);
+            startDetachedCliProcess(argSuffix);
             
-            StreamingLocalServer streamingLocalServer = new(streamingCliResult);
-            streamingLocalServer.StartProcess();
-            
-            return streamingLocalServer;
+            // Await success, pinging the CLI every 100ms to ensure online. Max 2 seconds.
+            return await PingServerUntilOnlineAsync();
         }
         
         /// Cross-platform kills process by port num (there's no universal `stop` command)
-        public static async Task<SpacetimeCliResult> ForceStopLocalServerAsync(ushort port)
+        public static async Task<SpacetimeCliResult> ForceStopLocalServerAsync(ushort port = SpacetimeMeta.DEFAULT_PORT)
         {
             string argSuffix = getKillCommand(port);
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
@@ -534,7 +574,7 @@ namespace SpacetimeDB.Editor
         #region // Low Level CLI Actions
         /// <summary>Uses the `spacetime server ping` CLI command.</summary>
         /// <param name="serverName">This is most likely "local" || "testnet"</param>
-        private static async Task<SpacetimeCliResult> createLocalFingerprintAsync(string serverName)
+        private static async Task<SpacetimeCliResult> createFingerprintAsync(string serverName)
         {
             string argSuffix = $"spacetime server fingerprint {serverName} --force";
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);

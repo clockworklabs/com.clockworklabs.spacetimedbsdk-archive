@@ -1,13 +1,6 @@
 /// Static metadata for SpacetimeDB editor scripts
 public static class SpacetimeMeta
 {
-    #region Flags
-    /// If you want to stop a SpacetimeDB server but don't have the port,
-    /// do you want to try killing the default port process? 
-    public const bool FORCE_STOP_DEFAULT_SERVER_ON_UNKNOWN_PORT = true;
-    #endregion // Flags
-    
-    
     #region Names & Paths
     public const ushort DEFAULT_PORT = 3000;
     public const string LOCAL_SERVER_NAME = "local";

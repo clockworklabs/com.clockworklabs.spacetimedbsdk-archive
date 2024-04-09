@@ -16,9 +16,6 @@ namespace SpacetimeDB.Editor
         /// Before this, the dropdown val will likely contain "Discovering ..."
         private bool _foundServer;
 
-        /// After _foundServer, we'll check for this right after: Localhost if exists
-        private StreamingLocalServer _localServer;
-
         /// Before this, the dropdown val will likely contain "Discovering ..."
         private bool _foundIdentity;
         
@@ -36,6 +33,12 @@ namespace SpacetimeDB.Editor
         /// This will be null on init (window may still load limited cache)
         /// We'll prioritize this over the path, in case it was changed post-publish
         private PublishResult _cachedPublishResult;
+
+        /// Set at Publisher-level ping
+        PingServerResult _lastServerPinged;
+
+        /// Last known || SpacetimeDbMeta.DEFAULT_PORT
+        ushort _lastKnownPort => _lastServerPinged?.Port ?? SpacetimeMeta.DEFAULT_PORT;
         #endregion // Operational State Vars
         
 

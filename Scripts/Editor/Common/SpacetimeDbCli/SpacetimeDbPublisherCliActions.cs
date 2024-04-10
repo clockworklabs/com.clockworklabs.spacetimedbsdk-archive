@@ -5,7 +5,7 @@ namespace SpacetimeDB.Editor
 {
     /// CLI action middleware between PublisherWindow and SpacetimeDbCli 
     /// Vanilla: Do the action -> return the result -> no more.
-    public static class SpacetimeDbPublisherCli
+    public static class SpacetimeDbPublisherCliActions
     {
         #region High Level CLI Actions
         /// Publishes your SpacetimeDB server module

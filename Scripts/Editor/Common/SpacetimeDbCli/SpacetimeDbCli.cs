@@ -2,7 +2,6 @@ using System;
 using UnityEngine;
 using System.Diagnostics;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Debug = UnityEngine.Debug;
@@ -303,21 +302,21 @@ namespace SpacetimeDB.Editor
             }
             
             // Ensure the local server is running
-            PingServerResult pingResult = await PingServerAsync();
+            PingServerResult pingResult = await SpacetimeDbCliActions.PingServerAsync();
             if (!pingResult.IsServerOnline)
             {
-                 pingResult = await StartDetachedLocalServer(); // Temporarily start the server
+                 pingResult = await SpacetimeDbCliActions.StartDetachedLocalServerWaitUntilOnlineAsync(); // Temporarily start the server
             }
             
             // Attempt to create a fingerprint for the server
-            SpacetimeCliResult fingerprintResult = await createFingerprintAsync(SpacetimeMeta.LOCAL_SERVER_NAME);
+            SpacetimeCliResult fingerprintResult = await SpacetimeDbCliActions.CreateFingerprintAsync(SpacetimeMeta.LOCAL_SERVER_NAME);
             // _ = ForceStopLocalServerAsync(); // No need to await this // Or perhaps it's good to keep it running?
 
             bool isResolvedTryAgain = !fingerprintResult.HasCliErr;
             return isResolvedTryAgain;
         }
 
-        public static void terminateProcessSafely(Process process)
+        private static void terminateProcessSafely(Process process)
         {
             try
             {
@@ -337,7 +336,7 @@ namespace SpacetimeDB.Editor
             }
         }
 
-        public static void logCliResults(SpacetimeCliResult cliResult)
+        private static void logCliResults(SpacetimeCliResult cliResult)
         {
             bool hasOutput = !string.IsNullOrEmpty(cliResult.CliOutput);
             bool hasLogLevelInfoNoErr = CLI_LOG_LEVEL == CliLogLevel.Info && !cliResult.HasCliErr;
@@ -371,8 +370,8 @@ namespace SpacetimeDB.Editor
                 }
             }
         }
-        
-        public static string getCommandPrefix()
+
+        private static string getCommandPrefix()
         {
             switch (Application.platform)
             {
@@ -390,7 +389,7 @@ namespace SpacetimeDB.Editor
         }
 
         /// Return either "cmd.exe" || "/bin/bash"
-        public static string getTerminalPrefix()
+        private static string getTerminalPrefix()
         {
             switch (Application.platform)
             {
@@ -412,7 +411,7 @@ namespace SpacetimeDB.Editor
         #region CLI Utils
         /// Cross-platform kill cmd for SpacetimeDB Local Server (or technically any port)
         /// TODO: Needs +review for safety; ran through ChatGPT a couple times
-        private static string getKillCommand(ushort port)
+        public static string GetKillCommand(ushort port)
         {
             bool isWin = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
                 System.Runtime.InteropServices.OSPlatform.Windows);
@@ -431,156 +430,5 @@ namespace SpacetimeDB.Editor
             return $"lsof -ti:{port} | grep -v '^0$' | xargs -r kill -9";
         }
         #endregion // CLI Utils
-        
-
-        #region High Level CLI Actions
-        /// isInstalled = !cliResult.HasCliError 
-        public static async Task<SpacetimeCliResult> GetIsSpacetimeCliInstalledAsync()
-        {
-            string argSuffix = "spacetime version";
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            return cliResult;
-        }
-        
-        /// Uses the `spacetime identity list` CLI command
-        public static async Task<GetIdentitiesResult> GetIdentitiesAsync()
-        {
-            string argSuffix = "spacetime identity list";
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            GetIdentitiesResult getIdentitiesResult = new(cliResult);
-            return getIdentitiesResult;
-        }
-        
-        /// Uses the `spacetime identity list` CLI command
-        public static async Task<GetServersResult> GetServersAsync() 
-        {
-            string argSuffix = "spacetime server list";
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            GetServersResult getServersResult = new(cliResult);
-            return getServersResult;
-        }
-        
-        /// Uses the `spacetime list {identity}` CLI command.
-        /// (!) This only returns the addresses.
-        ///     For nicknames, see the chained call: GetDbAddressesWithNicknames
-        public static async Task<GetDbAddressesResult> GetDbAddressesAsync(string identity)
-        {
-            string argSuffix = $"spacetime list {identity}";
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            GetDbAddressesResult getDbAddressesResult = new(cliResult);
-            return getDbAddressesResult;
-        }
-        
-        /// [Slow] Uses the `spacetime describe {moduleName} [--as-identity {identity}]` CLI command
-        public static async Task<GetEntityStructureResult> GetEntityStructureAsync(
-            string moduleName,
-            string asIdentity = null)
-        {
-            // Append ` --as-identity {identity}`?
-            string asIdentitySuffix = string.IsNullOrEmpty(asIdentity) ? "" : $" --as-identity {asIdentity}";
-            string argSuffix = $"spacetime describe {moduleName}{asIdentitySuffix}";
-            
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            GetEntityStructureResult getEntityStructureResult = new(cliResult);
-            return getEntityStructureResult;
-        }
-
-        /// Uses the `spacetime logs` CLI command.
-        /// <param name="serverName"></param>
-        public static async Task<SpacetimeCliResult> GetLogsAsync(string serverName)
-        {
-            string argSuffix = $"spacetime logs {serverName}";
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            return cliResult;
-        }
-        
-        /// <summary>Uses the `spacetime server ping` CLI command.</summary>
-        /// <param name="cancelToken">If left default, set to 200ms timeout</param>
-        public static async Task<PingServerResult> PingServerAsync(CancellationToken cancelToken = default)
-        {
-            if (cancelToken == default)
-            {
-                cancelToken = new CancellationTokenSource(TimeSpan.FromMilliseconds(200)).Token;
-            }
-            
-            const string argSuffix = "spacetime server ping";
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix, cancelToken);
-            PingServerResult pingServerResult = new(cliResult);
-            return pingServerResult;
-        }
-
-        /// <param name="cancelToken">If left default, set to 200ms timeout (2 attempts @ 1 per 100ms)</param>
-        public static async Task<PingServerResult> PingServerUntilOnlineAsync(CancellationToken cancelToken = default)
-        {
-            bool isOnline = false;
-            
-            // If default, set to 200ms timeout
-            using CancellationTokenSource globalTimeoutCts = cancelToken == default
-                ? new CancellationTokenSource(TimeSpan.FromMilliseconds(200)) 
-                : CancellationTokenSource.CreateLinkedTokenSource(cancelToken);
-            
-            try
-            {
-                while (!globalTimeoutCts.Token.IsCancellationRequested)
-                {
-                    using CancellationTokenSource pingIterationCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
-                    try
-                    {
-                        // Attempt to ping the server with a per-iteration timeout
-                        PingServerResult pingServerResult = await PingServerAsync(pingIterationCts.Token);
-                        isOnline = !pingServerResult.HasCliErr;
-
-                        if (isOnline)
-                        {
-                            return pingServerResult;
-                        }
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        // If the ping iteration was cancelled, we simply continue to the next iteration until global timeout.
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                // Global timeout cancellation: Timed out!
-            }
-
-            // Timed out
-            return new PingServerResult(new SpacetimeCliResult("", "Canceled"));
-        }
-        
-        /// Uses the `spacetime start` CLI command. Runs in background in a detached service.
-        /// Awaits up to 2s for the server to come online.
-        public static async Task<PingServerResult> StartDetachedLocalServer()
-        {
-            const string argSuffix = "spacetime start";
-            startDetachedCliProcess(argSuffix);
-            
-            // Await success, pinging the CLI every 100ms to ensure online. Max 2 seconds.
-            return await PingServerUntilOnlineAsync();
-        }
-        
-        /// Cross-platform kills process by port num (there's no universal `stop` command)
-        public static async Task<SpacetimeCliResult> ForceStopLocalServerAsync(ushort port = SpacetimeMeta.DEFAULT_PORT)
-        {
-            string argSuffix = getKillCommand(port);
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            return cliResult;
-        }
-        #endregion // High Level CLI Actions
-        
-        
-        #region // Low Level CLI Actions
-        /// <summary>Uses the `spacetime server ping` CLI command.</summary>
-        /// <param name="serverName">This is most likely "local" || "testnet"</param>
-        private static async Task<SpacetimeCliResult> createFingerprintAsync(string serverName)
-        {
-            string argSuffix = $"spacetime server fingerprint {serverName} --force";
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            return cliResult;
-        }
-        #endregion // Low Level CLI Actions
-
     }
 }

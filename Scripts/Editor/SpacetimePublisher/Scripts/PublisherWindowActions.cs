@@ -104,7 +104,7 @@ namespace SpacetimeDB.Editor
         private async Task ensureSpacetimeCliInstalledAsync()
         {
             // Check if Spacetime CLI is installed => install, if !found
-            SpacetimeCliResult cliResult = await SpacetimeDbCli.GetIsSpacetimeCliInstalledAsync();
+            SpacetimeCliResult cliResult = await SpacetimeDbCliActions.GetIsSpacetimeCliInstalledAsync();
             
             // Process result -> Update UI
             bool isSpacetimeCliInstalled = !cliResult.HasCliErr;
@@ -157,7 +157,7 @@ namespace SpacetimeDB.Editor
             // Validate
             installCliProgressBar.title = "Validating SpacetimeDB CLI Installation ...";
             
-            SpacetimeCliResult validateCliResult = await SpacetimeDbCli.GetIsSpacetimeCliInstalledAsync();
+            SpacetimeCliResult validateCliResult = await SpacetimeDbCliActions.GetIsSpacetimeCliInstalledAsync();
             bool isNotRecognizedCmd = validateCliResult.HasCliErr && validateCliResult.CliError.Contains("'spacetime' is not recognized");
             if (isNotRecognizedCmd)
             {
@@ -213,7 +213,7 @@ namespace SpacetimeDB.Editor
         private async Task getServersSetDropdown()
         {
             // Run CLI cmd
-            GetServersResult getServersResult = await SpacetimeDbCli.GetServersAsync();
+            GetServersResult getServersResult = await SpacetimeDbCliActions.GetServersAsync();
             
             // Process result -> Update UI
             bool isSuccess = getServersResult.HasServer;
@@ -253,7 +253,7 @@ namespace SpacetimeDB.Editor
             }
             
             // Run CLI cmd
-            GetIdentitiesResult getIdentitiesResult = await SpacetimeDbCli.GetIdentitiesAsync();
+            GetIdentitiesResult getIdentitiesResult = await SpacetimeDbCliActions.GetIdentitiesAsync();
             
             // Process result -> Update UI
             bool isSuccess = getIdentitiesResult.HasIdentity;
@@ -375,11 +375,11 @@ namespace SpacetimeDB.Editor
             
             // Run CLI cmd: Add `local` server (forces `--no-fingerprint` so it doesn't need to be running now)
             addServerRequest = new(SpacetimeMeta.LOCAL_SERVER_NAME, SpacetimeMeta.LOCAL_HOST_URL);
-            _ = await SpacetimeDbPublisherCli.AddServerAsync(addServerRequest);
+            _ = await SpacetimeDbPublisherCliActions.AddServerAsync(addServerRequest);
             
             // Run CLI cmd: Add `testnet` server (becomes default)
             addServerRequest = new(SpacetimeMeta.TESTNET_SERVER_NAME, SpacetimeMeta.TESTNET_HOST_URL);
-            _ = await SpacetimeDbPublisherCli.AddServerAsync(addServerRequest);
+            _ = await SpacetimeDbPublisherCliActions.AddServerAsync(addServerRequest);
             
             // Success - try again
             _ = getServersSetDropdown();
@@ -526,7 +526,7 @@ namespace SpacetimeDB.Editor
             
                 // We need a default server set
                 string nickname = servers[0].Nickname;
-                await SpacetimeDbPublisherCli.SetDefaultServerAsync(nickname);
+                await SpacetimeDbPublisherCliActions.SetDefaultServerAsync(nickname);
             }
 
             // Process result -> Update UI
@@ -601,7 +601,7 @@ namespace SpacetimeDB.Editor
             Assert.IsTrue(checkIsLocalhostServerSelected(), $"Expected {nameof(checkIsLocalhostServerSelected)}");
 
             // Run CLI command with short timeout
-            _lastServerPinged = await SpacetimeDbCli.PingServerAsync();
+            _lastServerPinged = await SpacetimeDbCliActions.PingServerAsync();
             
             // Process result
             bool isSuccess = _lastServerPinged.IsServerOnline;
@@ -647,7 +647,7 @@ namespace SpacetimeDB.Editor
                 ));
             
             // Run CLI cmd [can cancel]
-            PublishResult publishResult = await SpacetimeDbPublisherCli.PublishAsync(
+            PublishResult publishResult = await SpacetimeDbPublisherCliActions.PublishAsync(
                 publishRequest,
                 _publishCts.Token);
 
@@ -820,7 +820,7 @@ namespace SpacetimeDB.Editor
             setinstallWasmOptPackageViaNpmUi();
             
             // Run CLI cmd
-            InstallWasmResult installWasmResult = await SpacetimeDbPublisherCli.InstallWasmOptPkgAsync();
+            InstallWasmResult installWasmResult = await SpacetimeDbPublisherCliActions.InstallWasmOptPkgAsync();
 
             // Process result -> Update UI
             bool isSuccess = installWasmResult.IsSuccessfulInstall;
@@ -871,7 +871,7 @@ namespace SpacetimeDB.Editor
             AddIdentityRequest addIdentityRequestRequest = new(nickname, email);
             
             // Run CLI cmd
-            AddIdentityResult addIdentityResult = await SpacetimeDbPublisherCli.AddIdentityAsync(addIdentityRequestRequest);
+            AddIdentityResult addIdentityResult = await SpacetimeDbPublisherCliActions.AddIdentityAsync(addIdentityRequestRequest);
             SpacetimeIdentity identity = new(nickname, isDefault:true);
 
             // Process result -> Update UI
@@ -938,7 +938,7 @@ namespace SpacetimeDB.Editor
             AddServerRequest request = new(nickname, host);
 
             // Run the CLI cmd
-            AddServerResult addServerResult = await SpacetimeDbPublisherCli.AddServerAsync(request);
+            AddServerResult addServerResult = await SpacetimeDbPublisherCliActions.AddServerAsync(request);
             
             // Process result -> Update UI
             SpacetimeServer serverAdded = new(nickname, host, isDefault:true);
@@ -980,7 +980,7 @@ namespace SpacetimeDB.Editor
             }
 
             // Run CLI cmd
-            SpacetimeCliResult cliResult = await SpacetimeDbPublisherCli.SetDefaultIdentityAsync(idNicknameOrDbAddress);
+            SpacetimeCliResult cliResult = await SpacetimeDbPublisherCliActions.SetDefaultIdentityAsync(idNicknameOrDbAddress);
 
             // Process result -> Update UI
             bool isSuccess = !cliResult.HasCliErr;
@@ -1090,7 +1090,7 @@ namespace SpacetimeDB.Editor
             toggleSelectedServerProcessing(setEnabled: false);
 
             // Run CLI cmd
-            SpacetimeCliResult cliResult = await SpacetimeDbPublisherCli.SetDefaultServerAsync(nicknameOrHost);
+            SpacetimeCliResult cliResult = await SpacetimeDbPublisherCliActions.SetDefaultServerAsync(nicknameOrHost);
             
             // Process result -> Update UI
             bool isSuccess = !cliResult.HasCliErr;
@@ -1164,7 +1164,7 @@ namespace SpacetimeDB.Editor
                 PathToAutogenDir,
                 deleteOutdatedFiles: true);
 
-            GenerateResult generateResult = await SpacetimeDbPublisherCli
+            GenerateResult generateResult = await SpacetimeDbPublisherCliActions
                 .GenerateClientFilesAsync(request);
 
             bool isSuccess = generateResult.IsSuccessfulGenerate;
@@ -1192,7 +1192,7 @@ namespace SpacetimeDB.Editor
             setGetServerLogsAsyncUi();
 
             string serverName = publishModuleNameTxt.text;
-            SpacetimeCliResult cliResult = await SpacetimeDbCli.GetLogsAsync(serverName);
+            SpacetimeCliResult cliResult = await SpacetimeDbCliActions.GetLogsAsync(serverName);
         
             resetGetServerLogsUi();
             if (cliResult.HasCliErr)
@@ -1279,10 +1279,10 @@ namespace SpacetimeDB.Editor
             setStartingLocalServerUi();
             
             // Run async CLI cmd => wait for connection => Save to state cache
-            SpacetimeDbCli.StartDetachedLocalServer();
+            SpacetimeDbCliActions.StartDetachedLocalServerWaitUntilOnlineAsync();
 
             // Await success, pinging the CLI every 100ms to ensure online. Max 2 seconds.
-            _lastServerPinged = await SpacetimeDbCli.PingServerUntilOnlineAsync();
+            _lastServerPinged = await SpacetimeDbCliActions.PingServerUntilOnlineAsync();
             
             // Process result -> Update UI
             if (!_lastServerPinged.IsServerOnline)
@@ -1325,7 +1325,7 @@ namespace SpacetimeDB.Editor
             if (_lastServerPinged.Port == 0)
             {
                 // TODO: Set port from ping
-                _lastServerPinged = await SpacetimeDbCli.PingServerAsync();
+                _lastServerPinged = await SpacetimeDbCliActions.PingServerAsync();
             }
             
             // Validate + Logs + UI
@@ -1333,7 +1333,7 @@ namespace SpacetimeDB.Editor
             setStoppingLocalServerUi();
             
             // Run CLI cmd => Save to state cache
-            SpacetimeCliResult cliResult = await SpacetimeDbCli.ForceStopLocalServerAsync(_lastKnownPort);
+            SpacetimeCliResult cliResult = await SpacetimeDbCliActions.ForceStopLocalServerAsync(_lastKnownPort);
             
             // Process result -> Update UI
             bool isSuccess = !cliResult.HasCliErr;

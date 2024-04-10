@@ -459,7 +459,7 @@ namespace SpacetimeDB.Editor
             }
             else
             {
-                publishGroupBox.style.display = DisplayStyle.None;
+                HideRippleUi(publishGroupBox);
             }
         }
         
@@ -482,7 +482,7 @@ namespace SpacetimeDB.Editor
             }
             finally
             {
-                installWasmOptProgressBar.style.display = DisplayStyle.None;
+                HideRippleUi(installWasmOptProgressBar);
                 publishBtn.SetEnabled(true);
             }
         }
@@ -531,7 +531,7 @@ namespace SpacetimeDB.Editor
             else
             {
                 // Hide
-                serverNewGroupBox.style.display = DisplayStyle.None;
+                HideRippleUi(serverNewGroupBox);
                 serverAddNewShowUiBtn.text = "+"; // Show opposite
             }
         }
@@ -552,7 +552,7 @@ namespace SpacetimeDB.Editor
             else
             {
                 // Hide
-                identityNewGroupBox.style.display = DisplayStyle.None;
+                HideRippleUi(identityNewGroupBox);
                 identityAddNewShowUiBtn.text = "+"; // Show opposite
             }
         }
@@ -640,8 +640,8 @@ namespace SpacetimeDB.Editor
             }
 
             // Hide UI: Progress bar, cancel btn
-            publishInstallProgressBar.style.display = DisplayStyle.None;
-            publishCancelBtn.style.display = DisplayStyle.None;
+            HideRippleUi(publishInstallProgressBar);
+            HideRippleUi(publishCancelBtn);
 
             // Show UI: Canceled status, publish btn
             publishStatusLabel.text = SpacetimeMeta.GetStyledStr(
@@ -679,7 +679,7 @@ namespace SpacetimeDB.Editor
             }
             finally
             {
-                publishInstallProgressBar.style.display = DisplayStyle.None;
+                HideRippleUi(publishInstallProgressBar);
                 _publishCts?.Dispose();
             }
         }

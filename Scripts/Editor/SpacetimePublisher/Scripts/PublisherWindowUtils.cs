@@ -95,5 +95,22 @@ namespace SpacetimeDB.Editor
         /// Useful for FocusOut events, checking the entire host for being valid.
         /// At minimum, must start with "http".
         private static bool checkIsValidUrl(string url) => url.StartsWith("http");
+
+        /// Hide a visual element via DisplayStyle.None
+        /// (!) Ripples the UI, as if removing it completely
+        /// (!) Does not trigger transition animations
+        private static void HideRippleUi(VisualElement element) =>
+            HideRippleUi(element);
+        
+        /// Hide a visual element via setting visible to false
+        /// (!) Does not ripple the UI, as if it's still there
+        /// (!) Does not trigger transition animations
+        private static void HideNoRippleUi(VisualElement element) =>
+            element.visible = false;
+        
+        /// Sets opacity to 0, triggering `transition` properties, if set
+        /// (!) Does not ripple the UI, as if it's still there
+        private static void FadeOutUi(VisualElement element) =>
+            element.style.opacity = 0;
     }
 }

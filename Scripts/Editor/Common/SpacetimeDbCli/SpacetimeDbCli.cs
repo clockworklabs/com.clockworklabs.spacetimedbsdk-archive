@@ -355,7 +355,16 @@ namespace SpacetimeDB.Editor
                     Debug.Log($"CLI Output: {prettyOutput}");
                 }
 
-                Debug.LogError($"CLI Error: {cliResult.CliError}");
+                bool isWarning = cliResult.CliError is "Canceled" or "Cancelled";
+                if (isWarning)
+                {
+                    Debug.LogWarning($"CLI Warning: {cliResult.CliError}");
+                }
+                else
+                {
+                    // Error
+                    Debug.LogError($"CLI Error: {cliResult.CliError}");
+                }
 
                 // Separate the errs found from the CLI output so the user doesn't need to dig
                 bool logCliResultErrsSeparately = cliResult.ErrsFoundFromCliOutput?.Count is > 0 and < 5;

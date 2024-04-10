@@ -35,10 +35,10 @@ namespace SpacetimeDB.Editor
         private PublishResult _cachedPublishResult;
 
         /// Set at Publisher-level ping
-        PingServerResult _lastServerPinged;
+        PingServerResult _lastServerPingSuccess;
 
         /// Last known || SpacetimeDbMeta.DEFAULT_PORT
-        ushort _lastKnownPort => _lastServerPinged?.Port ?? SpacetimeMeta.DEFAULT_PORT;
+        ushort _lastKnownPort => _lastServerPingSuccess?.Port ?? SpacetimeMeta.DEFAULT_PORT;
         #endregion // Operational State Vars
         
 

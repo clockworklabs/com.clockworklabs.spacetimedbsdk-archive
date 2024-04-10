@@ -616,10 +616,10 @@ namespace SpacetimeDB.Editor
             Assert.IsTrue(checkIsLocalhostServerSelected(), $"Expected {nameof(checkIsLocalhostServerSelected)}");
 
             // Run CLI command with short timeout
-            _lastServerPinged = await SpacetimeDbCliActions.PingServerAsync();
+            _lastServerPingSuccess = await SpacetimeDbCliActions.PingServerAsync();
             
             // Process result
-            bool isSuccess = _lastServerPinged.IsServerOnline;
+            bool isSuccess = _lastServerPingSuccess.IsServerOnline;
             return isSuccess;
         }
 
@@ -659,7 +659,7 @@ namespace SpacetimeDB.Editor
         {
             showUi(publishStatusLabel);
 
-            if (_lastServerPinged?.IsServerOnline == false)
+            if (_lastServerPingSuccess?.IsServerOnline == false)
             {
                 setLocalServerOfflinePublishLabel();
             }
@@ -1359,10 +1359,14 @@ namespace SpacetimeDB.Editor
             setStartingLocalServerUi();
             
             // Run async CLI cmd => wait for connection => Save to state cache
-            _lastServerPinged = await SpacetimeDbCliActions.StartDetachedLocalServerWaitUntilOnlineAsync();
+            PingServerResult pingResult = await SpacetimeDbCliActions.StartDetachedLocalServerWaitUntilOnlineAsync();
+            if (pingResult.IsServerOnline)
+            {
+                _lastServerPingSuccess = pingResult;
+            }
             
             // Process result -> Update UI
-            if (!_lastServerPinged.IsServerOnline)
+            if (!_lastServerPingSuccess.IsServerOnline)
             {
                 onStartLocalServerFail();
                 return false; // !startedServer 
@@ -1374,7 +1378,7 @@ namespace SpacetimeDB.Editor
 
         private void onStartLocalServerSuccess()
         {
-            Debug.Log($"Started local server on port `{_lastServerPinged}`");
+            Debug.Log($"Started local server on port `{_lastServerPingSuccess}`");
             
             hideUi(publishStartLocalServerBtn);
             
@@ -1391,14 +1395,14 @@ namespace SpacetimeDB.Editor
         /// Pulls host from _lastServerPinged
         private void setStopLocalServerBtnTxt()
         {
-            if (string.IsNullOrEmpty(_lastServerPinged?.HostUrl))
+            if (string.IsNullOrEmpty(_lastServerPingSuccess?.HostUrl))
             {
                 // Fallback
                 publishStopLocalServerBtn.text = "Stop Local Server";
                 return;
             }
             
-            string host = _lastServerPinged.HostUrl.Replace("127.0.0.1", "localhost");
+            string host = _lastServerPingSuccess.HostUrl.Replace("127.0.0.1", "localhost");
             publishStopLocalServerBtn.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error, $"Stop {serverSelectedDropdown.value}@{host}");
         }
@@ -1415,10 +1419,10 @@ namespace SpacetimeDB.Editor
         /// <returns>stoppedServer</returns>
         private async Task<bool> stopLocalServer()
         {
-            if (_lastServerPinged.Port == 0)
+            if (_lastServerPingSuccess.Port == 0)
             {
                 // TODO: Set port from ping
-                _lastServerPinged = await SpacetimeDbCliActions.PingServerAsync();
+                _lastServerPingSuccess = await SpacetimeDbCliActions.PingServerAsync();
             }
             
             // Validate + Logs + UI

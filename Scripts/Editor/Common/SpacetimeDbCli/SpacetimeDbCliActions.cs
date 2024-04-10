@@ -139,7 +139,7 @@ namespace SpacetimeDB.Editor
             
             // Synchronously start the detached local server CLI -> give it 100ms to spin up
             startDetachedLocalServer();
-            await Task.Delay(100); // Give it a chance to spin up
+            await Task.Delay(200); // Give it a chance to spin up
             
             // Await success, pinging the CLI every 100ms to ensure online. Max 2 seconds.
             return await PingServerUntilOnlineAsync();

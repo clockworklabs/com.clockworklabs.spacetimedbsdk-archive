@@ -634,10 +634,10 @@ namespace SpacetimeDB.Editor
                 setStopLocalServerBtnTxt();
                 setPublishReadyStatusIfOnline();
             }
-            else
+            else // Offline
             {
-                hideUi(publishStopLocalServerBtn);
                 showUi(publishStartLocalServerBtn);
+                hideUi(publishStopLocalServerBtn);
                 
                 setLocalServerOfflinePublishLabel();
             }

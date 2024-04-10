@@ -111,7 +111,12 @@ namespace SpacetimeDB.Editor
         /// if you initially hid via hideUiNoRipple()
         private static void showUi(VisualElement element, bool useVisibilityNotDisplay = false)
         {
-            element.style.opacity = 0;
+            // Don't mess with opacity if it's !enabled or a btn
+            bool skipOpacity = element is Button || !element.enabledSelf;
+            if (!skipOpacity)
+            {
+                element.style.opacity = 0;
+            }
             
             if (useVisibilityNotDisplay)
             {
@@ -120,7 +125,11 @@ namespace SpacetimeDB.Editor
             }
             
             element.style.display = DisplayStyle.Flex;
-            element.style.opacity = 1;
+            
+            if (!skipOpacity)
+            {
+                element.style.opacity = 1;
+            }
         }
         
         /// Hide a visual element via setting visible to false

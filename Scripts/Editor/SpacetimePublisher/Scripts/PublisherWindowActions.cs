@@ -164,8 +164,39 @@ namespace SpacetimeDB.Editor
                 onInstallSpacetimeDbCliSoftFail(); // Throws
                 return;
             }
+            
+            // Set default fingerprint for testnet -- not yet local, since that requires a local server *running* 
+            await newInstallSetTestnetFingerpintAsync();
+            
+            // Set `testnet` as default server (currently `local`)
+            await newInstallSetTestnetAsDefaultServerAsync();
 
             hideUi(installCliGroupBox);
+        }
+
+        private async Task newInstallSetTestnetAsDefaultServerAsync()
+        {
+            Debug.Log($"[{nameof(onInstallSpacetimeDbCliSuccess)}] Setting default server to `testnet` ...");
+            SpacetimeCliResult cliResult = await SpacetimeDbPublisherCliActions
+                .SetDefaultServerAsync(SpacetimeMeta.TESTNET_SERVER_NAME);
+            
+            bool isSuccess = !cliResult.HasCliErr;
+            if (!isSuccess)
+            {
+                throw new Exception("Failed to set default server to 'testnet' after a new install");
+            }
+        }
+
+        private async Task newInstallSetTestnetFingerpintAsync()
+        {
+            Debug.Log($"[{nameof(onInstallSpacetimeDbCliSuccess)}] Setting default `testnet` fingerprint ...");
+            SpacetimeCliResult cliResult = await SpacetimeDbCliActions
+                .CreateFingerprintAsync(SpacetimeMeta.TESTNET_SERVER_NAME);
+
+            if (cliResult.HasCliErr)
+            {
+                throw new Exception($"Failed to set default fingerprint for `testnet`: {cliResult.CliError}");
+            }
         }
 
         /// Set common fail UI, shared between hard and soft fail funcs

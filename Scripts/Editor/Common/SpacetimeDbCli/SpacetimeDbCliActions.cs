@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using static SpacetimeDB.Editor.SpacetimeDbCli;
@@ -113,14 +114,14 @@ namespace SpacetimeDB.Editor
             return cliResult;
         }
         
-        /// <summary>Uses the `spacetime server ping` CLI command.</summary>
+        /// <summary>Uses the `spacetime server fingerprint` CLI command.</summary>
         /// <param name="serverName">This is most likely "local" || "testnet"</param>
         public static async Task<SpacetimeCliResult> CreateFingerprintAsync(string serverName)
         {
             string argSuffix = $"spacetime server fingerprint {serverName} --force";
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
             return cliResult;
-        }
+        }        
         #endregion // High Level CLI Actions
         
         
@@ -181,6 +182,8 @@ namespace SpacetimeDB.Editor
             // Timed out
             return new PingServerResult(new SpacetimeCliResult("", "Canceled"));
         }
+        
+        
         #endregion // Compounded Actions
     }
 }

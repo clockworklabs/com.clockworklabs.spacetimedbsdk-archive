@@ -3,9 +3,10 @@ public static class SpacetimeMeta
 {
     #region Names & Paths
     public const ushort DEFAULT_PORT = 3000;
+    public const string NEW_INSTALL_DEFAULT_SERVER = LOCAL_SERVER_NAME; 
     public const string LOCAL_SERVER_NAME = "local";
     public const string TESTNET_SERVER_NAME = "testnet";
-    public const string TESTNET_HOST_URL = "https://testnet.spacetimedb.com";
+    public const string TESTNET_HOST_URL = "https://" + TESTNET_SERVER_NAME + ".spacetimedb.com";
     public static string LOCAL_HOST_URL => $"http://127.0.0.1:{DEFAULT_PORT}";
     
     public const string SDK_PACKAGE_NAME = "com.clockworklabs.spacetimedbsdk";

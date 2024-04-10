@@ -32,7 +32,8 @@ namespace SpacetimeDB.Editor
 
         
         #region Init
-        /// Install the SpacetimeDB CLI | https://spacetimedb.com/install 
+        /// Install the SpacetimeDB CLI | https://spacetimedb.com/install
+        /// After installed, the default server is `local` 
         public static async Task<InstallSpacetimeDbCliResult> InstallSpacetimeCliAsync()
         {
             if (CLI_LOG_LEVEL == CliLogLevel.Info)
@@ -59,12 +60,6 @@ namespace SpacetimeDB.Editor
             }
             
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            
-            if (CLI_LOG_LEVEL == CliLogLevel.Info)
-            {
-                Debug.Log($"Installed spacetimeDB CLI tool | {PublisherMeta.DOCS_URL}");
-            }
-
             InstallSpacetimeDbCliResult installResult = new(cliResult);
             
             // Update PATH env var override to prevent having to restart Unity for the next cmd
@@ -293,24 +288,55 @@ namespace SpacetimeDB.Editor
         {
             // TODO: Break this up if we catch too many
             _autoResolvedBugIsTryingAgain = true;
-            bool isLocalFingerprintErr = cliResult.CliError.Contains("without a saved fingerprint: local");
-            bool serverOffline = cliResult.CliError.Contains("target machine actively refused");
+            bool isResolvedTryAgain = false;
+            
+            string cliError = cliResult.CliError;
+            bool isFingerprintErr = cliError.Contains("without a saved fingerprint");
+            bool isLocalFingerprintErr = false;
+            bool isTestnetFingerprintErr = false;
 
-            if (!serverOffline && !isLocalFingerprintErr)
+            if (isFingerprintErr)
             {
-                return false; // !isResolvedTryAgain
+                isLocalFingerprintErr = cliError.Contains("local");
+                isTestnetFingerprintErr = cliError.Contains("testnet");
             }
+            
+            if (isLocalFingerprintErr)
+            {
+                isResolvedTryAgain = await fixLocalFingerprintErr(cliError);
+            }
+            else if (isTestnetFingerprintErr)
+            {
+                isResolvedTryAgain = await fixTestnetFingerprintErr(cliError);
+            }
+            
+            return isResolvedTryAgain;
+        }
+
+        private static async Task<bool> fixTestnetFingerprintErr(string cliError)
+        {
+            // Attempt to create a fingerprint for the server
+            SpacetimeCliResult fingerprintResult = await SpacetimeDbCliActions
+                .CreateFingerprintAsync(SpacetimeMeta.TESTNET_SERVER_NAME);
+
+            bool isResolvedTryAgain = !fingerprintResult.HasCliErr;
+            return isResolvedTryAgain;
+        }
+
+        private static async Task<bool> fixLocalFingerprintErr(string cliError)
+        {
+            bool serverOfflineErr = cliError.Contains("target machine actively refused");
             
             // Ensure the local server is running
             PingServerResult pingResult = await SpacetimeDbCliActions.PingServerAsync();
             if (!pingResult.IsServerOnline)
             {
-                 pingResult = await SpacetimeDbCliActions.StartDetachedLocalServerWaitUntilOnlineAsync(); // Temporarily start the server
+                pingResult = await SpacetimeDbCliActions.StartDetachedLocalServerWaitUntilOnlineAsync(); // Temporarily start the server
             }
             
             // Attempt to create a fingerprint for the server
-            SpacetimeCliResult fingerprintResult = await SpacetimeDbCliActions.CreateFingerprintAsync(SpacetimeMeta.LOCAL_SERVER_NAME);
-            // _ = ForceStopLocalServerAsync(); // No need to await this // Or perhaps it's good to keep it running?
+            SpacetimeCliResult fingerprintResult = await SpacetimeDbCliActions
+                .CreateFingerprintAsync(SpacetimeMeta.LOCAL_SERVER_NAME);
 
             bool isResolvedTryAgain = !fingerprintResult.HasCliErr;
             return isResolvedTryAgain;

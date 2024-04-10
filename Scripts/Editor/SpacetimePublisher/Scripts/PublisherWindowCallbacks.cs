@@ -97,7 +97,7 @@ namespace SpacetimeDB.Editor
                 publishModulePathTxt.RegisterValueChangedCallback(
                     onPublishModulePathTxtInitChanged);
   
-                // If !empty, Reveal next UI grou
+                // If !empty, Reveal next UI group
                 publishModulePathTxt.RegisterCallback<FocusOutEvent>(
                     onPublishModulePathTxtFocusOut);
             }

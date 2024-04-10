@@ -349,13 +349,11 @@ namespace SpacetimeDB.Editor
 
             if (cliResult.HasCliErr)
             {
-                // There may be only a CliError and no CliOutput, depending on the type of error.
-                if (!string.IsNullOrEmpty(cliResult.CliOutput))
-                {
-                    Debug.Log($"CLI Output: {prettyOutput}");
-                }
+                // There may be only a CliError and no CliOutput, depending on the type of error
+                string prettyOutputOrNull = hasOutput ? prettyOutput : "<Empty>";
+                Debug.Log($"CLI Output: {prettyOutputOrNull}");
 
-                bool isWarning = cliResult.CliError is "Canceled" or "Cancelled";
+                bool isWarning = cliResult.CliError is "Canceled";
                 if (isWarning)
                 {
                     Debug.LogWarning($"CLI Warning: {cliResult.CliError}");

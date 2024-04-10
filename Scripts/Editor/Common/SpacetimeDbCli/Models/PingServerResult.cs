@@ -13,6 +13,9 @@ namespace SpacetimeDB.Editor
         /// Eg: "http://127.0.0.1:3000" 
         public string FullHostUrl { get; }
         
+        /// Eg: "127.0.0.1:3000" 
+        public string HostUrl { get; }
+        
         /// Eg: 3000
         public ushort Port { get; }
         
@@ -36,6 +39,7 @@ namespace SpacetimeDB.Editor
             this.Port = ushort.Parse(portString);
         
             this.FullHostUrl = $"http://{IpAddress}:{portString}";
+            this.HostUrl = $"{IpAddress}:{portString}";
             this.IsServerOnline = !string.IsNullOrEmpty(IpAddress);
         }
         

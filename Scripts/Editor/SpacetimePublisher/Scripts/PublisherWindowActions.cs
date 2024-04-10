@@ -59,7 +59,7 @@ namespace SpacetimeDB.Editor
             resetPublishAdvanced();
             
             publishLocalBtnsHoriz.style.display = DisplayStyle.None;
-            toggleLocalServerStartOrStopBtn(isOnline: false);
+            toggleLocalServerStartOrStopBtnGroup(isOnline: false);
         }
 
         private void resetPublishAdvanced()
@@ -288,7 +288,7 @@ namespace SpacetimeDB.Editor
         /// (1) Suggest module name, if empty
         /// (2) Reveal publisher group
         /// (3) Ensure spacetimeDB CLI is installed async
-        private async Task onDirPathSetAsync()
+        private async Task onPublishModulePathSetAsync()
         {
             // We just updated the path - hide old publishAsync result cache
             publishResultFoldout.style.display = DisplayStyle.None;
@@ -569,7 +569,7 @@ namespace SpacetimeDB.Editor
             // to check/install Spacetime CLI tool
             publishGroupBox.SetEnabled(true);
             publishBtn.SetEnabled(false);
-            setPublishReadyStatus();
+            setPublishReadyStatusIfOnline();
             publishStatusLabel.style.display = DisplayStyle.Flex;
             publishGroupBox.style.display = DisplayStyle.Flex;
             toggleDebugModeIfNotLocalhost();
@@ -597,14 +597,13 @@ namespace SpacetimeDB.Editor
                 return;
             }
             
-            Debug.Log("Localhost server selected: Pinging for online status: " +
-                      "(!) will 'Cancel' Process if !responsive within a short duration...");
+            Debug.Log("Localhost server selected: Pinging for online status ...");
             
             // Run CLI cmd
             bool isOnline = await checkIsLocalServerOnlineAsync();
             
             Debug.Log("Local server online? " + isOnline);
-            toggleLocalServerStartOrStopBtn(isOnline);
+            toggleLocalServerStartOrStopBtnGroup(isOnline);
         }
 
         /// <returns>isOnline (successful ping) with short timeout</returns>
@@ -621,27 +620,53 @@ namespace SpacetimeDB.Editor
         }
 
         /// This includes the Publish btn, disabling if !online
-        private void toggleLocalServerStartOrStopBtn(bool isOnline)
+        private void toggleLocalServerStartOrStopBtnGroup(bool isOnline)
         {
             publishStartLocalServerBtn.style.display = isOnline ? DisplayStyle.None : DisplayStyle.Flex;
             publishStopLocalServerBtn.style.display = isOnline ? DisplayStyle.Flex : DisplayStyle.None;
+
+            if (isOnline)
+            {
+                setStopLocalServerBtnTxt();
+                setPublishReadyStatusIfOnline();
+            }
+            else
+            {
+                setLocalServerOfflinePublishLabel();
+            }
+
             publishBtn.SetEnabled(isOnline);
-            publishBtn.text = "Publish"; // From "Pinging local server ..."
         }
 
-        /// Sets status label to "Ready" and enables+shows Publisher btn
-        /// +Hides the cancel btn
-        private void setPublishReadyStatus()
+        private void setLocalServerOfflinePublishLabel()
         {
             publishStatusLabel.text = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Success, 
-                "Ready");
+                SpacetimeMeta.StringStyle.Error, 
+                "Local server offline");
+            publishStatusLabel.style.display = DisplayStyle.Flex;
+        }
+        
+        /// Sets status label to "Ready" and enables+shows Publisher btn
+        /// +Hides the cancel btn
+        private void setPublishReadyStatusIfOnline()
+        {
+            publishStatusLabel.style.display = DisplayStyle.Flex;
+
+            if (_lastServerPinged?.IsServerOnline == false)
+            {
+                setLocalServerOfflinePublishLabel();
+            }
+            else
+            {
+                publishStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                    SpacetimeMeta.StringStyle.Success, "Ready");
+            }
             
             publishBtn.SetEnabled(true);
             publishBtn.style.display = DisplayStyle.Flex;
-            
+            publishBtn.text = "Publish";
+ 
             publishCancelBtn.style.display = DisplayStyle.None;
-            // publishStopLocalServerBtn.style.display = DisplayStyle.None;
         }
         
         /// Be sure to try/catch this with a try/finally to dispose `_cts
@@ -693,7 +718,7 @@ namespace SpacetimeDB.Editor
             _cachedPublishResult = publishResult;
             
             // Success - reset UI back to normal
-            setPublishReadyStatus();
+            setPublishReadyStatusIfOnline();
             setPublishResultGroupUi(publishResult);
             
             // Other editor tools may want to utilize this value,
@@ -1296,6 +1321,7 @@ namespace SpacetimeDB.Editor
 
         private void setStartingLocalServerUi()
         {
+            publishStatusLabel.style.display = DisplayStyle.None;
             publishStartLocalServerBtn.SetEnabled(false);
             publishStartLocalServerBtn.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, "Starting ...");
@@ -1329,15 +1355,31 @@ namespace SpacetimeDB.Editor
             publishStartLocalServerBtn.style.display = DisplayStyle.None;
             
             // The server is now running: Show the button to stop it (with a slight delay to enable)
-            publishStopLocalServerBtn.text = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Error, "Stop Local Server");
+            setStopLocalServerBtnTxt();
             publishStopLocalServerBtn.style.display = DisplayStyle.Flex;
             publishStopLocalServerBtn.SetEnabled(false);
             _ = WaitEnableElementAsync(publishStopLocalServerBtn, TimeSpan.FromSeconds(1));
             
-            setPublishReadyStatus();
+            setPublishReadyStatusIfOnline();
         }
 
+        /// Sets stop server btn to "Stop {server}@{hostUrlWithoutHttp}"
+        /// Pulls host from _lastServerPinged
+        private void setStopLocalServerBtnTxt()
+        {
+            if (string.IsNullOrEmpty(_lastServerPinged?.HostUrl))
+            {
+                // Fallback
+                publishStopLocalServerBtn.text = "Stop Local Server";
+                return;
+            }
+            
+            string host = _lastServerPinged.HostUrl.Replace("127.0.0.1", "localhost");
+            publishStopLocalServerBtn.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error, $"Stop {serverSelectedDropdown.value}@{host}");
+        }
+
+        /// The last ping was cached to _lastServerPinged
         private void onStartLocalServerFail()
         {
             Debug.LogError($"Failed to {nameof(startLocalServer)}");
@@ -1389,7 +1431,12 @@ namespace SpacetimeDB.Editor
             Debug.Log(SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Error, "Stopped local server"));
             
             publishStopLocalServerBtn.style.display = DisplayStyle.None;
+            
+            publishStartLocalServerBtn.text = "Start Local Server";
+            publishStartLocalServerBtn.SetEnabled(true);
             publishStartLocalServerBtn.style.display = DisplayStyle.Flex;
+            
+            setLocalServerOfflinePublishLabel();
             publishBtn.SetEnabled(false);
         }
     }

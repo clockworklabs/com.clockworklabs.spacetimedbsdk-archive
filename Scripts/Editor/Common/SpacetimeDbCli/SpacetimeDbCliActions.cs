@@ -76,20 +76,30 @@ namespace SpacetimeDB.Editor
         /// <param name="cancelToken">If left default, set to 200ms timeout</param>
         public static async Task<PingServerResult> PingServerAsync(CancellationToken cancelToken = default)
         {
-            if (cancelToken == default)
-            {
-                cancelToken = new CancellationTokenSource(TimeSpan.FromMilliseconds(200)).Token;
-            }
+            CancellationTokenSource cts = null;
             
-            const string argSuffix = "spacetime server ping";
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix, cancelToken);
-            PingServerResult pingServerResult = new(cliResult);
-            return pingServerResult;
+            try
+            {
+                // If no cancel token was provided, set to default 200ms timeout
+                if (cancelToken == default)
+                {
+                    cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
+                    cancelToken = cts.Token;
+                }
+    
+                const string argSuffix = "spacetime server ping";
+                SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix, cancelToken);
+                return new PingServerResult(cliResult);
+            }
+            finally
+            {
+                cts?.Dispose();
+            }
         }
         
         /// Uses the `spacetime start` CLI command. Runs in background in a detached service.
         /// Does not await online: Better for an init before a queued command.
-        public static async Task StartDetachedLocalServer()
+        private static void startDetachedLocalServer()
         {
             const string argSuffix = "spacetime start";
             startDetachedCliProcess(argSuffix);
@@ -116,10 +126,19 @@ namespace SpacetimeDB.Editor
         
         #region Compounded Actions
         /// Uses the `spacetime start` CLI command. Runs in background in a detached service.
-        /// Awaits up to 2s for the server to come online.
+        /// - Checks if an existing localhost of the same port is already running
+        /// - Awaits up to 2s for the server to come online.
         public static async Task<PingServerResult> StartDetachedLocalServerWaitUntilOnlineAsync()
         {
-            await StartDetachedLocalServer();
+            // First, see if it's already running locally
+            PingServerResult pingServerResult = await PingServerAsync();
+            if (pingServerResult.IsServerOnline)
+            {
+                return pingServerResult;
+            }
+            
+            // Synchronously start the detached local server CLI -> give it 100ms to spin up
+            startDetachedLocalServer();
             await Task.Delay(100); // Give it a chance to spin up
             
             // Await success, pinging the CLI every 100ms to ensure online. Max 2 seconds.
@@ -140,7 +159,6 @@ namespace SpacetimeDB.Editor
                 {
                     try
                     {
-                        // Attempt to ping the server with a per-iteration timeout
                         PingServerResult pingServerResult = await PingServerAsync(cancelToken: default); // 200ms iteration timeout
                         bool isOnline = pingServerResult.IsServerOnline;
 

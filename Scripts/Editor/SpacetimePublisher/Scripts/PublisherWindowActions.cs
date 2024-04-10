@@ -681,12 +681,14 @@ namespace SpacetimeDB.Editor
             setPublishStartUi();
             resetCancellationTokenSrc();
 
+            bool enableDebugMode = publishModuleDebugModeToggle.enabledSelf && publishModuleClearDataToggle.value;
+            
             PublishRequest publishRequest = new(
                 publishModuleNameTxt.value, 
                 publishModulePathTxt.value,
                 new PublishRequest.AdvancedOpts(
                     publishModuleClearDataToggle.value,
-                    publishModuleDebugModeToggle.value
+                    enableDebugMode
                 ));
             
             // Run CLI cmd [can cancel]

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Assertions.Must;
 using UnityEngine.UIElements;
 using static SpacetimeDB.Editor.PublisherMeta;
 
@@ -664,8 +665,11 @@ namespace SpacetimeDB.Editor
             }
             else
             {
+                // Make it look satisfying
+                hideUi(publishStatusLabel, setOpacity0ForFadeIn: true);
                 publishStatusLabel.text = SpacetimeMeta.GetStyledStr(
                     SpacetimeMeta.StringStyle.Success, "Ready");
+                showUi(publishStatusLabel); // Fades in
             }
             
             publishBtn.SetEnabled(true);

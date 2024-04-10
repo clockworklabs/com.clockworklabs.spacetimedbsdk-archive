@@ -7,7 +7,7 @@ Label {
     -unity-font: url("project://database/Packages/com.clockworklabs.spacetimedbsdk/Scripts/Editor/Common/Fonts/Inter.ttf?fileID=12800000&guid=0159f667c97f22d4daf25768d0adebca&type=3#Inter");
     -unity-font-definition: initial;
     -unity-font-style: normal;
-    transition-duration: 0.2s;
+    transition-duration: 0.3s;
 }
 
 .unity-base-text-field__multiline-container {

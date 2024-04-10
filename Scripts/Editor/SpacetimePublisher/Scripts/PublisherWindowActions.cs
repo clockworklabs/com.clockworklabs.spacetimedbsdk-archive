@@ -481,7 +481,7 @@ namespace SpacetimeDB.Editor
             publishModuleNameTxt.SelectNone();
             
             // If we have a cached result, show that (minimized)
-            _foundServer = true;
+            _foundIdentity = true;
             revealPublishResultCacheIfHostExists(openFoldout: false);
         }
 

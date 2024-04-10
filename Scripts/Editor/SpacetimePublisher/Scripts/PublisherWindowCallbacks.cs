@@ -349,7 +349,7 @@ namespace SpacetimeDB.Editor
 
             if (isHidden)
             {
-                serverSelectedDropdown.style.display = DisplayStyle.Flex;
+                showUi(serverSelectedDropdown);
             }
 
             // We changed from a known server to another known one.
@@ -383,7 +383,7 @@ namespace SpacetimeDB.Editor
 
             if (isHidden)
             {
-                identitySelectedDropdown.style.display = DisplayStyle.Flex;
+                showUi(identitySelectedDropdown);
             }
 
             // We changed from a known identity to another known one.
@@ -459,7 +459,7 @@ namespace SpacetimeDB.Editor
             }
             else
             {
-                HideRippleUi(publishGroupBox);
+                hideUi(publishGroupBox);
             }
         }
         
@@ -482,7 +482,7 @@ namespace SpacetimeDB.Editor
             }
             finally
             {
-                HideRippleUi(installWasmOptProgressBar);
+                hideUi(installWasmOptProgressBar);
                 publishBtn.SetEnabled(true);
             }
         }
@@ -522,7 +522,7 @@ namespace SpacetimeDB.Editor
             if (isHidden)
             {
                 // Show + UX: Focus the 1st field
-                serverNewGroupBox.style.display = DisplayStyle.Flex;
+                showUi(serverNewGroupBox);
                 serverAddNewShowUiBtn.text = SpacetimeMeta.GetStyledStr(
                     SpacetimeMeta.StringStyle.Success, "-"); // Show opposite, styled
                 serverNicknameTxt.Focus();
@@ -531,7 +531,7 @@ namespace SpacetimeDB.Editor
             else
             {
                 // Hide
-                HideRippleUi(serverNewGroupBox);
+                hideUi(serverNewGroupBox);
                 serverAddNewShowUiBtn.text = "+"; // Show opposite
             }
         }
@@ -543,7 +543,7 @@ namespace SpacetimeDB.Editor
             if (isHidden)
             {
                 // Show + UX: Focus the 1st field
-                identityNewGroupBox.style.display = DisplayStyle.Flex;
+                showUi(identityNewGroupBox);
                 identityAddNewShowUiBtn.text = SpacetimeMeta.GetStyledStr(
                     SpacetimeMeta.StringStyle.Success, "-"); // Show opposite, styled
                 identityNicknameTxt.Focus();
@@ -552,7 +552,7 @@ namespace SpacetimeDB.Editor
             else
             {
                 // Hide
-                HideRippleUi(identityNewGroupBox);
+                hideUi(identityNewGroupBox);
                 identityAddNewShowUiBtn.text = "+"; // Show opposite
             }
         }
@@ -640,14 +640,14 @@ namespace SpacetimeDB.Editor
             }
 
             // Hide UI: Progress bar, cancel btn
-            HideRippleUi(publishInstallProgressBar);
-            HideRippleUi(publishCancelBtn);
+            hideUi(publishInstallProgressBar);
+            hideUi(publishCancelBtn);
 
             // Show UI: Canceled status, publish btn
             publishStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error, "Canceled");
-            publishStatusLabel.style.display = DisplayStyle.Flex;
-            publishBtn.style.display = DisplayStyle.Flex;
+            showUi(publishStatusLabel);
+            showUi(publishBtn);
             
             // Slight cooldown, then enable publish btn
             publishBtn.SetEnabled(false);
@@ -679,7 +679,7 @@ namespace SpacetimeDB.Editor
             }
             finally
             {
-                HideRippleUi(publishInstallProgressBar);
+                hideUi(publishInstallProgressBar);
                 _publishCts?.Dispose();
             }
         }

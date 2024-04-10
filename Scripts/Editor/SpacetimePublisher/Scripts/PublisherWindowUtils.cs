@@ -97,20 +97,45 @@ namespace SpacetimeDB.Editor
         private static bool checkIsValidUrl(string url) => url.StartsWith("http");
 
         /// Hide a visual element via DisplayStyle.None
-        /// (!) Ripples the UI, as if removing it completely
-        /// (!) Does not trigger transition animations
-        private static void HideRippleUi(VisualElement element) =>
-            HideRippleUi(element);
+        /// - (!) Ripples the UI, as if removing it completely
+        /// - (!) Does not trigger transition animations
+        private static void hideUi(VisualElement element) =>
+            element.style.display = DisplayStyle.None;
+        
+        /// Simply show the UI via DisplayStyle.Flex
+        /// - (!) Ripples the UI as if it was just dragged into view
+        /// - Optionally, useVisibilityNotDisplay to use `.visible` instead of `.style.display`
+        /// if you initially hid via hideUiNoRipple()
+        private static void showUi(VisualElement element, bool useVisibilityNotDisplay = false)
+        {
+            if (useVisibilityNotDisplay)
+            {
+                element.visible = true;
+                return;
+            }
+            
+            element.style.display = DisplayStyle.Flex;
+        }
         
         /// Hide a visual element via setting visible to false
-        /// (!) Does not ripple the UI, as if it's still there
-        /// (!) Does not trigger transition animations
-        private static void HideNoRippleUi(VisualElement element) =>
+        /// - (!) Does not ripple the UI, as if it's still there
+        /// - (!) Does not trigger transition animations
+        /// - Show again via showUi(element, useVisibilityNotDisplay: true)
+        private static void hideUiNoRipple(VisualElement element) =>
             element.visible = false;
         
         /// Sets opacity to 0, triggering `transition` properties, if set
-        /// (!) Does not ripple the UI, as if it's still there
-        private static void FadeOutUi(VisualElement element) =>
+        /// - (!) Does not ripple the UI, as if it's still there
+        private static void fadeOutUi(VisualElement element) =>
             element.style.opacity = 0;
+        
+        /// Set opacity to 0 -> DisplayStyle.Flex -> Set opacity to 100%,
+        /// triggering `transition` animations (bottom property)
+        private static void showUiFadeIn(VisualElement element)
+        {
+            element.style.opacity = 0;
+            showUi(element);
+            element.style.opacity = 100;
+        }
     }
 }

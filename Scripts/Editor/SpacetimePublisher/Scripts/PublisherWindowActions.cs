@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
@@ -52,13 +51,13 @@ namespace SpacetimeDB.Editor
         private void resetPublish()
         {
             // Hide publish
-            HideRippleUi(publishGroupBox);
-            HideRippleUi(publishCancelBtn);
-            HideRippleUi(publishInstallProgressBar);
-            HideRippleUi(publishStatusLabel);
+            hideUi(publishGroupBox);
+            hideUi(publishCancelBtn);
+            hideUi(publishInstallProgressBar);
+            hideUi(publishStatusLabel);
             resetPublishAdvanced();
             
-            HideRippleUi(publishLocalBtnsHoriz);
+            hideUi(publishLocalBtnsHoriz);
             toggleLocalServerStartOrStopBtnGroup(isOnline: false);
         }
 
@@ -71,8 +70,8 @@ namespace SpacetimeDB.Editor
 
         private void resetIdentity()
         {
-            HideRippleUi(identityAddNewShowUiBtn);
-            HideRippleUi(identityNewGroupBox);
+            hideUi(identityAddNewShowUiBtn);
+            hideUi(identityNewGroupBox);
             resetIdentityDropdown();
             identitySelectedDropdown.value = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, "Discovering ..."); 
@@ -81,8 +80,8 @@ namespace SpacetimeDB.Editor
 
         private void resetServer()
         {
-            HideRippleUi(serverAddNewShowUiBtn);
-            HideRippleUi(serverNewGroupBox);
+            hideUi(serverAddNewShowUiBtn);
+            hideUi(serverNewGroupBox);
             serverNicknameTxt.value = "";
 
             serverHostTxt.value = "";
@@ -93,9 +92,9 @@ namespace SpacetimeDB.Editor
 
         private void resetInstallCli()
         {
-            HideRippleUi(installCliGroupBox);
-            HideRippleUi(installCliProgressBar);
-            HideRippleUi(installCliStatusLabel);
+            hideUi(installCliGroupBox);
+            hideUi(installCliProgressBar);
+            hideUi(installCliStatusLabel);
         }
 
         /// Check for install => Install if !found -> Throw if err
@@ -125,8 +124,8 @@ namespace SpacetimeDB.Editor
                 valIncreasePerSec: 4,
                 autoHideOnComplete: true);
 
-            HideRippleUi(installCliStatusLabel);
-            installCliGroupBox.style.display = DisplayStyle.Flex;
+            hideUi(installCliStatusLabel);
+            showUi(installCliGroupBox);
         }
 
         private async Task installSpacetimeDbCliAsync()
@@ -165,15 +164,15 @@ namespace SpacetimeDB.Editor
                 return;
             }
 
-            HideRippleUi(installCliGroupBox);
+            hideUi(installCliGroupBox);
         }
 
         /// Set common fail UI, shared between hard and soft fail funcs
         private void onInstallSpacetimeDbFailUi()
         {
-            installCliStatusLabel.style.display = DisplayStyle.Flex;
-            installCliGroupBox.style.display = DisplayStyle.Flex;
-            HideRippleUi(installCliProgressBar);
+            showUi(installCliStatusLabel);
+            showUi(installCliGroupBox);
+            hideUi(installCliProgressBar);
         }
 
         /// Technically success, but we need to restart Unity to refresh PATH env vars
@@ -277,7 +276,7 @@ namespace SpacetimeDB.Editor
             }
 
             // Reveal the publishAsync result info cache
-            publishResultFoldout.style.display = DisplayStyle.Flex;
+            showUi(publishResultFoldout);
             
             if (openFoldout != null)
             {
@@ -291,7 +290,7 @@ namespace SpacetimeDB.Editor
         private async Task onPublishModulePathSetAsync()
         {
             // We just updated the path - hide old publishAsync result cache
-            HideRippleUi(publishResultFoldout);
+            hideUi(publishResultFoldout);
             
             // Set the tooltip to equal the path, since it's likely cutoff
             publishModulePathTxt.tooltip = publishModulePathTxt.value;
@@ -349,10 +348,10 @@ namespace SpacetimeDB.Editor
             // UI: Reset flags, clear cohices, hide selected server dropdown box
             _isRegeneratingDefaultServers = false; // in case we looped around to a fail
             serverSelectedDropdown.choices.Clear();
-            HideRippleUi(serverSelectedDropdown);
+            hideUi(serverSelectedDropdown);
             
             // Show "add new server" group box, focus nickname
-            serverNewGroupBox.style.display = DisplayStyle.Flex;
+            showUi(serverNewGroupBox);
             serverNicknameTxt.Focus();
             serverNicknameTxt.SelectAll();
         }
@@ -367,7 +366,7 @@ namespace SpacetimeDB.Editor
             serverStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, 
                 "<b>Regenerating default servers:</b>\n[ local, testnet* ]");
-            serverStatusLabel.style.display = DisplayStyle.Flex;
+            showUi(serverStatusLabel);
 
             AddServerRequest addServerRequest = null;
             
@@ -390,12 +389,12 @@ namespace SpacetimeDB.Editor
             
             // UI: Reset choices, hide dropdown+new identity btn
             identitySelectedDropdown.choices.Clear();
-            HideRippleUi(identitySelectedDropdown);
-            HideRippleUi(identityAddNewShowUiBtn);
+            hideUi(identitySelectedDropdown);
+            hideUi(identityAddNewShowUiBtn);
             
             // UI: Reveal "add new identity" group, reveal foldout
-            identityNewGroupBox.style.display = DisplayStyle.Flex;
-            identityFoldout.style.display = DisplayStyle.Flex;
+            showUi(identityNewGroupBox);
+            showUi(identityFoldout);
             
             // UX: Focus Nickname field
             identityNicknameTxt.Focus();
@@ -419,7 +418,7 @@ namespace SpacetimeDB.Editor
             serverSelectedDropdown.value = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, "Discovering ...");
             
-            HideRippleUi(serverConnectingStatusLabel);
+            hideUi(serverConnectingStatusLabel);
         }
         
         /// Set the selected identity dropdown. If identities found but no default, [0] will be set. 
@@ -464,20 +463,20 @@ namespace SpacetimeDB.Editor
         {
             // Allow selection, show [+] new reveal ui btn
             identitySelectedDropdown.pickingMode = PickingMode.Position;
-            identityAddNewShowUiBtn.style.display = DisplayStyle.Flex;
+            showUi(identityAddNewShowUiBtn);
             
             // Hide UI
-            HideRippleUi(identityStatusLabel);
-            HideRippleUi(identityNewGroupBox);
+            hideUi(identityStatusLabel);
+            hideUi(identityNewGroupBox);
             
             // Show this identity foldout + dropdown, which may have been hidden
             // if a server was recently changed
-            identityFoldout.style.display = DisplayStyle.Flex;
-            identitySelectedDropdown.style.display = DisplayStyle.Flex;
+            showUi(identityFoldout);
+            showUi(identitySelectedDropdown);
             
             // Show the next section + UX: Focus the 1st field
-            publishFoldout.style.display = DisplayStyle.Flex;
-            identityFoldout.style.display = DisplayStyle.Flex;
+            showUi(publishFoldout);
+            showUi(identityFoldout);
             toggleDebugModeIfNotLocalhost(); // Always false if called from init
             publishModuleNameTxt.Focus();
             publishModuleNameTxt.SelectNone();
@@ -550,14 +549,14 @@ namespace SpacetimeDB.Editor
         {
             // Allow selection, show [+] new reveal ui btn
             serverSelectedDropdown.pickingMode = PickingMode.Position;
-            serverAddNewShowUiBtn.style.display = DisplayStyle.Flex;
+            showUi(serverAddNewShowUiBtn);
             
             // Hide UI
-            HideRippleUi(serverStatusLabel);
-            HideRippleUi(serverNewGroupBox);
+            hideUi(serverStatusLabel);
+            hideUi(serverNewGroupBox);
             
             // Show the next section
-            identityFoldout.style.display = DisplayStyle.Flex;
+            showUi(identityFoldout);
             
             _foundServer = true;
         }
@@ -570,8 +569,8 @@ namespace SpacetimeDB.Editor
             publishGroupBox.SetEnabled(true);
             publishBtn.SetEnabled(false);
             setPublishReadyStatusIfOnline();
-            publishStatusLabel.style.display = DisplayStyle.Flex;
-            publishGroupBox.style.display = DisplayStyle.Flex;
+            showUi(publishStatusLabel);
+            showUi(publishGroupBox);
             toggleDebugModeIfNotLocalhost();
             
             // If localhost, show start|stop server btns async on separate thread
@@ -588,7 +587,7 @@ namespace SpacetimeDB.Editor
         ///     c. If offline, disable Publish btn
         private async Task pingLocalServerSetBtnsAsync()
         {
-            HideRippleUi(publishLocalBtnsHoriz);
+            hideUi(publishLocalBtnsHoriz);
             
             bool isLocalServer = checkIsLocalhostServerSelected();
             publishLocalBtnsHoriz.style.display = isLocalServer ? DisplayStyle.Flex : DisplayStyle.None;
@@ -643,14 +642,14 @@ namespace SpacetimeDB.Editor
             publishStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error, 
                 "Local server offline");
-            publishStatusLabel.style.display = DisplayStyle.Flex;
+            showUi(publishStatusLabel);
         }
         
         /// Sets status label to "Ready" and enables+shows Publisher btn
         /// +Hides the cancel btn
         private void setPublishReadyStatusIfOnline()
         {
-            publishStatusLabel.style.display = DisplayStyle.Flex;
+            showUi(publishStatusLabel);
 
             if (_lastServerPinged?.IsServerOnline == false)
             {
@@ -663,10 +662,10 @@ namespace SpacetimeDB.Editor
             }
             
             publishBtn.SetEnabled(true);
-            publishBtn.style.display = DisplayStyle.Flex;
+            showUi(publishBtn);
             publishBtn.text = "Publish";
  
-            HideRippleUi(publishCancelBtn);
+            hideUi(publishCancelBtn);
         }
         
         /// Be sure to try/catch this with a try/finally to dispose `_cts
@@ -731,7 +730,7 @@ namespace SpacetimeDB.Editor
         private void setPublishResultGroupUi(PublishResult publishResult)
         {
             // Hide old status -> Load the result data
-            HideRippleUi(publishResultStatusLabel);
+            hideUi(publishResultStatusLabel);
             publishResultDateTimeTxt.value = $"{publishResult.PublishedAt:G} (Local)";
             publishResultHostTxt.value = publishResult.UploadedToHost;
             publishResultDbAddressTxt.value = publishResult.DatabaseAddressHash;
@@ -764,7 +763,7 @@ namespace SpacetimeDB.Editor
             // Prepare the progress bar style and min/max
             const int maxVal = 99;
             progressBar.value = Mathf.Clamp(initVal, 1, maxVal);
-            progressBar.style.display = DisplayStyle.Flex;
+            showUi(progressBar);
             
             while (progressBar.value < 100 && 
                    progressBar.style.display == DisplayStyle.Flex)
@@ -784,22 +783,22 @@ namespace SpacetimeDB.Editor
             
             if (autoHideOnComplete)
             {
-                HideRippleUi(progressBar);
+                hideUi(progressBar);
             }
         }
 
         /// Hide CLI group
         private void onSpacetimeCliAlreadyInstalled()
         {
-            HideRippleUi(installCliProgressBar);
-            HideRippleUi(installCliGroupBox);
+            hideUi(installCliProgressBar);
+            hideUi(installCliGroupBox);
         }
 
         /// Show a styled friendly string to UI. Errs will enable publishAsync btn.
         private void updatePublishStatus(SpacetimeMeta.StringStyle style, string friendlyStr)
         {
             publishStatusLabel.text = SpacetimeMeta.GetStyledStr(style, friendlyStr);
-            publishStatusLabel.style.display = DisplayStyle.Flex;
+            showUi(publishStatusLabel);
 
             if (style != SpacetimeMeta.StringStyle.Error)
             {
@@ -807,10 +806,10 @@ namespace SpacetimeDB.Editor
             }
 
             // Error: Hide cancel btn, cancel token, show/enable pub btn
-            HideRippleUi(publishCancelBtn);
+            hideUi(publishCancelBtn);
             _publishCts?.Dispose();
             
-            publishBtn.style.display = DisplayStyle.Flex;
+            showUi(publishBtn);
             publishBtn.SetEnabled(true);
         }
         
@@ -821,12 +820,12 @@ namespace SpacetimeDB.Editor
             resetPublishResultCache();
             
             // Hide: Publish btn, label, result foldout 
-            HideRippleUi(publishResultFoldout);
-            HideRippleUi(publishStatusLabel);
-            HideRippleUi(publishBtn);
+            hideUi(publishResultFoldout);
+            hideUi(publishStatusLabel);
+            hideUi(publishBtn);
             
             // Show: Cancel btn, show progress bar,
-            publishCancelBtn.style.display = DisplayStyle.Flex;
+            showUi(publishCancelBtn);
             _ = startProgressBarAsync(
                 publishInstallProgressBar,
                 barTitle: "Publishing to SpacetimeDB ...",
@@ -843,7 +842,7 @@ namespace SpacetimeDB.Editor
             // Show UI
             installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, "Installing ...");
-            installCliProgressBar.style.display = DisplayStyle.Flex;
+            showUi(installCliProgressBar);
             
             _ = startProgressBarAsync(
                 installWasmOptProgressBar,
@@ -891,9 +890,9 @@ namespace SpacetimeDB.Editor
             identityAddBtn.SetEnabled(false);
             identityStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, $"Adding {nickname} ...");
-            identityStatusLabel.style.display = DisplayStyle.Flex;
-            HideRippleUi(publishStatusLabel);
-            HideRippleUi(publishResultFoldout);
+            showUi(identityStatusLabel);
+            hideUi(publishStatusLabel);
+            hideUi(publishResultFoldout);
         }
         
         private async Task addIdentityAsync(string nickname, string email)
@@ -944,7 +943,7 @@ namespace SpacetimeDB.Editor
                 identityNicknameTxt.SelectAll();
             }
             
-            identityStatusLabel.style.display = DisplayStyle.Flex;
+            showUi(identityStatusLabel);
         }
 
         private void setAddServerUi(string nickname)
@@ -953,14 +952,14 @@ namespace SpacetimeDB.Editor
             serverAddBtn.SetEnabled(false);
             serverStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, $"Adding {nickname} ...");
-            serverStatusLabel.style.display = DisplayStyle.Flex;
+            showUi(serverStatusLabel);
             
             // Hide the other sections (while clearing out their labels), since we rely on servers
-            HideRippleUi(identityStatusLabel);
-            HideRippleUi(identityFoldout);
-            HideRippleUi(publishFoldout);
-            HideRippleUi(publishStatusLabel);
-            HideRippleUi(publishResultFoldout);
+            hideUi(identityStatusLabel);
+            hideUi(identityFoldout);
+            hideUi(publishFoldout);
+            hideUi(publishStatusLabel);
+            hideUi(publishResultFoldout);
         }
         
         private async Task addServerAsync(string nickname, string host)
@@ -997,7 +996,7 @@ namespace SpacetimeDB.Editor
                 $"<b>Failed:</b> Couldn't add `{serverAdded.Nickname}` server</b>\n" +
                 addServerResult.StyledFriendlyErrorMessage);
                 
-            serverStatusLabel.style.display = DisplayStyle.Flex;
+            showUi(serverStatusLabel);
         }
         
         /// Success: Add to dropdown + set default + show. Hide the [+] add group.
@@ -1039,10 +1038,10 @@ namespace SpacetimeDB.Editor
             publishResultDbAddressTxt.value = "";
             
             publishResultIsOptimizedBuildToggle.value = false;
-            HideRippleUi(installWasmOptBtn);
-            HideRippleUi(installWasmOptProgressBar);
+            hideUi(installWasmOptBtn);
+            hideUi(installWasmOptProgressBar);
             
-            HideRippleUi(publishResultStatusLabel);
+            hideUi(publishResultStatusLabel);
             
             publishResultGenerateClientFilesBtn.SetEnabled(true);
             publishResultGenerateClientFilesBtn.text = "Generate Client Typings";
@@ -1069,7 +1068,7 @@ namespace SpacetimeDB.Editor
                 serverFoldout.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
                 if (!show)
                 {
-                    HideRippleUi(serverStatusLabel);
+                    hideUi(serverStatusLabel);
                 }
             }
             
@@ -1080,7 +1079,7 @@ namespace SpacetimeDB.Editor
                 identityFoldout.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
                 if (!show)
                 {
-                    HideRippleUi(identityStatusLabel);
+                    hideUi(identityStatusLabel);
                 }
             }
             else
@@ -1092,10 +1091,10 @@ namespace SpacetimeDB.Editor
             // Publish, PublishResult
             if (startRippleFrom <= FoldoutGroupType.Publish)
             {
-                HideRippleUi(publishFoldout);
+                hideUi(publishFoldout);
                 if (!show)
                 {
-                    HideRippleUi(publishStatusLabel);
+                    hideUi(publishStatusLabel);
                 }
             }
             else
@@ -1107,7 +1106,7 @@ namespace SpacetimeDB.Editor
             // PublishResult+
             if (startRippleFrom <= FoldoutGroupType.PublishResult)
             {
-                HideRippleUi(publishResultFoldout);
+                hideUi(publishResultFoldout);
             }
         }
         
@@ -1120,7 +1119,7 @@ namespace SpacetimeDB.Editor
             
             serverConnectingStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, "Connecting ...");
-            serverConnectingStatusLabel.style.display = DisplayStyle.Flex;
+            showUi(serverConnectingStatusLabel);
         }
 
         /// Change to a *known* nicknameOrHost
@@ -1168,7 +1167,7 @@ namespace SpacetimeDB.Editor
             serverConnectingStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error,
                 $"<b>Failed to Change Servers:</b>\n{clippedCliErr}");
-            serverConnectingStatusLabel.style.display = DisplayStyle.Flex;
+            showUi(serverConnectingStatusLabel);
         }
         
         /// Invalidate identities
@@ -1177,20 +1176,20 @@ namespace SpacetimeDB.Editor
             await pingLocalServerSetBtnsAsync();
             
             // UI: Hide label fast so it doesn't look laggy
-            HideRippleUi(serverConnectingStatusLabel);
+            hideUi(serverConnectingStatusLabel);
             
             await getIdentitiesSetDropdown(); // Process and reveal the next UI group
             
             serverSelectedDropdown.SetEnabled(true);
             serverAddNewShowUiBtn.text = "+";
-            HideRippleUi(serverConnectingStatusLabel);
+            hideUi(serverConnectingStatusLabel);
             resetPublishResultCache(); // We don't want stale info from a different server's publish showing
         }
 
         /// Disable generate btn, show "GGenerating..." label
         private void setGenerateClientFilesUi()
         {
-            HideRippleUi(publishResultStatusLabel);
+            hideUi(publishResultStatusLabel);
             publishResultGenerateClientFilesBtn.SetEnabled(false);
             publishResultGenerateClientFilesBtn.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action,
@@ -1287,7 +1286,7 @@ namespace SpacetimeDB.Editor
                 SpacetimeMeta.StringStyle.Error,
                 $"<b>Failed to Generate:</b>\n{clippedCliErr}");
             
-            publishResultStatusLabel.style.display = DisplayStyle.Flex;
+            showUi(publishResultStatusLabel);
         }
 
         private void onGenerateClientFilesSuccess(string serverModulePath)
@@ -1299,7 +1298,7 @@ namespace SpacetimeDB.Editor
             publishResultStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Success,
                 "Generated to dir: <color=white>Assets/Autogen/</color>");
-            publishResultStatusLabel.style.display = DisplayStyle.Flex;
+            showUi(publishResultStatusLabel);
         }
         
         bool generatedFilesExist() => Directory.Exists(PathToAutogenDir);
@@ -1311,7 +1310,7 @@ namespace SpacetimeDB.Editor
                 ? "Regenerate Client Typings"
                 : "Generate Client Typings";
             
-            HideRippleUi(publishResultStatusLabel);
+            hideUi(publishResultStatusLabel);
             publishResultGenerateClientFilesBtn.SetEnabled(true);
         }
 
@@ -1321,11 +1320,11 @@ namespace SpacetimeDB.Editor
 
         private void setStartingLocalServerUi()
         {
-            HideRippleUi(publishStatusLabel);
+            hideUi(publishStatusLabel);
             publishStartLocalServerBtn.SetEnabled(false);
             publishStartLocalServerBtn.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, "Starting ...");
-            HideRippleUi(publishStatusLabel);
+            hideUi(publishStatusLabel);
         }
         
         /// <summary>Starts the local SpacetimeDB server; sets _localServer state.</summary>
@@ -1352,11 +1351,11 @@ namespace SpacetimeDB.Editor
         {
             Debug.Log($"Started local server on port `{_lastServerPinged}`");
             
-            HideRippleUi(publishStartLocalServerBtn);
+            hideUi(publishStartLocalServerBtn);
             
             // The server is now running: Show the button to stop it (with a slight delay to enable)
             setStopLocalServerBtnTxt();
-            publishStopLocalServerBtn.style.display = DisplayStyle.Flex;
+            showUi(publishStopLocalServerBtn);
             publishStopLocalServerBtn.SetEnabled(false);
             _ = WaitEnableElementAsync(publishStopLocalServerBtn, TimeSpan.FromSeconds(1));
             
@@ -1422,7 +1421,7 @@ namespace SpacetimeDB.Editor
             publishStopLocalServerBtn.SetEnabled(false);
             publishStopLocalServerBtn.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, "Stopping ...");
-            HideRippleUi(publishStatusLabel);
+            hideUi(publishStatusLabel);
         }
 
         /// We stopped -> So now we want to show start (+disable publish)
@@ -1430,11 +1429,11 @@ namespace SpacetimeDB.Editor
         {
             Debug.Log(SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Error, "Stopped local server"));
             
-            HideRippleUi(publishStopLocalServerBtn);
+            hideUi(publishStopLocalServerBtn);
             
             publishStartLocalServerBtn.text = "Start Local Server";
             publishStartLocalServerBtn.SetEnabled(true);
-            publishStartLocalServerBtn.style.display = DisplayStyle.Flex;
+            showUi(publishStartLocalServerBtn);
             
             setLocalServerOfflinePublishLabel();
             publishBtn.SetEnabled(false);

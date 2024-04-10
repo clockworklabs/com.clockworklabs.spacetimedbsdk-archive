@@ -338,8 +338,8 @@ namespace SpacetimeDB.Editor
             bool selectedAnything = serverSelectedDropdown.index >= 0;
             
             // The old val could've beeen a placeholder "<color=yellow>Searching ...</color>" val
-            bool oldValIsPlaceholderStr = selectedAnything && evt.previousValue.Contains("<"); 
-            bool isHidden = serverSelectedDropdown.style.display == DisplayStyle.None;
+            bool oldValIsPlaceholderStr = selectedAnything && evt.previousValue.Contains("<");
+            bool isHidden = isHiddenUi(serverSelectedDropdown);
             
             // We have "some" server loaded by runtime code; show this dropdown
             if (!selectedAnything || oldValIsPlaceholderStr)
@@ -373,7 +373,7 @@ namespace SpacetimeDB.Editor
         private async void onIdentitySelectedDropdownChangedAsync(ChangeEvent<string> evt)
         {
             bool selectedAnything = identitySelectedDropdown.index >= 0;
-            bool isHidden = identitySelectedDropdown.style.display == DisplayStyle.None;
+            bool isHidden = isHiddenUi(identitySelectedDropdown);
             
             // We have "some" newIdentity loaded by runtime code; show this dropdown
             if (!selectedAnything)
@@ -518,7 +518,7 @@ namespace SpacetimeDB.Editor
         /// Toggles the "new server" group UI
         private void onServerAddNewShowUiBtnClick()
         {
-            bool isHidden = serverNewGroupBox.style.display == DisplayStyle.None;
+            bool isHidden = isHiddenUi(serverNewGroupBox);
             if (isHidden)
             {
                 // Show + UX: Focus the 1st field
@@ -539,7 +539,7 @@ namespace SpacetimeDB.Editor
         /// Toggles the "new identity" group UI
         private void onIdentityAddNewShowUiBtnClick()
         {
-            bool isHidden = identityNewGroupBox.style.display == DisplayStyle.None;
+            bool isHidden = isHiddenUi(identityNewGroupBox);
             if (isHidden)
             {
                 // Show + UX: Focus the 1st field
@@ -587,9 +587,14 @@ namespace SpacetimeDB.Editor
         private void onPublishResultIsOptimizedBuildToggleChanged(ChangeEvent<bool> evt)
         {
             bool isOptimized = evt.newValue;
-            installWasmOptBtn.style.display = isOptimized 
-                ? DisplayStyle.None 
-                : DisplayStyle.Flex;
+            if (isOptimized)
+            {
+                hideUi(installWasmOptBtn);                
+            }
+            else
+            {
+                showUi(installWasmOptBtn);
+            }
         }
         
         private async void onIdentityAddBtnClickAsync()

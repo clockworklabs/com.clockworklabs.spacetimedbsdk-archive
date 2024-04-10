@@ -54,7 +54,7 @@ namespace SpacetimeDB.Editor
             hideUi(publishGroupBox);
             hideUi(publishCancelBtn);
             hideUi(publishInstallProgressBar);
-            hideUi(publishStatusLabel);
+            fadeOutUi(publishStatusLabel);
             resetPublishAdvanced();
             
             hideUi(publishLocalBtnsHoriz);
@@ -590,9 +590,13 @@ namespace SpacetimeDB.Editor
             hideUi(publishLocalBtnsHoriz);
             
             bool isLocalServer = checkIsLocalhostServerSelected();
-            publishLocalBtnsHoriz.style.display = isLocalServer ? DisplayStyle.Flex : DisplayStyle.None;
-            if (!isLocalServer)
+            if (isLocalServer)
             {
+                showUi(publishLocalBtnsHoriz);
+            }
+            else
+            {
+                hideUi(publishLocalBtnsHoriz);
                 return;
             }
             
@@ -621,16 +625,19 @@ namespace SpacetimeDB.Editor
         /// This includes the Publish btn, disabling if !online
         private void toggleLocalServerStartOrStopBtnGroup(bool isOnline)
         {
-            publishStartLocalServerBtn.style.display = isOnline ? DisplayStyle.None : DisplayStyle.Flex;
-            publishStopLocalServerBtn.style.display = isOnline ? DisplayStyle.Flex : DisplayStyle.None;
-
             if (isOnline)
             {
+                hideUi(publishStartLocalServerBtn);
+                showUi(publishStopLocalServerBtn);
+                
                 setStopLocalServerBtnTxt();
                 setPublishReadyStatusIfOnline();
             }
             else
             {
+                hideUi(publishStopLocalServerBtn);
+                showUi(publishStartLocalServerBtn);
+                
                 setLocalServerOfflinePublishLabel();
             }
 
@@ -739,9 +746,14 @@ namespace SpacetimeDB.Editor
             publishResultIsOptimizedBuildToggle.value = publishResult.IsPublishWasmOptimized;
             
             // Show install pkg button, to optionally optimize next publish
-            installWasmOptBtn.style.display = publishResult.IsPublishWasmOptimized
-                ? DisplayStyle.None // If it's already installed, no need to show it
-                : DisplayStyle.Flex;
+            if (publishResult.IsPublishWasmOptimized)
+            {
+                hideUi(installWasmOptBtn);
+            }
+            else
+            {
+                showUi(installWasmOptBtn);
+            }
 
             resetGenerateUi();
             
@@ -765,8 +777,7 @@ namespace SpacetimeDB.Editor
             progressBar.value = Mathf.Clamp(initVal, 1, maxVal);
             showUi(progressBar);
             
-            while (progressBar.value < 100 && 
-                   progressBar.style.display == DisplayStyle.Flex)
+            while (progressBar.value < 100 && isShowingUi(progressBar))
             {
                 // Wait for 1 second, then update the bar
                 await Task.Delay(TimeSpan.FromSeconds(1));
@@ -821,7 +832,7 @@ namespace SpacetimeDB.Editor
             
             // Hide: Publish btn, label, result foldout 
             hideUi(publishResultFoldout);
-            hideUi(publishStatusLabel);
+            fadeOutUi(publishStatusLabel);
             hideUi(publishBtn);
             
             // Show: Cancel btn, show progress bar,
@@ -891,7 +902,7 @@ namespace SpacetimeDB.Editor
             identityStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, $"Adding {nickname} ...");
             showUi(identityStatusLabel);
-            hideUi(publishStatusLabel);
+            fadeOutUi(publishStatusLabel);
             hideUi(publishResultFoldout);
         }
         
@@ -958,7 +969,7 @@ namespace SpacetimeDB.Editor
             hideUi(identityStatusLabel);
             hideUi(identityFoldout);
             hideUi(publishFoldout);
-            hideUi(publishStatusLabel);
+            fadeOutUi(publishStatusLabel);
             hideUi(publishResultFoldout);
         }
         
@@ -1065,10 +1076,14 @@ namespace SpacetimeDB.Editor
             // Server, Identity, Publish, PublishResult
             if (startRippleFrom <= FoldoutGroupType.Server)
             {
-                serverFoldout.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
-                if (!show)
+                if (show)
+                {
+                    showUi(serverFoldout);
+                }
+                else
                 {
                     hideUi(serverStatusLabel);
+                    hideUi(serverFoldout);
                 }
             }
             
@@ -1076,9 +1091,13 @@ namespace SpacetimeDB.Editor
             // Identity, Publish, PublishResult
             if (startRippleFrom <= FoldoutGroupType.Identity)
             {
-                identityFoldout.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
-                if (!show)
+                if (show)
                 {
+                   showUi(identityFoldout); 
+                }
+                else
+                {
+                    hideUi(identityFoldout); 
                     hideUi(identityStatusLabel);
                 }
             }
@@ -1094,7 +1113,7 @@ namespace SpacetimeDB.Editor
                 hideUi(publishFoldout);
                 if (!show)
                 {
-                    hideUi(publishStatusLabel);
+                    fadeOutUi(publishStatusLabel);
                 }
             }
             else
@@ -1320,11 +1339,11 @@ namespace SpacetimeDB.Editor
 
         private void setStartingLocalServerUi()
         {
-            hideUi(publishStatusLabel);
+            fadeOutUi(publishStatusLabel);
             publishStartLocalServerBtn.SetEnabled(false);
             publishStartLocalServerBtn.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, "Starting ...");
-            hideUi(publishStatusLabel);
+            fadeOutUi(publishStatusLabel);
         }
         
         /// <summary>Starts the local SpacetimeDB server; sets _localServer state.</summary>
@@ -1421,7 +1440,7 @@ namespace SpacetimeDB.Editor
             publishStopLocalServerBtn.SetEnabled(false);
             publishStopLocalServerBtn.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, "Stopping ...");
-            hideUi(publishStatusLabel);
+            fadeOutUi(publishStatusLabel);
         }
 
         /// We stopped -> So now we want to show start (+disable publish)

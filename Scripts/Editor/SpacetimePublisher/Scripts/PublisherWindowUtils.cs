@@ -102,12 +102,14 @@ namespace SpacetimeDB.Editor
         private static void hideUi(VisualElement element) =>
             element.style.display = DisplayStyle.None;
         
-        /// Simply show the UI via DisplayStyle.Flex
+        /// Show the UI via DisplayStyle.Flex + set opacity to 100%, triggering `transition` animations
         /// - (!) Ripples the UI as if it was just dragged into view
         /// - Optionally, useVisibilityNotDisplay to use `.visible` instead of `.style.display`
         /// if you initially hid via hideUiNoRipple()
         private static void showUi(VisualElement element, bool useVisibilityNotDisplay = false)
         {
+            element.style.opacity = 0;
+            
             if (useVisibilityNotDisplay)
             {
                 element.visible = true;
@@ -115,6 +117,7 @@ namespace SpacetimeDB.Editor
             }
             
             element.style.display = DisplayStyle.Flex;
+            element.style.opacity = 1;
         }
         
         /// Hide a visual element via setting visible to false
@@ -129,13 +132,15 @@ namespace SpacetimeDB.Editor
         private static void fadeOutUi(VisualElement element) =>
             element.style.opacity = 0;
         
-        /// Set opacity to 0 -> DisplayStyle.Flex -> Set opacity to 100%,
-        /// triggering `transition` animations (bottom property)
-        private static void showUiFadeIn(VisualElement element)
-        {
-            element.style.opacity = 0;
-            showUi(element);
-            element.style.opacity = 100;
-        }
+        /// <returns>True if: DisplayStyle.None || 0 opacity || !visible</returns>
+        public bool isHiddenUi(VisualElement element) =>
+            rootVisualElement.style.display == DisplayStyle.None ||
+            rootVisualElement.style.opacity == 0 ||
+            !rootVisualElement.visible;
+        
+        public bool isShowingUi(VisualElement element) =>
+            rootVisualElement.style.display == DisplayStyle.Flex ||
+            rootVisualElement.style.opacity == 1 ||
+            rootVisualElement.visible;
     }
 }

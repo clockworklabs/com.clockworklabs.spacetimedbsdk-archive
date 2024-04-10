@@ -37,7 +37,7 @@ namespace SpacetimeDB.Editor
         {
             if (CLI_LOG_LEVEL == CliLogLevel.Info)
             {
-                Debug.Log("Installing SpacetimeDB CLI tool...");
+                Debug.Log("<b>Installing SpacetimeDB CLI tool ...</b>");
             }
 
             string argSuffix = null;
@@ -104,10 +104,10 @@ namespace SpacetimeDB.Editor
                 startInfo.RedirectStandardError = true;
                 startInfo.RedirectStandardOutput = true;
                 startInfo.UseShellExecute = false;
+                
+                // If we *just* installed SpacetimeDB CLI, PATH is not yet refreshed
+                checkUpdatePathForNewSpacetimeDbCliInstall(startInfo);
             }
-            
-            // If we *just* installed SpacetimeDB CLI, PATH is not yet refreshed
-            checkUpdatePathForNewSpacetimeDbCliInstall(startInfo);
 
             return cliProcess;
         }

@@ -89,8 +89,6 @@ namespace SpacetimeDB.Editor
             serverHostTxt.isReadOnly = false;
             
             resetServerDropdown();
-            serverSelectedDropdown.value = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Action, "Discovering ...");
         }
 
         private void resetInstallCli()
@@ -418,6 +416,10 @@ namespace SpacetimeDB.Editor
             serverSelectedDropdown.choices.Clear();
             serverSelectedDropdown.value = "";
             serverSelectedDropdown.index = -1;
+            serverSelectedDropdown.value = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Action, "Discovering ...");
+            
+            serverConnectingStatusLabel.style.display = DisplayStyle.None;
         }
         
         /// Set the selected identity dropdown. If identities found but no default, [0] will be set. 
@@ -1083,6 +1085,18 @@ namespace SpacetimeDB.Editor
                 publishResultFoldout.style.display = DisplayStyle.None;
             }
         }
+        
+        /// UI: This invalidates identities, so we'll hide all Foldouts
+        /// If local, we'll need extra time to ping (show status)
+        private void setDefaultServerRefreshIdentitiesUi()
+        {
+            toggleFoldoutRipple(FoldoutGroupType.Identity, show: false);
+            toggleSelectedServerProcessingEnabled(setEnabled: false);
+            
+            serverConnectingStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Action, "Connecting ...");
+            serverConnectingStatusLabel.style.display = DisplayStyle.Flex;
+        }
 
         /// Change to a *known* nicknameOrHost
         /// - Changes CLI default server
@@ -1094,10 +1108,8 @@ namespace SpacetimeDB.Editor
             {
                 return;
             }
-
-            // UI: This invalidates identities, so we'll hide all Foldouts
-            toggleFoldoutRipple(FoldoutGroupType.Identity, show:false);
-            toggleSelectedServerProcessing(setEnabled: false);
+            
+            setDefaultServerRefreshIdentitiesUi(); // Hide all foldouts [..]
 
             // Run CLI cmd
             SpacetimeCliResult cliResult = await SpacetimeDbPublisherCliActions.SetDefaultServerAsync(nicknameOrHost);
@@ -1113,11 +1125,11 @@ namespace SpacetimeDB.Editor
                 await onChangeDefaultServerSuccessAsync();
             }
             
-            toggleSelectedServerProcessing(setEnabled: true);
+            toggleSelectedServerProcessingEnabled(setEnabled: true);
         }
 
         /// Enables or disables the selected server dropdown + add new btn
-        private void toggleSelectedServerProcessing(bool setEnabled)
+        private void toggleSelectedServerProcessingEnabled(bool setEnabled)
         {
             serverSelectedDropdown.SetEnabled(setEnabled);
             serverAddNewShowUiBtn.SetEnabled(setEnabled);
@@ -1128,18 +1140,25 @@ namespace SpacetimeDB.Editor
             serverSelectedDropdown.SetEnabled(true);
 
             string clippedCliErr = Utils.ClipString(cliResult.CliError, maxLength: 4000);
-            serverStatusLabel.text = SpacetimeMeta.GetStyledStr(
+            serverConnectingStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error,
                 $"<b>Failed to Change Servers:</b>\n{clippedCliErr}");
+            serverConnectingStatusLabel.style.display = DisplayStyle.Flex;
         }
         
         /// Invalidate identities
         private async Task onChangeDefaultServerSuccessAsync()
         {
             await pingLocalServerSetBtnsAsync();
+            
+            // UI: Hide label fast so it doesn't look laggy
+            serverConnectingStatusLabel.style.display = DisplayStyle.None;
+            
             await getIdentitiesSetDropdown(); // Process and reveal the next UI group
+            
             serverSelectedDropdown.SetEnabled(true);
             serverAddNewShowUiBtn.text = "+";
+            serverConnectingStatusLabel.style.display = DisplayStyle.None;
             resetPublishResultCache(); // We don't want stale info from a different server's publish showing
         }
 

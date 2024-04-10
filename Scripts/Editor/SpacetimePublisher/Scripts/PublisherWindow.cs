@@ -51,6 +51,7 @@ namespace SpacetimeDB.Editor
 
         private Foldout serverFoldout;
         private DropdownField serverSelectedDropdown; // Don't set ViewDataKey; we'll set the default set in CLI
+        private Label serverConnectingStatusLabel;
         private Button serverAddNewShowUiBtn;
         private GroupBox serverNewGroupBox;
         private TextField serverNicknameTxt;
@@ -175,6 +176,7 @@ namespace SpacetimeDB.Editor
             
             serverFoldout = rootVisualElement.Q<Foldout>(nameof(serverFoldout));
             serverSelectedDropdown = rootVisualElement.Q<DropdownField>(nameof(serverSelectedDropdown));
+            serverConnectingStatusLabel = rootVisualElement.Q<Label>(nameof(serverConnectingStatusLabel));
             serverAddNewShowUiBtn = rootVisualElement.Q<Button>(nameof(serverAddNewShowUiBtn));
             serverNewGroupBox = rootVisualElement.Q<GroupBox>(nameof(serverNewGroupBox));
             serverNicknameTxt = rootVisualElement.Q<TextField>(nameof(serverNicknameTxt));
@@ -235,6 +237,7 @@ namespace SpacetimeDB.Editor
                 
                 Assert.IsNotNull(serverFoldout, $"Expected `#{nameof(serverFoldout)}`");
                 Assert.IsNotNull(serverSelectedDropdown, $"Expected `#{nameof(serverSelectedDropdown)}`");
+                Assert.IsNotNull(serverConnectingStatusLabel, $"Expected `#{nameof(serverConnectingStatusLabel)}`");
                 Assert.IsNotNull(serverAddNewShowUiBtn, $"Expected `#{nameof(serverAddNewShowUiBtn)}`");
                 Assert.IsNotNull(serverNewGroupBox, $"Expected `#{nameof(serverNewGroupBox)}`");
                 Assert.IsNotNull(serverNicknameTxt, $"Expected `#{nameof(serverNicknameTxt)}`");

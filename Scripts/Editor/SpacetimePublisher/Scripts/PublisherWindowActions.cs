@@ -238,7 +238,7 @@ namespace SpacetimeDB.Editor
             await getIdentitiesSetDropdown(); // Process and reveal the next UI group
         }
 
-        /// Try to get get list of Identities from CLI.
+        /// Try to get list of Identities from CLI.
         /// (!) Servers must already be set.
         private async Task getIdentitiesSetDropdown()
         {
@@ -455,10 +455,10 @@ namespace SpacetimeDB.Editor
             }
 
             // Process result -> Update UI
-            onEnsureIdentityDefaultSuccess();
+            await onEnsureIdentityDefaultSuccessAsync();
         }
         
-        private void onEnsureIdentityDefaultSuccess()
+        private async Task onEnsureIdentityDefaultSuccessAsync()
         {
             // Allow selection, show [+] new reveal ui btn
             identitySelectedDropdown.pickingMode = PickingMode.Position;
@@ -474,8 +474,8 @@ namespace SpacetimeDB.Editor
             identitySelectedDropdown.style.display = DisplayStyle.Flex;
             
             // Show the next section + UX: Focus the 1st field
-            identityFoldout.style.display = DisplayStyle.Flex;
             publishFoldout.style.display = DisplayStyle.Flex;
+            identityFoldout.style.display = DisplayStyle.Flex;
             toggleDebugModeIfNotLocalhost(); // Always false if called from init
             publishModuleNameTxt.Focus();
             publishModuleNameTxt.SelectNone();

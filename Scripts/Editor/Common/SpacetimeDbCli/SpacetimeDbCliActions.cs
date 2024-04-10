@@ -120,29 +120,29 @@ namespace SpacetimeDB.Editor
         public static async Task<PingServerResult> StartDetachedLocalServerWaitUntilOnlineAsync()
         {
             await StartDetachedLocalServer();
+            await Task.Delay(100); // Give it a chance to spin up
             
             // Await success, pinging the CLI every 100ms to ensure online. Max 2 seconds.
             return await PingServerUntilOnlineAsync();
         }
         
-        /// <param name="cancelToken">If left default, set to 200ms timeout (2 attempts @ 1 per 100ms)</param>
+        /// <param name="cancelToken">If left default, set to 200ms timeout (3 attempts @ 1 per 100ms)</param>
         public static async Task<PingServerResult> PingServerUntilOnlineAsync(CancellationToken cancelToken = default)
         {
             // If default, set to 200ms timeout
             using CancellationTokenSource globalTimeoutCts = cancelToken == default
-                ? new CancellationTokenSource(TimeSpan.FromMilliseconds(200)) 
+                ? new CancellationTokenSource(TimeSpan.FromMilliseconds(300)) 
                 : CancellationTokenSource.CreateLinkedTokenSource(cancelToken);
             
             try
             {
                 while (!globalTimeoutCts.Token.IsCancellationRequested)
                 {
-                    using CancellationTokenSource pingIterationCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
                     try
                     {
                         // Attempt to ping the server with a per-iteration timeout
-                        PingServerResult pingServerResult = await PingServerAsync(pingIterationCts.Token);
-                        bool isOnline = !pingServerResult.HasCliErr;
+                        PingServerResult pingServerResult = await PingServerAsync(cancelToken: default); // 200ms iteration timeout
+                        bool isOnline = pingServerResult.IsServerOnline;
 
                         if (isOnline)
                         {

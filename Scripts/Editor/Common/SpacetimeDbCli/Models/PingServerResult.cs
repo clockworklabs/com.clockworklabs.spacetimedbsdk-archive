@@ -23,7 +23,7 @@ namespace SpacetimeDB.Editor
             // #################################################
             // Server is online: http://127.0.0.1:3000
             // #################################################
-            const string pattern = @"online: (?<ip>\d{1,3}(?:\.\d{1,3}){3}):(?<port>\d+)";
+            const string pattern = @"online: (?:http://)?(?<ip>\d{1,3}(?:\.\d{1,3}){3}):(?<port>\d+)";
             Match match = Regex.Match(cliResult.CliOutput, pattern);
             if (!match.Success)
             {

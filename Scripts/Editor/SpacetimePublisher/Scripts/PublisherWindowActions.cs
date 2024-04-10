@@ -480,10 +480,21 @@ namespace SpacetimeDB.Editor
             publishModuleNameTxt.Focus();
             publishModuleNameTxt.SelectNone();
             
+            // Continue even further to the publish button+?
+            bool readyToPublish = checkIsReadyToPublish();
+            if (readyToPublish)
+            {
+                await revealPublisherGroupUiAsync();
+            }
+            
             // If we have a cached result, show that (minimized)
             _foundIdentity = true;
             revealPublishResultCacheIfHostExists(openFoldout: false);
         }
+
+        private bool checkIsReadyToPublish() =>
+            !string.IsNullOrEmpty(publishModuleNameTxt.value) &&
+            !string.IsNullOrEmpty(publishModulePathTxt.value);
 
         /// Only allow --debug for !localhost (for numerous reasons, including a buffer overload bug)
         /// Always false if called from init (since it will be "Discovering ...")
@@ -556,11 +567,10 @@ namespace SpacetimeDB.Editor
             // to check/install Spacetime CLI tool
             publishGroupBox.SetEnabled(true);
             publishBtn.SetEnabled(false);
+            setPublishReadyStatus();
             publishStatusLabel.style.display = DisplayStyle.Flex;
             publishGroupBox.style.display = DisplayStyle.Flex;
             toggleDebugModeIfNotLocalhost();
-            
-            setPublishReadyStatus();
             
             // If localhost, show start|stop server btns async on separate thread
             if (_foundServer)
@@ -629,7 +639,7 @@ namespace SpacetimeDB.Editor
             publishBtn.style.display = DisplayStyle.Flex;
             
             publishCancelBtn.style.display = DisplayStyle.None;
-            publishStopLocalServerBtn.style.display = DisplayStyle.None;
+            // publishStopLocalServerBtn.style.display = DisplayStyle.None;
         }
         
         /// Be sure to try/catch this with a try/finally to dispose `_cts
@@ -1130,6 +1140,7 @@ namespace SpacetimeDB.Editor
             await getIdentitiesSetDropdown(); // Process and reveal the next UI group
             serverSelectedDropdown.SetEnabled(true);
             serverAddNewShowUiBtn.text = "+";
+            resetPublishResultCache(); // We don't want stale info from a different server's publish showing
         }
 
         /// Disable generate btn, show "GGenerating..." label
@@ -1279,10 +1290,7 @@ namespace SpacetimeDB.Editor
             setStartingLocalServerUi();
             
             // Run async CLI cmd => wait for connection => Save to state cache
-            SpacetimeDbCliActions.StartDetachedLocalServerWaitUntilOnlineAsync();
-
-            // Await success, pinging the CLI every 100ms to ensure online. Max 2 seconds.
-            _lastServerPinged = await SpacetimeDbCliActions.PingServerUntilOnlineAsync();
+            _lastServerPinged = await SpacetimeDbCliActions.StartDetachedLocalServerWaitUntilOnlineAsync();
             
             // Process result -> Update UI
             if (!_lastServerPinged.IsServerOnline)

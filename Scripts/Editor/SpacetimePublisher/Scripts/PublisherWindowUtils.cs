@@ -146,13 +146,13 @@ namespace SpacetimeDB.Editor
         
         /// <returns>True if: DisplayStyle.None || 0 opacity || !visible</returns>
         public bool isHiddenUi(VisualElement element) =>
-            rootVisualElement.style.display == DisplayStyle.None ||
-            rootVisualElement.style.opacity == 0 ||
-            !rootVisualElement.visible;
+            element.style.display == DisplayStyle.None ||
+            element.style.opacity == 0 ||
+            !element.visible;
         
         public bool isShowingUi(VisualElement element) =>
-            rootVisualElement.style.display == DisplayStyle.Flex ||
-            rootVisualElement.style.opacity == 1 ||
-            rootVisualElement.visible;
+            element.style.display == DisplayStyle.Flex ||
+            element.style.opacity == 1 ||
+            element.visible;
     }
 }

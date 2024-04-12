@@ -100,7 +100,7 @@ namespace SpacetimeDB.Editor
 
             // Enable the TreeView, hide refreshing status
             reducersTreeView.SetEnabled(true); // Possibly unnecessary, but for sanity
-            reducersTreeView.style.display = DisplayStyle.Flex;
+            ShowUi(reducersTreeView);
             
             toggleRefreshReducersBtn(isRefreshing: false);
         }
@@ -115,12 +115,12 @@ namespace SpacetimeDB.Editor
             {
                 // Has args: Set txt + txt label -> enable
                 actionArgsTxt.value = "";
-                actionArgsTxt.style.display = DisplayStyle.Flex;
+                ShowUi(actionArgsTxt);
                 actionArgsTxt.SetEnabled(true);
                 
                 // Set syntax hint label -> show
                 actionsSyntaxHintLabel.text = string.Join("  ", styledSyntaxHints);
-                actionsSyntaxHintLabel.style.display = DisplayStyle.Flex;    
+                ShowUi(actionsSyntaxHintLabel);    
             }
             else
             {
@@ -129,7 +129,7 @@ namespace SpacetimeDB.Editor
                 actionsSyntaxHintLabel.text = ""; // Just empty so we don't shift the UI
             }
             
-            actionsFoldout.style.display = DisplayStyle.Flex;
+            ShowUi(actionsFoldout);
         }
 
         /// We only expect a single index changed
@@ -144,7 +144,7 @@ namespace SpacetimeDB.Editor
             if (selectedIndex == -1)
             {
                 // User pressed ESC
-                actionsFoldout.style.display = DisplayStyle.None;
+                HideUi(actionsFoldout);
                 return;
             }
 
@@ -266,7 +266,7 @@ namespace SpacetimeDB.Editor
 
             toggleRefreshReducersBtn(isRefreshing: true);
             reducersTreeView.Clear();
-            reducersTreeView.style.display = DisplayStyle.None;
+            HideUi(reducersTreeView);
             
             resetActionsFoldoutUi();
             resetActionResultFoldoutUi();
@@ -288,22 +288,22 @@ namespace SpacetimeDB.Editor
 
             // Refreshing
             reducersTreeView.selectedIndex = -1;
-            reducersTreeView.style.display = DisplayStyle.None;
-            actionsFoldout.style.display = DisplayStyle.None;
-            actionsResultFoldout.style.display = DisplayStyle.None;
+            HideUi(reducersTreeView);
+            HideUi(actionsFoldout);
+            HideUi(actionsResultFoldout);
         }
 
         private void resetActionResultFoldoutUi()
         {
             actionsResultFoldout.value = false;
-            actionsResultFoldout.style.display = DisplayStyle.None;
+            HideUi(actionsResultFoldout);
             actionsResultLabel.text = "";
         }
 
         private void resetActionsFoldoutUi()
         {
-            actionsFoldout.style.display = DisplayStyle.None;
-            actionsSyntaxHintLabel.style.display = DisplayStyle.None;
+            HideUi(actionsFoldout);
+            HideUi(actionsSyntaxHintLabel);
             actionsCallReducerBtn.SetEnabled(false);
         }
         #endregion // Init from ReducerWindow.CreateGUI
@@ -318,7 +318,7 @@ namespace SpacetimeDB.Editor
             errorCoverLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error, 
                 $"<b>Error:</b> {friendlyError}");
-            errorCover.style.display = DisplayStyle.Flex;
+            ShowUi(errorCover);
 
             throw new Exception(friendlyError);
         }

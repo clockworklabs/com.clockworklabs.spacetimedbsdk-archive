@@ -1,12 +1,61 @@
+using System;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace SpacetimeDB.Editor
 {
     /// Validations, trimming, special formatting
     public partial class PublisherWindow 
     {
+        /// Checked at OnFocusOut events to ensure both nickname+email txt fields are valid.
+        /// Toggle identityAddBtn enabled based validity of both.
+        private void checkIdentityReqsToggleIdentityBtn()
+        {
+            bool isNicknameValid = !string.IsNullOrWhiteSpace(identityNicknameTxt.value);
+            bool isEmailValid = checkIsValidEmail(identityEmailTxt.value);
+            identityAddBtn.SetEnabled(isNicknameValid && isEmailValid);
+        }
+        
+        /// Checked at OnFocusOut events to ensure both nickname-host txt fields are valid.
+        /// Toggle serverAddBtn enabled based validity of both.
+        private void checkServerReqsToggleServerBtn()
+        {
+            bool isHostValid = checkIsValidUrl(serverHostTxt.value);
+            bool isNicknameValid = !string.IsNullOrWhiteSpace(serverNicknameTxt.value);
+            serverAddBtn.SetEnabled(isNicknameValid && isHostValid);
+        }
+        
+        private void resetCancellationTokenSrc()
+        {
+            _publishCts?.Dispose();
+            _publishCts = new CancellationTokenSource();
+        }
+
+        /// <returns>
+        /// dashified-project-name, suggested based on your project name.
+        /// Swaps out `client` keyword with `server`.</returns>
+        private string getSuggestedServerModuleName()
+        {
+            // Prefix "unity-", dashify the name, replace "client" with "server (if found).
+            // Use Unity's productName
+            string unityProjectName = $"unity-{Application.productName.ToLowerInvariant()}";
+            string projectNameDashed = Regex
+                .Replace(unityProjectName, @"[^a-z0-9]", "-")
+                .Replace("client", "server");
+
+            return projectNameDashed;
+        }
+        
+        /// Great for adding a cooldown to a button, for example after a successful cancel
+        private static async Task WaitEnableElementAsync(VisualElement element, TimeSpan timespan)
+        {
+            await Task.Delay(timespan);
+            element.SetEnabled(true);
+        }
+        
         private static string replaceSpacesWithDashes(string str) =>
             str?.Replace(" ", "-");
         
@@ -47,43 +96,63 @@ namespace SpacetimeDB.Editor
         /// At minimum, must start with "http".
         private static bool checkIsValidUrl(string url) => url.StartsWith("http");
 
-        /// Checked at OnFocusOut events to ensure both nickname+email txt fields are valid.
-        /// Toggle identityAddBtn enabled based validity of both.
-        private void checkIdentityReqsToggleIdentityBtn()
+        /// Hide a visual element via DisplayStyle.None
+        /// - (!) Ripples the UI, as if removing it completely
+        /// - (!) Does not trigger transition animations
+        /// - setOpacity0 to make it fade in on showUi(), if transition animation props set
+        private static void hideUi(VisualElement element, bool setOpacity0ForFadeIn = false)
         {
-            bool isNicknameValid = !string.IsNullOrWhiteSpace(identityNicknameTxt.value);
-            bool isEmailValid = checkIsValidEmail(identityEmailTxt.value);
-            identityAddBtn.SetEnabled(isNicknameValid && isEmailValid);
+            element.style.display = DisplayStyle.None;
         }
         
-        /// Checked at OnFocusOut events to ensure both nickname-host txt fields are valid.
-        /// Toggle serverAddBtn enabled based validity of both.
-        private void checkServerReqsToggleServerBtn()
+        /// Show the UI via DisplayStyle.Flex + set opacity to 100%, triggering `transition` animations
+        /// - (!) Ripples the UI as if it was just dragged into view
+        /// - Optionally, useVisibilityNotDisplay to use `.visible` instead of `.style.display`
+        /// if you initially hid via hideUiNoRipple()
+        private static void showUi(VisualElement element, bool useVisibilityNotDisplay = false)
         {
-            bool isHostValid = checkIsValidUrl(serverHostTxt.value);
-            bool isNicknameValid = !string.IsNullOrWhiteSpace(serverNicknameTxt.value);
-            serverAddBtn.SetEnabled(isNicknameValid && isHostValid);
+            // Don't mess with opacity if it's !enabled or a btn
+            bool skipOpacity = element is Button || !element.enabledSelf;
+            if (!skipOpacity)
+            {
+                element.style.opacity = 0;
+            }
+            
+            if (useVisibilityNotDisplay)
+            {
+                element.visible = true;
+                return;
+            }
+            
+            element.style.display = DisplayStyle.Flex;
+            
+            if (!skipOpacity)
+            {
+                element.style.opacity = 1;
+            }
         }
         
-        private void resetCancellationTokenSrc()
-        {
-            _cts?.Dispose();
-            _cts = new CancellationTokenSource();
-        }
-
-        /// <returns>
-        /// dashified-project-name, suggested based on your project name.
-        /// Swaps out `client` keyword with `server`.</returns>
-        private string getSuggestedServerModuleName()
-        {
-            // Prefix "unity-", dashify the name, replace "client" with "server (if found).
-            // Use Unity's productName
-            string unityProjectName = $"unity-{Application.productName.ToLowerInvariant()}";
-            string projectNameDashed = Regex
-                .Replace(unityProjectName, @"[^a-z0-9]", "-")
-                .Replace("client", "server");
-
-            return projectNameDashed;
-        }
+        /// Hide a visual element via setting visible to false
+        /// - (!) Does not ripple the UI, as if it's still there
+        /// - (!) Does not trigger transition animations
+        /// - Show again via showUi(element, useVisibilityNotDisplay: true)
+        private static void hideUiNoRipple(VisualElement element) =>
+            element.visible = false;
+        
+        /// Sets opacity to 0, triggering `transition` properties, if set
+        /// - (!) Does not ripple the UI, as if it's still there
+        private static void fadeOutUi(VisualElement element) =>
+            element.style.opacity = 0;
+        
+        /// <returns>True if: DisplayStyle.None || 0 opacity || !visible</returns>
+        public bool isHiddenUi(VisualElement element) =>
+            element.resolvedStyle.display == DisplayStyle.None ||
+            element.resolvedStyle.opacity == 0 ||
+            !element.visible;
+        
+        public bool isShowingUi(VisualElement element) =>
+            element.resolvedStyle.display == DisplayStyle.Flex ||
+            element.resolvedStyle.opacity >= 1 ||
+            element.visible;
     }
 }

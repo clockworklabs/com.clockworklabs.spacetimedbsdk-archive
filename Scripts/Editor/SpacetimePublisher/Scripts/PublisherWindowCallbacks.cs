@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static SpacetimeDB.Editor.PublisherMeta;
+using static SpacetimeDB.Editor.SpacetimeWindow;
 
 namespace SpacetimeDB.Editor
 {
@@ -304,14 +305,14 @@ namespace SpacetimeDB.Editor
         
         /// Normalize with no spacing
         private void onIdentityNicknameTxtChanged(ChangeEvent<string> evt) =>
-            identityNicknameTxt.SetValueWithoutNotify(replaceSpacesWithDashes(evt.newValue));
+            identityNicknameTxt.SetValueWithoutNotify(ReplaceSpacesWithDashes(evt.newValue));
 
         private void onServerNicknameTxtChanged(ChangeEvent<string> evt) =>
-            serverNicknameTxt.SetValueWithoutNotify(replaceSpacesWithDashes(evt.newValue));
+            serverNicknameTxt.SetValueWithoutNotify(ReplaceSpacesWithDashes(evt.newValue));
 
         /// Change spaces to dashes
         private void onPublishModuleNameTxtChanged(ChangeEvent<string> evt) =>
-            publishModuleNameTxt.SetValueWithoutNotify(replaceSpacesWithDashes(evt.newValue));
+            publishModuleNameTxt.SetValueWithoutNotify(ReplaceSpacesWithDashes(evt.newValue));
         
         /// Normalize with email formatting
         private void onIdentityEmailTxtChanged(ChangeEvent<string> evt)
@@ -338,7 +339,7 @@ namespace SpacetimeDB.Editor
             
             // The old val could've beeen a placeholder "<color=yellow>Searching ...</color>" val
             bool oldValIsPlaceholderStr = selectedAnything && evt.previousValue.Contains("<");
-            bool isHidden = isHiddenUi(serverSelectedDropdown);
+            bool isHidden = IsHiddenUi(serverSelectedDropdown);
             
             // We have "some" server loaded by runtime code; show this dropdown
             if (!selectedAnything || oldValIsPlaceholderStr)
@@ -348,7 +349,7 @@ namespace SpacetimeDB.Editor
 
             if (isHidden)
             {
-                showUi(serverSelectedDropdown);
+                ShowUi(serverSelectedDropdown);
             }
 
             // We changed from a known server to another known one.
@@ -372,7 +373,7 @@ namespace SpacetimeDB.Editor
         private async void onIdentitySelectedDropdownChangedAsync(ChangeEvent<string> evt)
         {
             bool selectedAnything = identitySelectedDropdown.index >= 0;
-            bool isHidden = isHiddenUi(identitySelectedDropdown);
+            bool isHidden = IsHiddenUi(identitySelectedDropdown);
             
             // We have "some" newIdentity loaded by runtime code; show this dropdown
             if (!selectedAnything)
@@ -382,7 +383,7 @@ namespace SpacetimeDB.Editor
 
             if (isHidden)
             {
-                showUi(identitySelectedDropdown);
+                ShowUi(identitySelectedDropdown);
             }
 
             // We changed from a known identity to another known one.
@@ -453,12 +454,12 @@ namespace SpacetimeDB.Editor
                 resetPublishResultCache();
                 
                 // Normalize, then reveal the next UI group
-                publishModulePathTxt.value = superTrim(publishModulePathTxt.value);
+                publishModulePathTxt.value = SuperTrim(publishModulePathTxt.value);
                 await revealPublisherGroupUiAsync();
             }
             else
             {
-                hideUi(publishGroupBox);
+                HideUi(publishGroupBox);
             }
         }
         
@@ -512,11 +513,11 @@ namespace SpacetimeDB.Editor
         /// Toggles the "new server" group UI
         private void onServerAddNewShowUiBtnClick()
         {
-            bool isHidden = isHiddenUi(serverNewGroupBox);
+            bool isHidden = IsHiddenUi(serverNewGroupBox);
             if (isHidden)
             {
                 // Show + UX: Focus the 1st field
-                showUi(serverNewGroupBox);
+                ShowUi(serverNewGroupBox);
                 serverAddNewShowUiBtn.text = SpacetimeMeta.GetStyledStr(
                     SpacetimeMeta.StringStyle.Success, "-"); // Show opposite, styled
                 serverNicknameTxt.Focus();
@@ -525,7 +526,7 @@ namespace SpacetimeDB.Editor
             else
             {
                 // Hide
-                hideUi(serverNewGroupBox);
+                HideUi(serverNewGroupBox);
                 serverAddNewShowUiBtn.text = "+"; // Show opposite
             }
         }
@@ -533,11 +534,11 @@ namespace SpacetimeDB.Editor
         /// Toggles the "new identity" group UI
         private void onIdentityAddNewShowUiBtnClick()
         {
-            bool isHidden = isHiddenUi(identityNewGroupBox);
+            bool isHidden = IsHiddenUi(identityNewGroupBox);
             if (isHidden)
             {
                 // Show + UX: Focus the 1st field
-                showUi(identityNewGroupBox);
+                ShowUi(identityNewGroupBox);
                 identityAddNewShowUiBtn.text = SpacetimeMeta.GetStyledStr(
                     SpacetimeMeta.StringStyle.Success, "-"); // Show opposite, styled
                 identityNicknameTxt.Focus();
@@ -546,7 +547,7 @@ namespace SpacetimeDB.Editor
             else
             {
                 // Hide
-                hideUi(identityNewGroupBox);
+                HideUi(identityNewGroupBox);
                 identityAddNewShowUiBtn.text = "+"; // Show opposite
             }
         }
@@ -583,11 +584,11 @@ namespace SpacetimeDB.Editor
             bool isOptimized = evt.newValue;
             if (isOptimized)
             {
-                hideUi(installWasmOptBtn);                
+                HideUi(installWasmOptBtn);                
             }
             else
             {
-                showUi(installWasmOptBtn);
+                ShowUi(installWasmOptBtn);
             }
         }
         
@@ -639,14 +640,14 @@ namespace SpacetimeDB.Editor
             }
 
             // Hide UI: Progress bar, cancel btn
-            hideUi(publishInstallProgressBar);
-            hideUi(publishCancelBtn);
+            HideUi(publishInstallProgressBar);
+            HideUi(publishCancelBtn);
 
             // Show UI: Canceled status, publish btn
             publishStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error, "Canceled");
-            showUi(publishStatusLabel);
-            showUi(publishBtn);
+            ShowUi(publishStatusLabel);
+            ShowUi(publishBtn);
             
             // Slight cooldown, then enable publish btn
             publishBtn.SetEnabled(false);
@@ -678,7 +679,7 @@ namespace SpacetimeDB.Editor
             }
             finally
             {
-                hideUi(publishInstallProgressBar);
+                HideUi(publishInstallProgressBar);
                 _publishCts?.Dispose();
             }
         }

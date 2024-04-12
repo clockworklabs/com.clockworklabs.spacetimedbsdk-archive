@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using static SpacetimeDB.Editor.SpacetimeWindow;
 
 namespace SpacetimeDB.Editor
 {
@@ -15,7 +16,7 @@ namespace SpacetimeDB.Editor
             }
 
             resetUi();
-            hideUi(serverSelectedDropdown);
+            HideUi(serverSelectedDropdown);
             serverFoldout.text = "PublisherWindowTester.PUBLISH_WINDOW_TESTS";
             
             testInstallWasmOpt();
@@ -28,8 +29,8 @@ namespace SpacetimeDB.Editor
         
         private async Task testProgressBar()
         {
-            showUi(installCliGroupBox);
-            showUi(installCliProgressBar);
+            ShowUi(installCliGroupBox);
+            ShowUi(installCliProgressBar);
             
             await startProgressBarAsync(
                 installCliProgressBar,
@@ -43,18 +44,18 @@ namespace SpacetimeDB.Editor
 
         private void testInstallWasmOpt()
         {
-            showUi(publishResultFoldout);
+            ShowUi(publishResultFoldout);
             publishResultFoldout.value = true;
             
-            hideUi(publishResultDateTimeTxt);
-            hideUi(publishResultHostTxt);
-            hideUi(publishResultDbAddressTxt);
-            hideUi(publishResultIsOptimizedBuildToggle);
-            hideUi(publishResultGenerateClientFilesBtn);
-            hideUi(publishResultGetServerLogsBtn);
+            HideUi(publishResultDateTimeTxt);
+            HideUi(publishResultHostTxt);
+            HideUi(publishResultDbAddressTxt);
+            HideUi(publishResultIsOptimizedBuildToggle);
+            HideUi(publishResultGenerateClientFilesBtn);
+            HideUi(publishResultGetServerLogsBtn);
             
-            showUi(installCliGroupBox);
-            showUi(installWasmOptBtn);
+            ShowUi(installCliGroupBox);
+            ShowUi(installWasmOptBtn);
             installWasmOptBtn.SetEnabled(true);
         }
     }

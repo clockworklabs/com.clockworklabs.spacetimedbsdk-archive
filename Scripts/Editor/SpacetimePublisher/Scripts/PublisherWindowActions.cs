@@ -157,7 +157,10 @@ namespace SpacetimeDB.Editor
             installCliProgressBar.title = "Validating SpacetimeDB CLI Installation ...";
             
             SpacetimeCliResult validateCliResult = await SpacetimeDbCliActions.GetIsSpacetimeCliInstalledAsync();
-            bool isNotRecognizedCmd = validateCliResult.HasCliErr && validateCliResult.CliError.Contains("'spacetime' is not recognized");
+
+            bool isNotRecognizedCmd = validateCliResult.HasCliErr && 
+                SpacetimeDbCli.CheckCmdNotFound(validateCliResult.CliError, expectedCmd: "spacetime");
+            
             if (isNotRecognizedCmd)
             {
                 // This is only a "partial" error: We probably installed, but the env vars didn't refresh

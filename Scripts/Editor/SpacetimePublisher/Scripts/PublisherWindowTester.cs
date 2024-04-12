@@ -5,7 +5,7 @@ namespace SpacetimeDB.Editor
 {
     public partial class PublisherWindow
     {
-        private const bool PUBLISH_WINDOW_TESTS = true;
+        private const bool PUBLISH_WINDOW_TESTS = false;
         
         private async Task startTests()
         {

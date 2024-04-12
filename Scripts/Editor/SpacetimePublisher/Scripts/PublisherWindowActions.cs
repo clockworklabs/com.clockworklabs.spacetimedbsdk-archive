@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Assertions.Must;
 using UnityEngine.UIElements;
 using static SpacetimeDB.Editor.PublisherMeta;
 
@@ -21,6 +20,7 @@ namespace SpacetimeDB.Editor
         /// Initially called by PublisherWindow @ CreateGUI.
         private async Task initDynamicEventsFromPublisherWindow()
         {
+            await startTests(); // Only if PublisherWindowTester.PUBLISH_WINDOW_TESTS
             await ensureSpacetimeCliInstalledAsync();
             await getServersSetDropdown();
             await pingLocalServerSetBtnsAsync();
@@ -814,24 +814,43 @@ namespace SpacetimeDB.Editor
             progressBar.value = Mathf.Clamp(initVal, 1, maxVal);
             showUi(progressBar);
             
-            while (progressBar.value < 100 && isShowingUi(progressBar))
+            while (progressBar.value <= 100 && isShowingUi(progressBar))
             {
                 // Wait for 1 second, then update the bar
                 await Task.Delay(TimeSpan.FromSeconds(1));
                 progressBar.value += valIncreasePerSec;
-                
-                // In case we reach 99%+, we'll add and retract a "." to show progress is continuing
-                if (progressBar.value >= maxVal)
-                {
-                    progressBar.title = progressBar.title.Contains("...")
-                        ? progressBar.title.Replace("...", "....")
-                        : progressBar.title.Replace("....", "...");    
-                }
             }
             
             if (autoHideOnComplete)
             {
                 hideUi(progressBar);
+                return;
+            }
+            
+            // We're at 100% and !autoHideOnComplete: 
+            // The test may still be going, so let's show some progress in a different way
+            // In case we reach 100%, we'll still show a spinny bar
+            await spinProgressBarAsync(progressBar);
+        }
+
+        private async Task spinProgressBarAsync(ProgressBar progressBar)
+        {
+            // string[] spinner = { "◴", "◷", "◶", "◵" }; // Unicode !works in UI Builder yet
+            string[] spinner = { "/", "|", @"\", "|" };
+            int spinnerIndex = 0;
+
+            progressBar.title += " " + spinner[spinnerIndex];  // Initialize with the first spinner character
+
+            while (isShowingUi(progressBar))
+            {
+                await Task.Delay(TimeSpan.FromSeconds(0.5));
+
+                // Remove the last character
+                progressBar.title = progressBar.title[..^1];
+
+                // Update spinner index to cycle through the spinner array
+                spinnerIndex = (spinnerIndex + 1) % spinner.Length;
+                progressBar.title += spinner[spinnerIndex]; // Add the next spinny char
             }
         }
 

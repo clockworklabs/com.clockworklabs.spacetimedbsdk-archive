@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static SpacetimeDB.Editor.SpacetimeWindow;
 
 namespace SpacetimeDB.Editor
 {
@@ -58,7 +59,7 @@ namespace SpacetimeDB.Editor
             
             // TODO: Cache the vals using ViewDataKey -> add a refresh btn
             string moduleName = moduleNameTxt.value;
-            GetEntityStructureResult entityStructureResult = await SpacetimeDbCli.GetEntityStructureAsync(moduleName);
+            GetEntityStructureResult entityStructureResult = await SpacetimeDbCliActions.GetEntityStructureAsync(moduleName);
             
             bool isSuccess = entityStructureResult is { HasEntityStructure: true };
             if (!isSuccess)
@@ -202,7 +203,7 @@ namespace SpacetimeDB.Editor
         
         private async Task setSelectedServerTxtAsync() 
         {
-            GetServersResult getServersResult = await SpacetimeDbCli.GetServersAsync();
+            GetServersResult getServersResult = await SpacetimeDbCliActions.GetServersAsync();
             
             bool isSuccess = getServersResult.HasServer && !getServersResult.HasServersButNoDefault;
             if (!isSuccess)
@@ -221,7 +222,7 @@ namespace SpacetimeDB.Editor
         /// Load selected identities => set readonly identity txt
         private async Task setSelectedIdentityTxtAsync()
         {
-            GetIdentitiesResult getIdentitiesResult = await SpacetimeDbCli.GetIdentitiesAsync();
+            GetIdentitiesResult getIdentitiesResult = await SpacetimeDbCliActions.GetIdentitiesAsync();
 
             bool isSuccess = getIdentitiesResult.HasIdentity && !getIdentitiesResult.HasIdentitiesButNoDefault;
             if (!isSuccess)
@@ -240,7 +241,7 @@ namespace SpacetimeDB.Editor
         private async Task ensureCliInstalledAsync()
         {
             // Ensure CLI installed -> Show err (refer to PublisherWindow), if not
-            SpacetimeCliResult isSpacetimeDbCliInstalledResult = await SpacetimeDbCli.GetIsSpacetimeCliInstalledAsync();
+            SpacetimeCliResult isSpacetimeDbCliInstalledResult = await SpacetimeDbCliActions.GetIsSpacetimeCliInstalledAsync();
 
             bool isCliInstalled = !isSpacetimeDbCliInstalledResult.HasCliErr;
             if (!isCliInstalled)
@@ -351,10 +352,16 @@ namespace SpacetimeDB.Editor
                     SpacetimeMeta.StringStyle.Action, 
                     $"Calling {callingReducerName} ...") 
                 : "<b>Call Reducer</b>"; // TODO: Mv this to meta
-            
-            actionsResultFoldout.style.display = isCalling 
-                ? DisplayStyle.None 
-                : DisplayStyle.Flex;
+
+            if (isCalling)
+            {
+                HideUi(actionsResultFoldout);
+            }
+            else
+            {
+                ShowUi(actionsResultFoldout);
+            }
+
             actionsResultFoldout.value = !isCalling; // Expand
         }
 

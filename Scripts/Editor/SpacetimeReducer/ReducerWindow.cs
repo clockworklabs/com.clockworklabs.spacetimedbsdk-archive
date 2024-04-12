@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UIElements;
 using static SpacetimeDB.Editor.ReducerMeta;
+using static SpacetimeDB.Editor.SpacetimeWindow;
 
 namespace SpacetimeDB.Editor
 {

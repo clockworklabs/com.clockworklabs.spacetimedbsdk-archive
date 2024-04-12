@@ -100,10 +100,8 @@ namespace SpacetimeDB.Editor
         /// - (!) Ripples the UI, as if removing it completely
         /// - (!) Does not trigger transition animations
         /// - setOpacity0 to make it fade in on showUi(), if transition animation props set
-        private static void hideUi(VisualElement element, bool setOpacity0ForFadeIn = false)
-        {
+        private static void hideUi(VisualElement element) =>
             element.style.display = DisplayStyle.None;
-        }
         
         /// Show the UI via DisplayStyle.Flex + set opacity to 100%, triggering `transition` animations
         /// - (!) Ripples the UI as if it was just dragged into view

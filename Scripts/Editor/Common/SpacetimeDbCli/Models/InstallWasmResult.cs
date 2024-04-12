@@ -28,7 +28,7 @@ namespace SpacetimeDB.Editor
                 return;
             }
             
-            bool missingNpm = SpacetimeDbCli.CheckCmdNotFound(cliResult.CliError, "npm");
+            bool missingNpm = SpacetimeDbCli.CheckCmdNotFound(cliResult.CliError, expectedCmd: "npm");
             if (missingNpm)
             {
                 this.InstallWasmError = InstallWasmErrorType.NpmNotRecognized;

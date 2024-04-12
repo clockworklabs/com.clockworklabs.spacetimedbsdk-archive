@@ -1015,6 +1015,7 @@ namespace SpacetimeDB.Editor
         private async void onAddIdentitySuccess(SpacetimeIdentity identity)
         {
             Debug.Log($"Add new identity success: {identity.Nickname}");
+            resetPublishResultCache();
             await onGetSetIdentitiesSuccessEnsureDefault(new List<SpacetimeIdentity> { identity });
         }
         
@@ -1093,6 +1094,7 @@ namespace SpacetimeDB.Editor
         private void onAddServerSuccess(SpacetimeServer server)
         {
             Debug.Log($"Add new server success: {server.Nickname}");
+            resetPublishResultCache();
             _ = onGetSetServersSuccessEnsureDefaultAsync(new List<SpacetimeServer> { server });
         }
 

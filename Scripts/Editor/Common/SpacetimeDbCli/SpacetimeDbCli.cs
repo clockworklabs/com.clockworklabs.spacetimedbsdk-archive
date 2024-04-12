@@ -74,7 +74,6 @@ namespace SpacetimeDB.Editor
         
         
         #region Core CLI
-
         private static Process createCliProcess(
             string terminal,
             string fullParsedArgs,

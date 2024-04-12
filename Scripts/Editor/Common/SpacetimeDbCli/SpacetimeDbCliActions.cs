@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEditor;
 using static SpacetimeDB.Editor.SpacetimeDbCli;
 
 namespace SpacetimeDB.Editor
@@ -121,7 +122,16 @@ namespace SpacetimeDB.Editor
             string argSuffix = $"spacetime server fingerprint {serverName} --force";
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
             return cliResult;
-        }        
+        }
+        
+        /// Uses the `spacetime init` CLI command.
+        public static async Task<SpacetimeCliResult> CreateNewServerModule(SpacetimeMeta.ModuleLang lang, string initProjDirPath)
+        {
+            string langArg = lang.ToString().ToLowerInvariant();
+            string argSuffix = $"spacetime init --lang {langArg} {initProjDirPath}";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
+            return cliResult;
+        }
         #endregion // High Level CLI Actions
         
         

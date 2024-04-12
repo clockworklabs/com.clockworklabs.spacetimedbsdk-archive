@@ -2,6 +2,9 @@
 public static class SpacetimeMeta
 {
     #region Names & Paths
+    public const string DEFAULT_RUST_MODULE_PROJ_FILE = "Cargo.toml";
+    public const string DEFAULT_CS_MODULE_PROJ_FILE = "StdbModule.csproj";
+    
     public const ushort DEFAULT_PORT = 3000;
     public const string NEW_INSTALL_DEFAULT_SERVER = LOCAL_SERVER_NAME; 
     public const string LOCAL_SERVER_NAME = "local";
@@ -28,6 +31,12 @@ public static class SpacetimeMeta
             "testnet" => TESTNET_HOST_URL,
             _ => serverName
         };
+    }
+    
+    public enum ModuleLang
+    {
+        CSharp,
+        Rust,
     }
     #endregion // Names & Paths
     

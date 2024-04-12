@@ -1,9 +1,6 @@
-using System;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace SpacetimeDB.Editor
 {
@@ -49,20 +46,6 @@ namespace SpacetimeDB.Editor
             return projectNameDashed;
         }
         
-        /// Great for adding a cooldown to a button, for example after a successful cancel
-        private static async Task WaitEnableElementAsync(VisualElement element, TimeSpan timespan)
-        {
-            await Task.Delay(timespan);
-            element.SetEnabled(true);
-        }
-        
-        private static string replaceSpacesWithDashes(string str) =>
-            str?.Replace(" ", "-");
-        
-        /// Remove ALL whitespace from string
-        private static string superTrim(string str) =>
-            str?.Replace(" ", "");
-
         /// This checks for valid email chars for OnChange events
         private static bool tryFormatAsEmail(string input, out string formattedEmail)
         {
@@ -95,62 +78,5 @@ namespace SpacetimeDB.Editor
         /// Useful for FocusOut events, checking the entire host for being valid.
         /// At minimum, must start with "http".
         private static bool checkIsValidUrl(string url) => url.StartsWith("http");
-
-        /// Hide a visual element via DisplayStyle.None
-        /// - (!) Ripples the UI, as if removing it completely
-        /// - (!) Does not trigger transition animations
-        /// - setOpacity0 to make it fade in on showUi(), if transition animation props set
-        private static void hideUi(VisualElement element) =>
-            element.style.display = DisplayStyle.None;
-        
-        /// Show the UI via DisplayStyle.Flex + set opacity to 100%, triggering `transition` animations
-        /// - (!) Ripples the UI as if it was just dragged into view
-        /// - Optionally, useVisibilityNotDisplay to use `.visible` instead of `.style.display`
-        /// if you initially hid via hideUiNoRipple()
-        private static void showUi(VisualElement element, bool useVisibilityNotDisplay = false)
-        {
-            // Don't mess with opacity if it's !enabled or a btn
-            bool skipOpacity = element is Button || !element.enabledSelf;
-            if (!skipOpacity)
-            {
-                element.style.opacity = 0;
-            }
-            
-            if (useVisibilityNotDisplay)
-            {
-                element.visible = true;
-                return;
-            }
-            
-            element.style.display = DisplayStyle.Flex;
-            
-            if (!skipOpacity)
-            {
-                element.style.opacity = 1;
-            }
-        }
-        
-        /// Hide a visual element via setting visible to false
-        /// - (!) Does not ripple the UI, as if it's still there
-        /// - (!) Does not trigger transition animations
-        /// - Show again via showUi(element, useVisibilityNotDisplay: true)
-        private static void hideUiNoRipple(VisualElement element) =>
-            element.visible = false;
-        
-        /// Sets opacity to 0, triggering `transition` properties, if set
-        /// - (!) Does not ripple the UI, as if it's still there
-        private static void fadeOutUi(VisualElement element) =>
-            element.style.opacity = 0;
-        
-        /// <returns>True if: DisplayStyle.None || 0 opacity || !visible</returns>
-        public bool isHiddenUi(VisualElement element) =>
-            element.resolvedStyle.display == DisplayStyle.None ||
-            element.resolvedStyle.opacity == 0 ||
-            !element.visible;
-        
-        public bool isShowingUi(VisualElement element) =>
-            element.resolvedStyle.display == DisplayStyle.Flex ||
-            element.resolvedStyle.opacity >= 1 ||
-            element.visible;
     }
 }

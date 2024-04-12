@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UIElements;
 using static SpacetimeDB.Editor.PublisherMeta;
+using static SpacetimeDB.Editor.SpacetimeWindow;
 
 namespace SpacetimeDB.Editor
 {
@@ -288,7 +289,7 @@ namespace SpacetimeDB.Editor
                 errorCover = rootVisualElement.Q<VisualElement>(nameof(errorCover));
                 if (errorCover != null)
                 {
-                    showUi(errorCover);
+                    ShowUi(errorCover);
                 }
 
                 Debug.LogError($"Error: {e}");

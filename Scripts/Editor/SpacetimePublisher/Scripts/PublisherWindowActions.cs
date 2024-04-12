@@ -697,7 +697,7 @@ namespace SpacetimeDB.Editor
             else
             {
                 // Make it look satisfying
-                hideUi(publishStatusLabel, setOpacity0ForFadeIn: true);
+                hideUi(publishStatusLabel);
                 publishStatusLabel.text = SpacetimeMeta.GetStyledStr(
                     SpacetimeMeta.StringStyle.Success, "Ready");
                 showUi(publishStatusLabel); // Fades in

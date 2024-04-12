@@ -65,6 +65,6 @@ public class InstallSpacetimeDbCliResult : SpacetimeCliResult
             this.PathToExeDir = Path.GetDirectoryName(PathToExe);
         }
         
-        Debug.Log($"Installed SpacetimeDB CLI to: `{PathToExe}`");
+        Debug.Log($"Installed SpacetimeDB CLI (https://spacetimedb.com/install) to: `{PathToExe}`");
     }
 }

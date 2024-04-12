@@ -5,9 +5,8 @@ namespace SpacetimeDB.Editor
 {
     /// CLI action middleware between PublisherWindow and SpacetimeDbCli 
     /// Vanilla: Do the action -> return the result -> no more.
-    public static class SpacetimeDbPublisherCli
+    public static class SpacetimeDbPublisherCliActions
     {
-        #region High Level CLI Actions
         /// Publishes your SpacetimeDB server module
         /// Uses the `spacetime publish` CLI command, appending +args from UI elements
         public static async Task<PublishResult> PublishAsync(
@@ -74,6 +73,5 @@ namespace SpacetimeDB.Editor
             GenerateResult generateResult = new(cliResult);
             return generateResult;
         }
-        #endregion // High Level CLI Actions
     }
 }

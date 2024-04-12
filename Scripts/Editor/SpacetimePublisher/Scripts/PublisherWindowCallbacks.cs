@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
@@ -38,9 +37,9 @@ namespace SpacetimeDB.Editor
                 // Replace spaces with dashes
                 serverNicknameTxt.RegisterValueChangedCallback(
                     onServerNicknameTxtChanged);
-            }
-            if (serverNicknameTxt != null)
-            {
+                
+                // If using a reserved name, fill host + disable
+                // Reveal the next Publish field, if ready
                 serverNicknameTxt.RegisterCallback<FocusOutEvent>(
                     onServerNicknameFocusOut);
             }
@@ -71,9 +70,7 @@ namespace SpacetimeDB.Editor
                 // Replace spaces with dashes
                 identityNicknameTxt.RegisterValueChangedCallback(
                     onIdentityNicknameTxtChanged);
-            }
-            if (identityNicknameTxt != null)
-            {
+
                 identityNicknameTxt.RegisterCallback<FocusOutEvent>(
                     onIdentityNicknameFocusOut);
             }
@@ -82,9 +79,7 @@ namespace SpacetimeDB.Editor
                 // Normalize email chars
                 identityEmailTxt.RegisterValueChangedCallback(
                     onIdentityEmailTxtChanged);
-            }
-            if (identityEmailTxt != null)
-            {
+ 
                 // If valid, enable Add New Identity btn
                 identityEmailTxt.RegisterCallback<FocusOutEvent>(
                     onIdentityEmailTxtFocusOut);
@@ -100,10 +95,8 @@ namespace SpacetimeDB.Editor
                 // For init only
                 publishModulePathTxt.RegisterValueChangedCallback(
                     onPublishModulePathTxtInitChanged);
-            }
-            if (publishModulePathTxt != null)
-            {
-                // If !empty, Reveal next UI grou
+  
+                // If !empty, Reveal next UI group
                 publishModulePathTxt.RegisterCallback<FocusOutEvent>(
                     onPublishModulePathTxtFocusOut);
             }
@@ -117,12 +110,18 @@ namespace SpacetimeDB.Editor
                 // Suggest module name if empty
                 publishModuleNameTxt.RegisterCallback<FocusOutEvent>(
                     onPublishModuleNameTxtFocusOut);
-            }
-            if (publishModuleNameTxt != null)
-            {
+ 
                 // Replace spaces with dashes
                 publishModuleNameTxt.RegisterValueChangedCallback(
                     onPublishModuleNameTxtChanged);
+            }
+            if (publishStartLocalServerBtn != null)
+            {
+                publishStartLocalServerBtn.clicked += onStartLocalServerBtnClick;
+            }
+            if (publishStopLocalServerBtn != null)
+            {
+                publishStopLocalServerBtn.clicked += onStopLocalServerBtnClick;
             }
             if (publishBtn != null)
             {
@@ -134,7 +133,6 @@ namespace SpacetimeDB.Editor
                 // Cancel publishAsync chain
                 publishCancelBtn.clicked += onCancelPublishBtnClick;
             }
-            
             if (publishResultIsOptimizedBuildToggle != null)
             {
                 // Show [Install Package] btn if !optimized
@@ -178,9 +176,7 @@ namespace SpacetimeDB.Editor
             {
                 serverNicknameTxt.UnregisterValueChangedCallback(
                     onServerNicknameTxtChanged);
-            }
-            if (serverNicknameTxt != null) 
-            {
+
                 serverNicknameTxt.UnregisterCallback<FocusOutEvent>(
                     onServerNicknameFocusOut);
             }
@@ -202,9 +198,7 @@ namespace SpacetimeDB.Editor
             {
                 identityNicknameTxt.UnregisterValueChangedCallback(
                     onIdentityNicknameTxtChanged);
-            }
-            if (identityNicknameTxt != null)
-            {
+
                 identityNicknameTxt.UnregisterCallback<FocusOutEvent>(
                     onIdentityNicknameFocusOut);
             }
@@ -212,9 +206,7 @@ namespace SpacetimeDB.Editor
             {
                 identityEmailTxt.UnregisterValueChangedCallback(
                     onIdentityEmailTxtChanged);
-            }
-            if (identityEmailTxt != null)
-            {
+
                 identityEmailTxt.UnregisterCallback<FocusOutEvent>(
                     onIdentityEmailTxtFocusOut);
             }
@@ -227,9 +219,7 @@ namespace SpacetimeDB.Editor
                 // For init only; likely already unsub'd itself
                 publishModulePathTxt.UnregisterValueChangedCallback(
                     onPublishModulePathTxtInitChanged);
-            }
-            if (publishModulePathTxt != null)
-            {
+
                 publishModulePathTxt.UnregisterCallback<FocusOutEvent>(
                     onPublishModulePathTxtFocusOut);
             }
@@ -241,10 +231,16 @@ namespace SpacetimeDB.Editor
             {
                 publishModuleNameTxt.UnregisterCallback<FocusOutEvent>(
                     onPublishModuleNameTxtFocusOut);
-            }
-            if (publishModuleNameTxt != null)
-            {
+
                 publishModuleNameTxt.UnregisterValueChangedCallback(onPublishModuleNameTxtChanged);
+            }
+            if (publishStartLocalServerBtn != null)
+            {
+                publishStartLocalServerBtn.clicked -= onStartLocalServerBtnClick;
+            }
+            if (publishStopLocalServerBtn != null)
+            {
+                publishStopLocalServerBtn.clicked -= onStopLocalServerBtnClick;
             }
             if (publishBtn != null)
             {
@@ -266,6 +262,33 @@ namespace SpacetimeDB.Editor
             if (publishResultGetServerLogsBtn != null)
             {
                 publishResultGetServerLogsBtn.clicked -= onGetServerLogsBtnClick;
+            }
+        }
+        
+        
+        private async void onStopLocalServerBtnClick()
+        {
+            try
+            {
+                await stopLocalServer();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e.Message);
+                throw;
+            }
+        }
+
+        private async void onStartLocalServerBtnClick()
+        {
+            try
+            {
+                await startLocalServer();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e.Message);
+                throw;
             }
         }
 
@@ -314,8 +337,8 @@ namespace SpacetimeDB.Editor
             bool selectedAnything = serverSelectedDropdown.index >= 0;
             
             // The old val could've beeen a placeholder "<color=yellow>Searching ...</color>" val
-            bool oldValIsPlaceholderStr = selectedAnything && evt.previousValue.Contains("<"); 
-            bool isHidden = serverSelectedDropdown.style.display == DisplayStyle.None;
+            bool oldValIsPlaceholderStr = selectedAnything && evt.previousValue.Contains("<");
+            bool isHidden = isHiddenUi(serverSelectedDropdown);
             
             // We have "some" server loaded by runtime code; show this dropdown
             if (!selectedAnything || oldValIsPlaceholderStr)
@@ -325,7 +348,7 @@ namespace SpacetimeDB.Editor
 
             if (isHidden)
             {
-                serverSelectedDropdown.style.display = DisplayStyle.Flex;
+                showUi(serverSelectedDropdown);
             }
 
             // We changed from a known server to another known one.
@@ -349,7 +372,7 @@ namespace SpacetimeDB.Editor
         private async void onIdentitySelectedDropdownChangedAsync(ChangeEvent<string> evt)
         {
             bool selectedAnything = identitySelectedDropdown.index >= 0;
-            bool isHidden = identitySelectedDropdown.style.display == DisplayStyle.None;
+            bool isHidden = isHiddenUi(identitySelectedDropdown);
             
             // We have "some" newIdentity loaded by runtime code; show this dropdown
             if (!selectedAnything)
@@ -359,7 +382,7 @@ namespace SpacetimeDB.Editor
 
             if (isHidden)
             {
-                identitySelectedDropdown.style.display = DisplayStyle.Flex;
+                showUi(identitySelectedDropdown);
             }
 
             // We changed from a known identity to another known one.
@@ -376,9 +399,9 @@ namespace SpacetimeDB.Editor
         }
         
         /// Used for init only, for when the persistent ViewDataKey
-        private void onPublishModulePathTxtInitChanged(ChangeEvent<string> evt)
+        private async void onPublishModulePathTxtInitChanged(ChangeEvent<string> evt)
         {
-            onDirPathSet();
+            await onPublishModulePathSetAsync();
             revealPublishResultCacheIfHostExists(openFoldout: null);
             publishModulePathTxt.UnregisterValueChangedCallback(onPublishModulePathTxtInitChanged);
         }
@@ -388,8 +411,23 @@ namespace SpacetimeDB.Editor
             checkIdentityReqsToggleIdentityBtn();
         
         /// Toggle newServer btn enabled based on email + nickname being valid
-        private void onServerNicknameFocusOut(FocusOutEvent evt) =>
+        private void onServerNicknameFocusOut(FocusOutEvent evt)
+        {
+            // Check for known aliases
+            string normalizedHost = SpacetimeMeta.GetHostFromKnownServerName(serverNicknameTxt.text);
+            bool isKnownAlias = normalizedHost != serverNicknameTxt.text;
+            if (isKnownAlias)
+            {
+                serverHostTxt.value = normalizedHost;
+                serverHostTxt.isReadOnly = true;
+            }
+            else
+            {
+                serverHostTxt.isReadOnly = false;
+            }
+            
             checkServerReqsToggleServerBtn();
+        }
         
         /// Toggle newIdentity btn enabled based on nickname + email being valid
         private void onIdentityEmailTxtFocusOut(FocusOutEvent evt) =>
@@ -400,7 +438,7 @@ namespace SpacetimeDB.Editor
             checkServerReqsToggleServerBtn();
         
         /// Toggle next section if !null
-        private void onPublishModulePathTxtFocusOut(FocusOutEvent evt)
+        private async void onPublishModulePathTxtFocusOut(FocusOutEvent evt)
         {
             // Prevent inadvertent UI showing too early, frozen on modal file picking
             if (_isFilePicking)
@@ -416,11 +454,11 @@ namespace SpacetimeDB.Editor
                 
                 // Normalize, then reveal the next UI group
                 publishModulePathTxt.value = superTrim(publishModulePathTxt.value);
-                revealPublisherGroupUiAsync();
+                await revealPublisherGroupUiAsync();
             }
             else
             {
-                publishGroupBox.style.display = DisplayStyle.None;
+                hideUi(publishGroupBox);
             }
         }
         
@@ -440,11 +478,6 @@ namespace SpacetimeDB.Editor
             {
                 Debug.LogError($"Error: {e.Message}");
                 throw;
-            }
-            finally
-            {
-                installWasmOptProgressBar.style.display = DisplayStyle.None;
-                publishBtn.SetEnabled(true);
             }
         }
         
@@ -479,11 +512,11 @@ namespace SpacetimeDB.Editor
         /// Toggles the "new server" group UI
         private void onServerAddNewShowUiBtnClick()
         {
-            bool isHidden = serverNewGroupBox.style.display == DisplayStyle.None;
+            bool isHidden = isHiddenUi(serverNewGroupBox);
             if (isHidden)
             {
                 // Show + UX: Focus the 1st field
-                serverNewGroupBox.style.display = DisplayStyle.Flex;
+                showUi(serverNewGroupBox);
                 serverAddNewShowUiBtn.text = SpacetimeMeta.GetStyledStr(
                     SpacetimeMeta.StringStyle.Success, "-"); // Show opposite, styled
                 serverNicknameTxt.Focus();
@@ -492,7 +525,7 @@ namespace SpacetimeDB.Editor
             else
             {
                 // Hide
-                serverNewGroupBox.style.display = DisplayStyle.None;
+                hideUi(serverNewGroupBox);
                 serverAddNewShowUiBtn.text = "+"; // Show opposite
             }
         }
@@ -500,11 +533,11 @@ namespace SpacetimeDB.Editor
         /// Toggles the "new identity" group UI
         private void onIdentityAddNewShowUiBtnClick()
         {
-            bool isHidden = identityNewGroupBox.style.display == DisplayStyle.None;
+            bool isHidden = isHiddenUi(identityNewGroupBox);
             if (isHidden)
             {
                 // Show + UX: Focus the 1st field
-                identityNewGroupBox.style.display = DisplayStyle.Flex;
+                showUi(identityNewGroupBox);
                 identityAddNewShowUiBtn.text = SpacetimeMeta.GetStyledStr(
                     SpacetimeMeta.StringStyle.Success, "-"); // Show opposite, styled
                 identityNicknameTxt.Focus();
@@ -513,13 +546,13 @@ namespace SpacetimeDB.Editor
             else
             {
                 // Hide
-                identityNewGroupBox.style.display = DisplayStyle.None;
+                hideUi(identityNewGroupBox);
                 identityAddNewShowUiBtn.text = "+"; // Show opposite
             }
         }
         
         /// Show folder dialog -> Set path label
-        private void OnPublishPathSetDirectoryBtnClick()
+        private async void OnPublishPathSetDirectoryBtnClick()
         {
             string pathBefore = publishModulePathTxt.value;
             // Show folder panel (modal FolderPicker dialog)
@@ -541,16 +574,21 @@ namespace SpacetimeDB.Editor
 
             // Path changed: set path val + reveal next UI group
             publishModulePathTxt.value = selectedPath;
-            onDirPathSet();
+            await onPublishModulePathSetAsync();
         }
         
         /// Show [Install Package] btn if !optimized
         private void onPublishResultIsOptimizedBuildToggleChanged(ChangeEvent<bool> evt)
         {
             bool isOptimized = evt.newValue;
-            installWasmOptBtn.style.display = isOptimized 
-                ? DisplayStyle.None 
-                : DisplayStyle.Flex;
+            if (isOptimized)
+            {
+                hideUi(installWasmOptBtn);                
+            }
+            else
+            {
+                showUi(installWasmOptBtn);
+            }
         }
         
         private async void onIdentityAddBtnClickAsync()
@@ -592,8 +630,8 @@ namespace SpacetimeDB.Editor
 
             try
             {
-                _cts.Cancel();
-                _cts.Dispose();
+                _publishCts.Cancel();
+                _publishCts.Dispose();
             }
             catch (ObjectDisposedException e)
             {
@@ -601,21 +639,21 @@ namespace SpacetimeDB.Editor
             }
 
             // Hide UI: Progress bar, cancel btn
-            publishInstallProgressBar.style.display = DisplayStyle.None;
-            publishCancelBtn.style.display = DisplayStyle.None;
+            hideUi(publishInstallProgressBar);
+            hideUi(publishCancelBtn);
 
             // Show UI: Canceled status, publish btn
             publishStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error, "Canceled");
-            publishStatusLabel.style.display = DisplayStyle.Flex;
-            publishBtn.style.display = DisplayStyle.Flex;
+            showUi(publishStatusLabel);
+            showUi(publishBtn);
             
             // Slight cooldown, then enable publish btn
             publishBtn.SetEnabled(false);
 
             try
             {
-                await enableVisualElementInOneSec(publishBtn);
+                await WaitEnableElementAsync(publishBtn, TimeSpan.FromSeconds(1));
             }
             catch (Exception e)
             {
@@ -640,43 +678,10 @@ namespace SpacetimeDB.Editor
             }
             finally
             {
-                publishInstallProgressBar.style.display = DisplayStyle.None;
-                _cts?.Dispose();
+                hideUi(publishInstallProgressBar);
+                _publishCts?.Dispose();
             }
         }
         #endregion // Direct UI Callbacks
-
-        private void onAddIdentityFail(SpacetimeIdentity identity, AddIdentityResult addIdentityResult)
-        {
-            identityAddBtn.SetEnabled(true);
-            identityStatusLabel.text = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Error, 
-                $"<b>Failed:</b> Couldn't add identity `{identity.Nickname}`\n" +
-                addIdentityResult.StyledFriendlyErrorMessage);
-                
-            identityStatusLabel.style.display = DisplayStyle.Flex;
-        }
-
-        /// Success: Add to dropdown + set default + show. Hide the [+] add group.
-        /// Don't worry about caching choices; we'll get the new choices via CLI each load
-        private void onAddIdentitySuccess(SpacetimeIdentity identity)
-        {
-            Debug.Log($"Add new identity success: {identity.Nickname}");
-            _ = onGetSetIdentitiesSuccessEnsureDefault(new List<SpacetimeIdentity> { identity });
-        }
-
-        /// Success: Show installed txt, keep button disabled, but don't actually check
-        /// the optimization box since *this* publishAsync is not optimized: Next one will be
-        private void onInstallWasmOptPackageViaNpmSuccess() =>
-            installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Success, "Installed");
-
-        private void onInstallWasmOptPackageViaNpmFail(SpacetimeCliResult cliResult)
-        {
-            installWasmOptBtn.SetEnabled(true);
-            installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Error, 
-                $"<b>Failed:</b> Couldn't install wasm-opt\n{cliResult.CliError}");
-        }
     }
 }

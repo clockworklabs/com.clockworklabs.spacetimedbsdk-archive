@@ -9,9 +9,10 @@
         <ui:ScrollView name="bodyScrollView">
             <ui:Foldout text="&lt;b&gt;Server&lt;/b&gt;" name="serverFoldout" view-data-key="serverFoldout" value="true" style="display: flex; -unity-font-style: normal;">
                 <ui:VisualElement name="serverSelectedHoriz" style="flex-grow: 1; flex-direction: row;">
-                    <ui:DropdownField label="Selected Server" index="-1" choices="System.Collections.Generic.List`1[System.String]" name="serverSelectedDropdown" tooltip="This will change between target server hosts" style="flex-grow: 1;" />
+                    <ui:DropdownField label="Selected Server:" index="-1" choices="System.Collections.Generic.List`1[System.String]" name="serverSelectedDropdown" tooltip="This will change between target server hosts (if localhost, we&apos;ll also ping the local server)" style="flex-grow: 1;" />
                     <ui:Button text="+" parse-escape-sequences="true" display-tooltip-when-elided="true" name="serverAddNewShowUiBtn" tooltip="Add new server" style="flex-grow: 0; flex-shrink: 0; -unity-font-style: bold;" />
                 </ui:VisualElement>
+                <ui:Label tabindex="-1" text="{serverConnectingStatusLabel}" parse-escape-sequences="true" display-tooltip-when-elided="true" name="serverConnectingStatusLabel" style="color: rgb(182, 192, 207); font-size: 12px; -unity-text-align: upper-left; display: flex; white-space: normal; -unity-font-style: normal; margin-left: 3px;" />
                 <ui:GroupBox name="serverNewGroupBox" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;">
                     <ui:TextField picking-mode="Ignore" label="Nickname:" name="serverNicknameTxt" multiline="false" tooltip="Mapped to your server host for convenience" readonly="false" keyboard-type="ASCIICapable" />
                     <ui:TextField picking-mode="Ignore" label="Host:" name="serverHostTxt" multiline="false" tooltip="eg: &quot;http://127.0.0.1:3000&quot; || &quot;https://testnet.spacetimedb.com&quot;" readonly="false" keyboard-type="URL" />
@@ -45,11 +46,15 @@
                     </ui:TextField>
                 </ui:GroupBox>
                 <ui:Foldout text="Advanced" name="publishModuleDebugFoldout" view-data-key="publishModuleDebugFoldout">
-                    <ui:Toggle label="Debug Mode?" name="publishModuleDebugModeToggle" view-data-key="publishModuleDebugModeToggle" tooltip="Appends -" />
+                    <ui:Toggle label="Debug Mode?" name="publishModuleDebugModeToggle" view-data-key="publishModuleDebugModeToggle" tooltip="Appends --debug to add stacktrace symbols          ⚠ For localhost only" />
                     <ui:Toggle label="Clear All Data?" name="publishModuleClearDataToggle" view-data-key="publishModuleClearDataToggle" tooltip="(!) This cannot be undone" />
                 </ui:Foldout>
                 <ui:VisualElement name="spacer10" style="height: 10px;" />
                 <ui:GroupBox name="publishGroupBox" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;">
+                    <ui:VisualElement name="publishLocalBtnsHoriz" style="flex-grow: 1; flex-direction: row;">
+                        <ui:Button text="Start Local Server" parse-escape-sequences="true" display-tooltip-when-elided="true" name="publishStartLocalServerBtn" tooltip="Start localhost server" style="height: 25px; padding-bottom: 2px; flex-grow: 1;" />
+                        <ui:Button text="&lt;color=#FDBE01&gt;Stop Local Server&lt;/color&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="publishStopLocalServerBtn" tooltip="Stop localhost server" style="height: 25px; padding-bottom: 2px; flex-grow: 1;" />
+                    </ui:VisualElement>
                     <ui:Button text="Publish" parse-escape-sequences="true" display-tooltip-when-elided="true" name="publishBtn" tooltip="This will issue a `spacetime publish` using your module name+path" style="height: 50px; -unity-font-style: bold; font-size: 16px; display: flex;" />
                     <ui:Button text="&lt;color=#FDBE01&gt;Cancel&lt;/color&gt;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="publishCancelBtn" tooltip="Stop publishing" style="height: 50px; -unity-font-style: normal; font-size: 16px; display: flex;" />
                     <ui:ProgressBar value="5" title="Publishing ..." name="publishInstallProgressBar" tooltip="Allows for the `spacetime` CLI command" low-value="5" style="display: flex;" />

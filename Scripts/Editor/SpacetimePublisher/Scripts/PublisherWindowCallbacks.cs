@@ -90,7 +90,6 @@ namespace SpacetimeDB.Editor
                 // Add new newIdentity
                 identityAddBtn.clicked += onIdentityAddBtnClickAsync;
             }
-            
             if (publishModulePathTxt != null)
             {
                 // For init only

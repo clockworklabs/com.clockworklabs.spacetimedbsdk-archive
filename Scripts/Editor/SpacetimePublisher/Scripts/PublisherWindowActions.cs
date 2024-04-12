@@ -157,7 +157,10 @@ namespace SpacetimeDB.Editor
             installCliProgressBar.title = "Validating SpacetimeDB CLI Installation ...";
             
             SpacetimeCliResult validateCliResult = await SpacetimeDbCliActions.GetIsSpacetimeCliInstalledAsync();
-            bool isNotRecognizedCmd = validateCliResult.HasCliErr && validateCliResult.CliError.Contains("'spacetime' is not recognized");
+
+            bool isNotRecognizedCmd = validateCliResult.HasCliErr && 
+                SpacetimeDbCli.CheckCmdNotFound(validateCliResult.CliError, expectedCmd: "spacetime");
+            
             if (isNotRecognizedCmd)
             {
                 // This is only a "partial" error: We probably installed, but the env vars didn't refresh
@@ -1012,6 +1015,7 @@ namespace SpacetimeDB.Editor
         private async void onAddIdentitySuccess(SpacetimeIdentity identity)
         {
             Debug.Log($"Add new identity success: {identity.Nickname}");
+            resetPublishResultCache();
             await onGetSetIdentitiesSuccessEnsureDefault(new List<SpacetimeIdentity> { identity });
         }
         
@@ -1090,6 +1094,7 @@ namespace SpacetimeDB.Editor
         private void onAddServerSuccess(SpacetimeServer server)
         {
             Debug.Log($"Add new server success: {server.Nickname}");
+            resetPublishResultCache();
             _ = onGetSetServersSuccessEnsureDefaultAsync(new List<SpacetimeServer> { server });
         }
 

@@ -479,11 +479,6 @@ namespace SpacetimeDB.Editor
                 Debug.LogError($"Error: {e.Message}");
                 throw;
             }
-            finally
-            {
-                hideUi(installWasmOptProgressBar);
-                publishBtn.SetEnabled(true);
-            }
         }
         
         /// Run CLI cmd `spacetime logs`

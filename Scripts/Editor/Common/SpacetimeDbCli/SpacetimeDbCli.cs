@@ -462,6 +462,19 @@ namespace SpacetimeDB.Editor
             // TODO: Mac|Linux needs testing
             return $"lsof -ti:{port} | grep -v '^0$' | xargs -r kill -9";
         }
+
+        /// Cross-platform checks for a command not being found. Examples:
+        /// - Windows: "`npm` is not recognized"
+        /// - Unix: "npm: command not found"
+        public static bool CheckCmdNotFound(string cliErrorStr, string expectedCmd = "")
+        {
+            return Environment.OSVersion.Platform switch
+            {
+                PlatformID.Win32NT => cliErrorStr.Contains($"{expectedCmd}' is not recognized"),
+                PlatformID.Unix => cliErrorStr.Contains($"{expectedCmd}: command not found"),
+                _ => false
+            };
+        }
         #endregion // CLI Utils
     }
 }

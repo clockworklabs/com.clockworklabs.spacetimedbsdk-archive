@@ -1,22 +1,33 @@
 using System;
 using System.Threading.Tasks;
-using UnityEngine;
 
 namespace SpacetimeDB.Editor
 {
     public partial class PublisherWindow
     {
-        private const bool PUBLISH_WINDOW_TESTS = false;
+        private const bool PUBLISH_WINDOW_TESTS = true;
         
-        private void startTest(string funcName)
+        private async Task startTests()
         {
-            Debug.Log($"<color=orange>START {funcName}</color>");
+            if (!PUBLISH_WINDOW_TESTS)
+            {
+                return;
+            }
+
             resetUi();
+            hideUi(serverSelectedDropdown);
+            serverFoldout.text = "PublisherWindowTester.PUBLISH_WINDOW_TESTS";
+            
+            testInstallWasmOpt();
+            _ = testProgressBar();
+            
+            // Stop everything else
+            throw new NotImplementedException($"PublisherWIndowTester done: " +
+                $"Set !{nameof(PUBLISH_WINDOW_TESTS)} to init normally");
         }
         
         private async Task testProgressBar()
         {
-            startTest(nameof(testProgressBar));
             showUi(installCliGroupBox);
             showUi(installCliProgressBar);
             
@@ -27,19 +38,24 @@ namespace SpacetimeDB.Editor
                 valIncreasePerSec: 20,
                 autoHideOnComplete: false);
             
-            // Stop everything else
-            throw new NotImplementedException($"PublisherWIndowTester done: " +
-                $"Set !{nameof(PUBLISH_WINDOW_TESTS)} to init normally");
+
         }
 
-        private async Task startTests()
+        private void testInstallWasmOpt()
         {
-            if (!PUBLISH_WINDOW_TESTS)
-            {
-                return;
-            }
+            showUi(publishResultFoldout);
+            publishResultFoldout.value = true;
             
-            await testProgressBar();
+            hideUi(publishResultDateTimeTxt);
+            hideUi(publishResultHostTxt);
+            hideUi(publishResultDbAddressTxt);
+            hideUi(publishResultIsOptimizedBuildToggle);
+            hideUi(publishResultGenerateClientFilesBtn);
+            hideUi(publishResultGetServerLogsBtn);
+            
+            showUi(installCliGroupBox);
+            showUi(installWasmOptBtn);
+            installWasmOptBtn.SetEnabled(true);
         }
     }
 }

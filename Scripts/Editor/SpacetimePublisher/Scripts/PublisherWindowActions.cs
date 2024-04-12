@@ -839,18 +839,16 @@ namespace SpacetimeDB.Editor
             string[] spinner = { "/", "|", @"\", "|" };
             int spinnerIndex = 0;
 
-            progressBar.title += " " + spinner[spinnerIndex];  // Initialize with the first spinner character
+            // Prepend a spinner to title
+            progressBar.title = $"{spinner[spinnerIndex]} " + progressBar.title;
 
             while (isShowingUi(progressBar))
             {
                 await Task.Delay(TimeSpan.FromSeconds(0.5));
 
-                // Remove the last character
-                progressBar.title = progressBar.title[..^1];
-
-                // Update spinner index to cycle through the spinner array
+                // Replace the 1st character with the next spinner character
+                progressBar.title = spinner[spinnerIndex] + progressBar.title[1..]; 
                 spinnerIndex = (spinnerIndex + 1) % spinner.Length;
-                progressBar.title += spinner[spinnerIndex]; // Add the next spinny char
             }
         }
 
@@ -927,6 +925,7 @@ namespace SpacetimeDB.Editor
 
             // Process result -> Update UI
             bool isSuccess = installWasmResult.IsSuccessfulInstall;
+            onInstallWasmOptPackageViaNpmDone();
             if (isSuccess)
             {
                 onInstallWasmOptPackageViaNpmSuccess();
@@ -936,19 +935,38 @@ namespace SpacetimeDB.Editor
                 onInstallWasmOptPackageViaNpmFail(installWasmResult);
             }
         }
-        
+
+        private void onInstallWasmOptPackageViaNpmDone()
+        {
+            hideUi(installWasmOptProgressBar);
+            publishBtn.SetEnabled(true);
+        }
+
         /// Success: Show installed txt, keep button disabled, but don't actually check
         /// the optimization box since *this* publishAsync is not optimized: Next one will be
-        private void onInstallWasmOptPackageViaNpmSuccess() =>
+        private void onInstallWasmOptPackageViaNpmSuccess()
+        {
             installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Success, "Installed");
+        }
 
-        private void onInstallWasmOptPackageViaNpmFail(SpacetimeCliResult cliResult)
+        private void onInstallWasmOptPackageViaNpmFail(InstallWasmResult installResult)
         {
             installWasmOptBtn.SetEnabled(true);
+            
+            // Caught err?
+            string friendlyErrDetails = "wasm-opt install failed";
+            if (installResult.InstallWasmError == InstallWasmResult.InstallWasmErrorType.NpmNotRecognized)
+            {
+                friendlyErrDetails = "Missing `npm`";
+            }
+            else
+            {
+                
+            }
+
             installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Error, 
-                $"<b>Failed:</b> Couldn't install wasm-opt\n{cliResult.CliError}");
+                SpacetimeMeta.StringStyle.Error, friendlyErrDetails);
         }
 
         /// UI: Disable btn + show installing status to id label

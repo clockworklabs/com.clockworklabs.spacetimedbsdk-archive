@@ -81,6 +81,10 @@ namespace SpacetimeDB.Editor
                 if (cliResult.HasCliErr)
                 {
                     onCliError(cliResult);
+                    if (PublishErrCode != PublishErrorCode.None)
+                    {
+                        Debug.LogError($"PublishResult Error Code: {PublishErrCode}");
+                    }
                 }
 
                 // CLI resulted success, but what about an internal error specific to publisher?

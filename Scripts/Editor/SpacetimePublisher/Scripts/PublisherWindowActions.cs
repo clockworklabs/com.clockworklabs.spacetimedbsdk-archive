@@ -752,10 +752,18 @@ namespace SpacetimeDB.Editor
         private void onPublishFail(PublishResult publishResult)
         {
             _cachedPublishResult = null;
+
+            if (publishResult.PublishErrCode == PublishResult.PublishErrorCode.Dotnet8PlusMissing)
+            {
+                // Launch installation URL + add to err
+                publishResult.StyledFriendlyErrorMessage += ": Launching installation website. Install -> try again";
+                Application.OpenURL("https://dotnet.microsoft.com/en-us/download/dotnet/8.0");
+            }
+            
             updatePublishStatus(
                 SpacetimeMeta.StringStyle.Error, 
                 publishResult.StyledFriendlyErrorMessage 
-                    ?? Utils.ClipString(publishResult.CliError, maxLength: 4000));
+                ?? Utils.ClipString(publishResult.CliError, maxLength: 4000));
         }
         
         /// There may be a false-positive wasm-opt err here; in which case, we'd still run success.

@@ -179,6 +179,7 @@ namespace SpacetimeDB.Editor
                 this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
                     SpacetimeMeta.StringStyle.Error,
                     "Cancelled");
+                this.PublishErrCode = PublishErrorCode.CancelledOperation;
                 return;
             }
             

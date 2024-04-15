@@ -74,24 +74,22 @@ namespace SpacetimeDB.Editor
             : base(cliResult.CliOutput, cliResult.CliError)
         {
             this.Request = request;
-            bool hasOutputErr = CliOutput.Contains("Error:");
 
-            if (cliResult.HasCliErr || hasOutputErr)
+            if (cliResult.HasCliErr)
             {
-                if (cliResult.HasCliErr)
+                onCliError(cliResult);
+                if (PublishErrCode != PublishErrorCode.None)
                 {
-                    onCliError(cliResult);
-                    if (PublishErrCode != PublishErrorCode.None)
-                    {
-                        Debug.LogError($"PublishResult Error Code: {PublishErrCode}");
-                    }
+                    Debug.LogError($"PublishResult Error Code: {PublishErrCode}");
                 }
-
-                // CLI resulted success, but what about an internal error specific to publisher?
-                if (cliResult.CliError.Contains("Error:"))
-                {
-                    onPublisherError(cliResult);
-                }
+            }
+            
+            // CLI resulted success, but what about an internal output error specific to publisher?
+            bool hasOutputErr = CliOutput.Contains("Error:");
+            if (hasOutputErr)
+            {
+                onPublisherError(cliResult);
+                // Continue: Possibly false-positive, such as an optimization error
             }
             
             // "created new database with domain" || "updated database with domain"

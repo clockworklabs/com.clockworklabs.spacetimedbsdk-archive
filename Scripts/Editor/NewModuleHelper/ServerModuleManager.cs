@@ -25,6 +25,15 @@ namespace SpacetimeDB.Editor
 
         private static async Task createNewModule(SpacetimeMeta.ModuleLang lang)
         {
+            if (lang == SpacetimeMeta.ModuleLang.CSharp)
+            {
+                await ensureCsharpModulePrereqs();
+            }
+            else if (lang == SpacetimeMeta.ModuleLang.Rust)
+            {
+                // await ensureRustModulePrereqs(); // TODO
+            }
+            
             // Create a directory picker, defaulting to the project's root
             string projectRoot = Application.dataPath.Replace("/Assets", "");
             
@@ -37,7 +46,7 @@ namespace SpacetimeDB.Editor
                 return;
             }
             
-            SpacetimeCliResult cliResult = await SpacetimeDbCliActions.CreateNewServerModule(lang, initProjDirPath);
+            SpacetimeCliResult cliResult = await SpacetimeDbCliActions.CreateNewServerModuleAsync(lang, initProjDirPath);
             
             if (cliResult.HasCliErr)
             {
@@ -79,6 +88,20 @@ namespace SpacetimeDB.Editor
             };
             
             SpacetimePopupWindow.ShowWindow(opts);
+        }
+
+        /// Ensures `wasi-experimental` workload is installed via `dotnet`
+        private static async Task ensureCsharpModulePrereqs()
+        {
+            CheckHasWasiWorkloadResult hasWasiWorkloadResult = await SpacetimeDbCliActions.CheckHasWasiExperimentalWorkload();
+            bool hasWasiWorkload = hasWasiWorkloadResult.HasWasiWorkload;
+            if (hasWasiWorkload)
+            {
+                return;
+            }
+            
+            // Install wasi workload (requires .NET 8)
+            Debug.Log("<b>Installing dotnet `wasi-experimental` workload ...</b>");
         }
 
         /// Open explorer to the project directory

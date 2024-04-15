@@ -125,12 +125,23 @@ namespace SpacetimeDB.Editor
         }
         
         /// Uses the `spacetime init` CLI command.
-        public static async Task<SpacetimeCliResult> CreateNewServerModule(SpacetimeMeta.ModuleLang lang, string initProjDirPath)
+        public static async Task<SpacetimeCliResult> CreateNewServerModuleAsync(
+            SpacetimeMeta.ModuleLang lang, 
+            string initProjDirPath)
         {
             string langArg = lang.ToString().ToLowerInvariant();
             string argSuffix = $"spacetime init --lang {langArg} {initProjDirPath}";
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
             return cliResult;
+        }
+        
+        /// Uses the `dotnet workload list` CLI command.
+        public static async Task<CheckHasWasiWorkloadResult> CheckHasWasiExperimentalWorkloadAsync()
+        {
+            const string argSuffix = "dotnet workload list";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
+            CheckHasWasiWorkloadResult checkHasWasiWorkloadResult = new(cliResult);
+            return checkHasWasiWorkloadResult;        
         }
         #endregion // High Level CLI Actions
         

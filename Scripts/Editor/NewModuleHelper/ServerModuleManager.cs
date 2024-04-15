@@ -93,15 +93,23 @@ namespace SpacetimeDB.Editor
         /// Ensures `wasi-experimental` workload is installed via `dotnet`
         private static async Task ensureCsharpModulePrereqs()
         {
-            CheckHasWasiWorkloadResult hasWasiWorkloadResult = await SpacetimeDbCliActions.CheckHasWasiExperimentalWorkload();
+            CheckHasWasiWorkloadResult hasWasiWorkloadResult = await SpacetimeDbCliActions.CheckHasWasiExperimentalWorkloadAsync();
             bool hasWasiWorkload = hasWasiWorkloadResult.HasWasiWorkload;
             if (hasWasiWorkload)
             {
                 return;
             }
             
-            // Install wasi workload (requires .NET 8)
+            // !has wasi workload -- 1st check for .NET 8+
             Debug.Log("<b>Installing dotnet `wasi-experimental` workload ...</b>");
+            CheckHasDotnet8PlusResult hasDotnet8PlusResult = await SpacetimeDbCliActions.CheckHasDotnet8PlusAsync();
+            bool hasDotnet8Plus = hasDotnet8PlusResult.HasDotnet8Plus;
+            if (!hasDotnet8Plus)
+            {
+                throw new NotImplementedException("TODO: .NET 8+ is required to install the `wasi-experimental` workload");
+            }
+            
+            throw new NotImplementedException("TODO: Install `wasi-experimental` workload");
         }
 
         /// Open explorer to the project directory

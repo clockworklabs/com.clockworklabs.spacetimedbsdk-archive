@@ -143,6 +143,15 @@ namespace SpacetimeDB.Editor
             CheckHasWasiWorkloadResult checkHasWasiWorkloadResult = new(cliResult);
             return checkHasWasiWorkloadResult;        
         }
+        
+        /// Uses the `dotnet --version` CLI command.
+        public static async Task<CheckHasDotnet8PlusResult> CheckHasDotnet8PlusAsync()
+        {
+            const string argSuffix = "dotnet --version";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
+            CheckHasDotnet8PlusResult checkHasDotnet8PlusResult = new(cliResult);
+            return checkHasDotnet8PlusResult;        
+        }
         #endregion // High Level CLI Actions
         
         

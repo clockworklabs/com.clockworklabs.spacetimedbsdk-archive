@@ -52,7 +52,7 @@ namespace SpacetimeDB.Editor
         public PublishErrorCode PublishErrCode { get; private set; }
         
         /// You may pass this raw string to the UI, if a known err is caught
-        public string StyledFriendlyErrorMessage { get; private set; }
+        public string StyledFriendlyErrorMessage { get; set; }
         
         /// (!) These may be lesser warnings. For a true indicator of success, check `IsSuccessfulPublish` 
         public bool HasPublishErr => PublishErrCode != PublishErrorCode.None;
@@ -64,6 +64,7 @@ namespace SpacetimeDB.Editor
             OS10061_ServerHostNotRunning,
             DBUpdateRejected_PermissionDenied,
             CancelledOperation,
+            Dotnet8PlusMissing,
             UnknownError,
         }
         #endregion // Errs
@@ -175,10 +176,20 @@ namespace SpacetimeDB.Editor
             bool isCancelled = cliResult.CliError == "Canceled";
             if (isCancelled)
             {
-                this.PublishErrCode = PublishErrorCode.UnknownError;
+                this.PublishErrCode = PublishErrorCode.CancelledOperation;
                 this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
                     SpacetimeMeta.StringStyle.Error,
                     "Cancelled");
+                return;
+            }
+            
+            bool isDotnet8PlusMissingErr = cliResult.CliError.Contains("Please install .NET");
+            if (isDotnet8PlusMissingErr)
+            {
+                this.PublishErrCode = PublishErrorCode.Dotnet8PlusMissing;
+                this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
+                    SpacetimeMeta.StringStyle.Error,
+                    "<b>Failed:</b> .NET 8+ SDK not found");
                 return;
             }
             

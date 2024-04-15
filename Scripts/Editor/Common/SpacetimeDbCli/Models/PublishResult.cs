@@ -175,10 +175,11 @@ namespace SpacetimeDB.Editor
             bool isCancelled = cliResult.CliError == "Canceled";
             if (isCancelled)
             {
-                this.PublishErrCode = PublishErrorCode.UnknownError;
+                this.PublishErrCode = PublishErrorCode.CancelledOperation;
                 this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
                     SpacetimeMeta.StringStyle.Error,
                     "Cancelled");
+                this.PublishErrCode = PublishErrorCode.CancelledOperation;
                 return;
             }
             

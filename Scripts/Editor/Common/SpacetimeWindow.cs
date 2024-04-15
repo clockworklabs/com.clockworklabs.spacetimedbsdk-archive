@@ -2,7 +2,9 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.UIElements;
+using Debug = UnityEngine.Debug;
 
 namespace SpacetimeDB.Editor
 {
@@ -96,6 +98,13 @@ namespace SpacetimeDB.Editor
             {
                 Process.Start("xdg-open", pathToDir);
             }
+        }
+        
+        /// Copies to clipboard + logs
+        public static void CopyToClipboard(string str)
+        {
+            GUIUtility.systemCopyBuffer = str;
+            Debug.Log($"Copied to clipboard: {str}");
         }
     }
 }

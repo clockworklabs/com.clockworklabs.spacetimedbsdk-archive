@@ -28,8 +28,15 @@ namespace SpacetimeDB.Editor
         /// Set @ OnGUI
         public class GuiOpts
         {
-            public string body = "Some body text";
-            public PrefixBodyIcon prefixBodyIcon = PrefixBodyIcon.None;
+            /// Shows a small icon before Body
+            public PrefixBodyIcon PrefixBodyIcon = PrefixBodyIcon.None;
+            
+            public string Body = "Some body text";
+            
+            /// Great for showing code snippets; best to put a copy btn after it
+            public string readonlyBlockAfterBody = null;
+            
+            /// Shows at bottom
             public Dictionary<string, Action> ButtonNameActionDict = new();
         }
 
@@ -68,11 +75,28 @@ namespace SpacetimeDB.Editor
 
             // Create GUIContent for both text and optional icon
             Texture prefixStatusIcon = getIconTexture();
-            GUIContent content = new GUIContent(_guiOpts.body, prefixStatusIcon);
+            GUIContent content = new GUIContent(_guiOpts.Body, prefixStatusIcon);
 
             // Display the label with the icon
             EditorGUILayout.LabelField(content, centeredStyle);
             
+            // Create copyable text
+            if (_guiOpts.readonlyBlockAfterBody != null)
+            {
+                // Calculate the height based on text length
+                GUIStyle textStyle = GUI.skin.textArea;
+                float width = position.width - 20;
+                Vector2 textSize = textStyle.CalcSize(new GUIContent(_guiOpts.readonlyBlockAfterBody));
+
+                // Estimate lines based on width and calculate height
+                int lines = Mathf.Max(1, (int)(textSize.x / width) + 1);
+                float height = lines * textStyle.lineHeight + 10; // Add some padding
+
+                EditorGUI.BeginDisabledGroup(true);
+                EditorGUILayout.TextArea(_guiOpts.readonlyBlockAfterBody, GUILayout.Height(height)); // Adjust height as needed
+                EditorGUI.EndDisabledGroup();
+            }
+
             // Create buttons; on click, call Action
             foreach (KeyValuePair<string, Action> kvp in _guiOpts.ButtonNameActionDict)
             {
@@ -85,17 +109,44 @@ namespace SpacetimeDB.Editor
 
         private Texture getIconTexture()
         {
-            if (_guiOpts.prefixBodyIcon == PrefixBodyIcon.SuccessCircle)
+            if (_guiOpts.PrefixBodyIcon == PrefixBodyIcon.SuccessCircle)
             {
                 return EditorGUIUtility.IconContent("d_winbtn_mac_max").image;
             }
             
-            if (_guiOpts.prefixBodyIcon == PrefixBodyIcon.ErrorCircle)
+            if (_guiOpts.PrefixBodyIcon == PrefixBodyIcon.ErrorCircle)
             {
                 return EditorGUIUtility.IconContent("d_winbtn_mac_close").image;
             }
             
             return null;
+        }
+        
+        // [MenuItem("Window/SpacetimeDB/Test/testPopupWindow %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
+        private static void testPopupWindow()
+        {
+            // Create buttons
+            const string openExplorerBtnStr = "Test btn 1";
+            const string openProjBtnStr = "Test btn 3";
+            Dictionary<string, Action> btnNameActionDict = new()
+            {
+                { openExplorerBtnStr, () => Debug.Log($"Clicked {openExplorerBtnStr}") },
+                { openProjBtnStr, () => Debug.Log($"Clicked {openProjBtnStr}") },
+            };
+
+            ShowWindowOpts opts = new()
+            {
+                title = "Some title",
+                Body = "Some success body",
+                PrefixBodyIcon = PrefixBodyIcon.SuccessCircle,
+                Width = 250,
+                Height = 100,
+                isModal = true,
+                ButtonNameActionDict = btnNameActionDict,
+                readonlyBlockAfterBody = "This is readonly, copyable text",
+            };
+            
+            ShowWindow(opts);
         }
     }
 }

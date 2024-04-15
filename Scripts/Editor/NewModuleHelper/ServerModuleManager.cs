@@ -79,8 +79,8 @@ namespace SpacetimeDB.Editor
             SpacetimePopupWindow.ShowWindowOpts opts = new()
             {
                 title = "Server Module Created",
-                body = "Success:",
-                prefixBodyIcon = SpacetimePopupWindow.PrefixBodyIcon.SuccessCircle,
+                Body = "Success:",
+                PrefixBodyIcon = SpacetimePopupWindow.PrefixBodyIcon.SuccessCircle,
                 Width = 250,
                 Height = 100,
                 isModal = true,
@@ -106,10 +106,62 @@ namespace SpacetimeDB.Editor
             bool hasDotnet8Plus = hasDotnet8PlusResult.HasDotnet8Plus;
             if (!hasDotnet8Plus)
             {
-                throw new NotImplementedException("TODO: .NET 8+ is required to install the `wasi-experimental` workload");
+                showInstallDotnet8PlusWindow();
+                throw new Exception("dotnet 8+ is required for `wasi-experimental` workload (SpacetimeDB Server Module)");
             }
             
-            throw new NotImplementedException("TODO: Install `wasi-experimental` workload");
+            // Install `wasi-experimental` workload: Requires admin, so we show a copy+paste cmd
+            showInstallWasiWorkloadWindow();
+        }
+
+        /// Show modal editor popup error message with a command to copy to terminal
+        // [MenuItem("Window/SpacetimeDB/Test/showInstallWasiWorkloadWindow %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
+        private static void showInstallWasiWorkloadWindow()
+        {
+            const string copyBtnStr = "Copy";
+            const string cmd = "dotnet workload install wasm-experimental";
+            Dictionary<string, Action> btnNameActionDict = new()
+            {
+                { copyBtnStr, () => SpacetimeWindow.CopyToClipboard(cmd) },
+            };
+            
+            SpacetimePopupWindow.ShowWindowOpts opts = new()
+            {
+                title = "dotnet workload missing",
+                Body = "Missing Prerequisite - copy to admin terminal:",
+                readonlyBlockAfterBody = "dotnet workload install wasm-experimental",
+                PrefixBodyIcon = SpacetimePopupWindow.PrefixBodyIcon.ErrorCircle,
+                Width = 350,
+                Height = 100,
+                isModal = true,
+                ButtonNameActionDict = btnNameActionDict,
+            };
+            
+            SpacetimePopupWindow.ShowWindow(opts);
+        }
+
+        /// Show modal editor popup error message with an [Install .NET 8+ (Website)] button
+        // [MenuItem("Window/SpacetimeDB/Test/showInstallDotnet8PlusWindow %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
+        private static void showInstallDotnet8PlusWindow()
+        {
+            const string installDotnetBtnStr = "Install .NET 8+ (Website)";
+            Dictionary<string, Action> btnNameActionDict = new()
+            {
+                { installDotnetBtnStr, () => Application.OpenURL("https://dotnet.microsoft.com/download") },
+            };
+            
+            SpacetimePopupWindow.ShowWindowOpts opts = new()
+            {
+                title = "dotnet 8+ Required",
+                Body = "Missing Prerequisite",
+                PrefixBodyIcon = SpacetimePopupWindow.PrefixBodyIcon.ErrorCircle,
+                Width = 250,
+                Height = 70,
+                isModal = true,
+                ButtonNameActionDict = btnNameActionDict,
+            };
+            
+            SpacetimePopupWindow.ShowWindow(opts);
         }
 
         /// Open explorer to the project directory

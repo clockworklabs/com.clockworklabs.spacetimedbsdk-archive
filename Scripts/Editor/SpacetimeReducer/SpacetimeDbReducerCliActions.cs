@@ -4,8 +4,9 @@ namespace SpacetimeDB.Editor
 {
     /// CLI action middleware between ReducerWindow and SpacetimeDbCli 
     /// Vanilla: Do the action -> return the result -> no more.
-    /// (!) Didn't find what you were looking for here? Check `SpacetimeDbCli.cs`
-    public static class SpacetimeDbReducerCli
+    /// (!) Didn't find what you were looking for here? Check
+    /// `SpacetimeDbCliActions.cs` || `SpacetimeDbPublisherCliActions.cs`
+    public static class SpacetimeDbReducerCliActions
     {
         #region High Level CLI Actions
         /// Uses the `spacetime call` CLI command

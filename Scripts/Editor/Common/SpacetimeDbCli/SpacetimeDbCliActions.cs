@@ -125,14 +125,15 @@ namespace SpacetimeDB.Editor
         }
         
         /// Uses the `spacetime init` CLI command.
-        public static async Task<SpacetimeCliResult> CreateNewServerModuleAsync(
+        public static async Task<CreateNewServerModuleResult> CreateNewServerModuleAsync(
             SpacetimeMeta.ModuleLang lang, 
             string initProjDirPath)
         {
             string langArg = lang.ToString().ToLowerInvariant();
             string argSuffix = $"spacetime init --lang {langArg} {initProjDirPath}";
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            return cliResult;
+            CreateNewServerModuleResult createNewServerModuleResult = new(cliResult);
+            return createNewServerModuleResult;
         }
         
         /// Uses the `dotnet workload list` CLI command.

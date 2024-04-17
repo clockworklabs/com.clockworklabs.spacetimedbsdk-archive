@@ -12,6 +12,8 @@ namespace SpacetimeDB.Editor
     /// - Vanilla: Do the action -> return the result -> no more.
     /// - Technically anything here accepts a CancellationToken; just add to arg + pass along!
     /// - (!) Looking for more actions? See `SpacetimeDbPublisherCli.cs`
+    /// - (!) Looking for publisher actions? See `SpacetimePublisherActionsCli.cs`
+    /// - (!) Looking for reducers actions? See `SpacetimeReducerActionsCli.cs`
     public static class SpacetimeDbCli
     {
         #region Static state/opts

@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Debug = UnityEngine.Debug;
@@ -81,24 +82,6 @@ namespace SpacetimeDB.Editor
             element.resolvedStyle.display == DisplayStyle.Flex ||
             element.resolvedStyle.opacity >= 1 ||
             element.visible;
-        
-        /// Cross-platform
-        public static void OpenDirectoryWindow(string pathToDir)
-        {
-            // Open the folder based on the operating system
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Process.Start("explorer.exe", pathToDir);
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                Process.Start("open", pathToDir);
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                Process.Start("xdg-open", pathToDir);
-            }
-        }
         
         /// Copies to clipboard + logs
         public static void CopyToClipboard(string str)

@@ -55,13 +55,21 @@ namespace SpacetimeDB.Editor
                 height: opts.Height);
             
             // Make the window modal
-            if (opts.isModal)
+            try
             {
-                window.ShowModalUtility();
+                if (opts.isModal)
+                {
+                    window.ShowModalUtility();
+                }
+                else
+                {
+                    window.ShowUtility();
+                }
             }
-            else
+            catch (Exception e)
             {
-                window.ShowUtility();
+                Debug.LogError(e.Message);
+                throw;
             }
         }
         

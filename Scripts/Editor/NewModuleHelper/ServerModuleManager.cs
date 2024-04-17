@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
+using System.IO;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
@@ -11,6 +10,9 @@ namespace SpacetimeDB.Editor
 {
     public static class ServerModuleManager
     {
+        const string OPEN_EXPLORER_BTN_STR = "Open Folder";
+        
+
         [MenuItem("Window/SpacetimeDB/New Server Module/C# %#&p")] // CTRL+SHIFT+ALT+P
         public static async void CreateNewCsModule()
         {
@@ -25,14 +27,18 @@ namespace SpacetimeDB.Editor
 
         private static async Task createNewModule(SpacetimeMeta.ModuleLang lang)
         {
+            // #################################################################
+            // - For C: `.NET 8` + wasm-experimental workload is required
+            // - For Rust: Cargo is required (which may require VS build tools?)
+            // #################################################################
             if (lang == SpacetimeMeta.ModuleLang.CSharp)
             {
                 await ensureCsharpModulePrereqs();
             }
-            else if (lang == SpacetimeMeta.ModuleLang.Rust)
-            {
-                // await ensureRustModulePrereqs(); // TODO
-            }
+            // else if (lang == SpacetimeMeta.ModuleLang.Rust)
+            // {
+            //     await ensureRustModulePrereqs(); // We only need cargo, caught later
+            // }
             
             // Create a directory picker, defaulting to the project's root
             string projectRoot = Application.dataPath.Replace("/Assets", "");
@@ -46,48 +52,43 @@ namespace SpacetimeDB.Editor
                 return;
             }
             
-            SpacetimeCliResult cliResult = await SpacetimeDbCliActions.CreateNewServerModuleAsync(lang, initProjDirPath);
+            CreateNewServerModuleResult createNewServerModuleResult = await SpacetimeDbCliActions
+                .CreateNewServerModuleAsync(lang, initProjDirPath);
             
-            if (cliResult.HasCliErr)
+            if (createNewServerModuleResult.HasCliErr)
             {
-                string errMsg = $"Error creating new SpacetimeDB Server Module at {initProjDirPath}:\n\n{cliResult.CliError}";
+                string errMsg = "Error creating new SpacetimeDB Server Module at " +
+                    $"{initProjDirPath}:\n\n{createNewServerModuleResult.CliError}";
                 Debug.LogError(errMsg);
                 
                 // Show modal editor popup error message with a [Close] button
                 return;
             }
+
+            string bodyStr = "Success";
             
-            // Create a cancellable success window with 2 buttons: [Open Project] [Open in Explorer]
-            string successMsg = $"Successfully created new SpacetimeDB Server Module at {initProjDirPath}";
-            Debug.Log(successMsg);
+            // Log -> Create a cancellable success window with 2 buttons: [Open Project] [Open in Explorer]
+            Debug.Log($"Successfully created new SpacetimeDB Server Module at {initProjDirPath}");
             
             // Create buttons
             const string openExplorerBtnStr = "Open in Explorer";
-            const string openProjBtnStr = "Open Project";
             Dictionary<string, Action> btnNameActionDict = new()
             {
                 { openExplorerBtnStr, () => onOpenExplorerBtnClick(lang, initProjDirPath) },
-                // { openProjBtnStr, () => onOpenProjBtnClick(lang, initProjDirPath) }, // TODO
             };
-            
-            // ###############################################################
-            // TODO:
-            // - For C: `.NET 8` + wasm-experimental workload is required
-            // - For Rust: Cargo is required 
-            // ###############################################################
-            
-            SpacetimePopupWindow.ShowWindowOpts opts = new()
+
+            if (!createNewServerModuleResult.HasCargo)
             {
-                title = "Server Module Created",
-                Body = "Success:",
-                PrefixBodyIcon = SpacetimePopupWindow.PrefixBodyIcon.SuccessCircle,
-                Width = 250,
-                Height = 100,
-                isModal = true,
-                ButtonNameActionDict = btnNameActionDict,
-            };
+                Debug.Log("Warning: Missing Rust's `cargo` project/package manager. " + 
+                    "Install @ https://www.rust-lang.org/tools/install");
+                
+                const string installCargoBtnStr = "Install Cargo (Website)";
+                btnNameActionDict.Add(installCargoBtnStr, () => Application.OpenURL(SpacetimeMeta.INSTALL_CARGO_URL));
+
+                bodyStr += " (but missing `cargo`)";
+            }
             
-            SpacetimePopupWindow.ShowWindow(opts);
+            showInitServerModuleSuccessWindow(bodyStr, btnNameActionDict);
         }
 
         /// Ensures `wasi-experimental` workload is installed via `dotnet`
@@ -114,24 +115,34 @@ namespace SpacetimeDB.Editor
             showInstallWasiWorkloadWindow();
         }
 
-        /// Show modal editor popup error message with a command to copy to terminal
-        // [MenuItem("Window/SpacetimeDB/Test/showInstallWasiWorkloadWindow %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
-        private static void showInstallWasiWorkloadWindow()
+        /// Open explorer to the project directory + focus the proj fileplorer
+        private static void onOpenExplorerBtnClick(
+            SpacetimeMeta.ModuleLang lang, 
+            string initProjPathToProjDir)
         {
-            const string copyBtnStr = "Copy";
-            const string cmd = "dotnet workload install wasm-experimental";
-            Dictionary<string, Action> btnNameActionDict = new()
+            string fileName = lang switch
             {
-                { copyBtnStr, () => SpacetimeWindow.CopyToClipboard(cmd) },
+                SpacetimeMeta.ModuleLang.CSharp => SpacetimeMeta.DEFAULT_CS_MODULE_PROJ_FILE,
+                SpacetimeMeta.ModuleLang.Rust => SpacetimeMeta.DEFAULT_RUST_MODULE_PROJ_FILE,
+                _ => throw new ArgumentOutOfRangeException()
             };
             
+            string pathToProjFile = Path.Join(initProjPathToProjDir, fileName);
+            EditorUtility.RevealInFinder(pathToProjFile);
+        }
+        
+        
+        #region Show Windows
+        private static void showInitServerModuleSuccessWindow(
+            string bodyStr = "Success", 
+            Dictionary<string, Action> btnNameActionDict = null)
+        {
             SpacetimePopupWindow.ShowWindowOpts opts = new()
             {
-                title = "dotnet workload missing",
-                Body = "Missing Prerequisite - copy to admin terminal:",
-                readonlyBlockAfterBody = "dotnet workload install wasm-experimental",
-                PrefixBodyIcon = SpacetimePopupWindow.PrefixBodyIcon.ErrorCircle,
-                Width = 350,
+                title = "Server Module Created",
+                Body = bodyStr, // "Success [(but missing `cargo`)]"
+                PrefixBodyIcon = SpacetimePopupWindow.PrefixBodyIcon.SuccessCircle,
+                Width = 250,
                 Height = 100,
                 isModal = true,
                 ButtonNameActionDict = btnNameActionDict,
@@ -139,7 +150,7 @@ namespace SpacetimeDB.Editor
             
             SpacetimePopupWindow.ShowWindow(opts);
         }
-
+        
         /// Show modal editor popup error message with an [Install .NET 8+ (Website)] button
         // [MenuItem("Window/SpacetimeDB/Test/showInstallDotnet8PlusWindow %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
         private static void showInstallDotnet8PlusWindow()
@@ -163,25 +174,64 @@ namespace SpacetimeDB.Editor
             
             SpacetimePopupWindow.ShowWindow(opts);
         }
-
-        /// Open explorer to the project directory
-        private static void onOpenExplorerBtnClick(SpacetimeMeta.ModuleLang lang, string initProjDirPath) =>
-            SpacetimeWindow.OpenDirectoryWindow(initProjDirPath);
-
-        private static void onOpenProjBtnClick(SpacetimeMeta.ModuleLang lang, string initProjDirPath)
+        
+        /// Show modal editor popup error message with a command to copy to terminal
+        // [MenuItem("Window/SpacetimeDB/Test/showInstallWasiWorkloadWindow %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
+        private static void showInstallWasiWorkloadWindow()
         {
-            // c#: open SpacetimeMeta.DEFAULT_CS_MODULE_PROJ_FILE
-            // rust: open SpacetimeMeta.DEFAULT_RUST_MODULE_PROJ_FILE
-            string projFilePath = lang switch
+            const string cmdToCopy = "dotnet workload install wasm-experimental";
+            Dictionary<string, Action> btnNameActionDict = new()
             {
-                SpacetimeMeta.ModuleLang.CSharp => SpacetimeMeta.DEFAULT_CS_MODULE_PROJ_FILE,
-                SpacetimeMeta.ModuleLang.Rust => SpacetimeMeta.DEFAULT_RUST_MODULE_PROJ_FILE,
-                _ => throw new ArgumentOutOfRangeException()
+                { "Copy", () => GUIUtility.systemCopyBuffer = cmdToCopy },
             };
             
-            // Open that file
-            string projFileFullPath = $"{initProjDirPath}/{projFilePath}";
-            throw new NotImplementedException("TODO: Open project");
+            SpacetimePopupWindow.ShowWindowOpts opts = new()
+            {
+                title = "dotnet workload missing",
+                Body = "Missing Prerequisite - copy to admin terminal:",
+                readonlyBlockAfterBody = "dotnet workload install wasm-experimental",
+                PrefixBodyIcon = SpacetimePopupWindow.PrefixBodyIcon.ErrorCircle,
+                Width = 350,
+                Height = 100,
+                isModal = true,
+                ButtonNameActionDict = btnNameActionDict,
+            };
+            
+            SpacetimePopupWindow.ShowWindow(opts);
         }
+        #endregion // Show Windows
+        
+        
+        #region Tests
+        // [MenuItem("Window/SpacetimeDB/Test/testShowInitModuleSuccessWindow %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
+        private static void testShowInitModuleSuccessWindow()
+        {
+            const string initProjPath = "%USERPROFILE/temp/stdbMod"; // << Set test path here
+
+            // Create buttons
+            Dictionary<string, Action> btnNameActionDict = new()
+            {
+                { OPEN_EXPLORER_BTN_STR, () => onOpenExplorerBtnClick(SpacetimeMeta.ModuleLang.Rust, initProjPath) },
+            };
+            
+            showInitServerModuleSuccessWindow("Success", btnNameActionDict);
+        }
+        
+        [MenuItem("Window/SpacetimeDB/Test/testShowInitModuleSuccessButNoCargoWindow %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
+        private static void testShowInitModuleSuccessButNoCargoWindow()
+        {
+            const string initProjPath = "%USERPROFILE/temp/stdbMod"; // << Set test path here
+
+            // Create buttons
+            const string installCargoBtnStr = "Install Cargo (Website)";
+            Dictionary<string, Action> btnNameActionDict = new()
+            {
+                { installCargoBtnStr, () => Application.OpenURL(SpacetimeMeta.INSTALL_CARGO_URL) },
+                { OPEN_EXPLORER_BTN_STR, () => onOpenExplorerBtnClick(SpacetimeMeta.ModuleLang.Rust, initProjPath) },
+            };
+            
+            showInitServerModuleSuccessWindow("Success (but missing `cargo`)", btnNameActionDict);
+        }
+        #endregion // Tests
     }
 }

@@ -2,6 +2,7 @@
 public static class SpacetimeMeta
 {
     #region Names & Paths
+    public static string INSTALL_CARGO_URL = "https://www.rust-lang.org/tools/install";
     public const string DEFAULT_RUST_MODULE_PROJ_FILE = "Cargo.toml";
     public const string DEFAULT_CS_MODULE_PROJ_FILE = "StdbModule.csproj";
     

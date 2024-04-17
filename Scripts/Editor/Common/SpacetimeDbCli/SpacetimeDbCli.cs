@@ -33,7 +33,8 @@ namespace SpacetimeDB.Editor
         
         #region Init
         /// Install the SpacetimeDB CLI | https://spacetimedb.com/install
-        /// After installed, the default server is `local` 
+        /// After installed, the default server is normally `local`, but there's a pre-approved open PR
+        /// to change the default to `testnet` soon: https://github.com/clockworklabs/SpacetimeDB/pull/1078 
         public static async Task<InstallSpacetimeDbCliResult> InstallSpacetimeCliAsync()
         {
             if (CLI_LOG_LEVEL == CliLogLevel.Info)

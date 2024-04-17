@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Debug = UnityEngine.Debug;
@@ -9,6 +10,41 @@ namespace SpacetimeDB.Editor
     /// Common static utils class for a SpacetimeWindow editor tool
     public static class SpacetimeWindow
     {
+        /// If missing, install SpacetimeDB CLI
+        public static async Task EnsureHasSpacetimeDbCli()
+        {
+            SpacetimeCliResult cliResult = await SpacetimeDbCliActions.GetIsSpacetimeCliInstalledAsync();
+            
+            bool isInstalled = !cliResult.HasCliErr;
+            if (isInstalled)
+            {
+                return;
+            }
+            
+            // Not yet installed >>
+            await InstallSpacetimeDbCliShowModalProgressBarAsync();
+        }
+        
+        /// If you're installing outside of the Publisher tool, use this
+        public static async Task InstallSpacetimeDbCliShowModalProgressBarAsync()
+        {
+            string title = "Installing SpacetimeDB CLI ...";
+            EditorUtility.DisplayProgressBar(title, "ETA < 30s", 1f);
+
+            try
+            {
+                await SpacetimeDbCli.InstallSpacetimeCliAsync();
+            }
+            catch (Exception e)
+            {
+                throw; // Already logged @ inner
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+        }
+        
         public static string ReplaceSpacesWithDashes(string str) =>
             str?.Replace(" ", "-");
         

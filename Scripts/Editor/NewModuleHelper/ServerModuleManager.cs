@@ -27,18 +27,20 @@ namespace SpacetimeDB.Editor
 
         private static async Task createNewModule(SpacetimeMeta.ModuleLang lang)
         {
-            // #################################################################
-            // - For C: `.NET 8` + wasm-experimental workload is required
-            // - For Rust: Cargo is required (which may require VS build tools?)
-            // #################################################################
+            await SpacetimeWindow.EnsureHasSpacetimeDbCli();
+            
+            // ###################################################################
+            // - For C: `.NET 8` + `wasm-experimental` workload is required
+            // - For Rust: `cargo` is required (which may require VS build tools?)
+            // ###################################################################
             if (lang == SpacetimeMeta.ModuleLang.CSharp)
             {
                 await ensureCsharpModulePrereqs();
             }
-            // else if (lang == SpacetimeMeta.ModuleLang.Rust)
-            // {
-            //     await ensureRustModulePrereqs(); // We only need cargo, caught later
-            // }
+            else if (lang == SpacetimeMeta.ModuleLang.Rust)
+            {
+                // `cargo` isn't required to init, but we'll tell the user later if missing
+            }
             
             // Create a directory picker, defaulting to the project's root
             string projectRoot = Application.dataPath.Replace("/Assets", "");
@@ -242,6 +244,10 @@ namespace SpacetimeDB.Editor
         // [MenuItem("Window/SpacetimeDB/Test/testShowInitModuleCsharpFail %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
         private static void testShowInitModuleCsharpFail() =>
             showInstallDotnet8PlusWasiWindow();
+        
+        [MenuItem("Window/SpacetimeDB/Test/testPopupWindow %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
+        private static async void testInstallSpacetimeDbCliShowModalProgressBarAsync() =>
+            await SpacetimeWindow.InstallSpacetimeDbCliShowModalProgressBarAsync();
         #endregion // Tests
     }
 }

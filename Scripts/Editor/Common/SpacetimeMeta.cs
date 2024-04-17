@@ -3,6 +3,8 @@ public static class SpacetimeMeta
 {
     #region Names & Paths
     public static string INSTALL_CARGO_URL = "https://www.rust-lang.org/tools/install";
+    public static string DOTNET_8PLUS_URL = "https://dotnet.microsoft.com/download";
+    public static string DOTNET_INSTALL_WASM_CMD = "dotnet workload install wasm-experimental";
     public const string DEFAULT_RUST_MODULE_PROJ_FILE = "Cargo.toml";
     public const string DEFAULT_CS_MODULE_PROJ_FILE = "StdbModule.csproj";
     

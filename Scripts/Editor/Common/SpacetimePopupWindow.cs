@@ -34,10 +34,17 @@ namespace SpacetimeDB.Editor
             public string Body = "Some body text";
             
             /// Great for showing code snippets; best to put a copy btn after it
-            public string readonlyBlockAfterBody = null;
+            /// (Unity won't allow readonly+copyable); Unlocks ReadonlyBlockBeforeBtns:bool.
+            public string ReadonlyBlockAfterBody = null;
+
+            /// Default: Before btns, else goes after
+            public bool ReadonlyBlockBeforeBtns = true;
             
             /// Shows at bottom
             public Dictionary<string, Action> ButtonNameActionDict = new();
+
+            /// Default: Align middle left
+            public bool AlignMiddleCenter = false;
         }
 
         public static void ShowWindow(ShowWindowOpts opts)
@@ -76,33 +83,31 @@ namespace SpacetimeDB.Editor
         private void OnGUI()
         {
             // Align center style
-            GUIStyle centeredStyle = new GUIStyle(GUI.skin.label)
+            GUIStyle alignStyle = new GUIStyle(GUI.skin.label)
             {
-                alignment = TextAnchor.MiddleCenter,
+                alignment = _guiOpts.AlignMiddleCenter 
+                    ? TextAnchor.MiddleCenter 
+                    : TextAnchor.MiddleLeft
             };
 
-            // Create GUIContent for both text and optional icon
+            // Create GUIContent for both text and optional icon prefixed
             Texture prefixStatusIcon = getIconTexture();
-            GUIContent content = new GUIContent(_guiOpts.Body, prefixStatusIcon);
-
-            // Display the label with the icon
-            EditorGUILayout.LabelField(content, centeredStyle);
             
-            // Create copyable text
-            if (_guiOpts.readonlyBlockAfterBody != null)
+            // Unity handles \n poorly, so we split line breaks to their own Labels
+            string[] lines = _guiOpts.Body.Split('\n');
+            foreach (string line in lines)
             {
-                // Calculate the height based on text length
-                GUIStyle textStyle = GUI.skin.textArea;
-                float width = position.width - 20;
-                Vector2 textSize = textStyle.CalcSize(new GUIContent(_guiOpts.readonlyBlockAfterBody));
+                GUIContent lineContent = new GUIContent(line, prefixStatusIcon);
+                EditorGUILayout.LabelField(lineContent, alignStyle);
+                
+                // Reset the icon after the first line so it only appears once
+                prefixStatusIcon = null;
+            }
 
-                // Estimate lines based on width and calculate height
-                int lines = Mathf.Max(1, (int)(textSize.x / width) + 1);
-                float height = lines * textStyle.lineHeight + 10; // Add some padding
-
-                EditorGUI.BeginDisabledGroup(true);
-                EditorGUILayout.TextArea(_guiOpts.readonlyBlockAfterBody, GUILayout.Height(height)); // Adjust height as needed
-                EditorGUI.EndDisabledGroup();
+            // Create readonly text block?
+            if (_guiOpts.ReadonlyBlockAfterBody != null && _guiOpts.ReadonlyBlockBeforeBtns)
+            {
+                insertTextBlock();
             }
 
             // Create buttons; on click, call Action
@@ -113,6 +118,30 @@ namespace SpacetimeDB.Editor
                     kvp.Value.Invoke(); // Callback
                 }
             }
+            
+            // Create readonly text block?
+            if (_guiOpts.ReadonlyBlockAfterBody != null && !_guiOpts.ReadonlyBlockBeforeBtns)
+            {
+                insertTextBlock();
+            }
+        }
+
+        private void insertTextBlock()
+        {
+            // Calculate the height based on text length
+            GUIStyle textStyle = GUI.skin.textArea;
+            float width = position.width - 20;
+            Vector2 textSize = textStyle.CalcSize(new GUIContent(_guiOpts.ReadonlyBlockAfterBody));
+
+            // Estimate lines based on width and calculate height
+            int lines = Mathf.Max(1, (int)(textSize.x / width) + 1);
+            float height = lines * textStyle.lineHeight + 10; // Add some padding
+
+            EditorGUI.BeginDisabledGroup(true);
+            EditorGUILayout.TextArea(
+                _guiOpts.ReadonlyBlockAfterBody, 
+                GUILayout.Height(height));
+            EditorGUI.EndDisabledGroup();
         }
 
         private Texture getIconTexture()
@@ -151,7 +180,7 @@ namespace SpacetimeDB.Editor
                 Height = 100,
                 isModal = true,
                 ButtonNameActionDict = btnNameActionDict,
-                readonlyBlockAfterBody = "This is readonly, copyable text",
+                ReadonlyBlockAfterBody = "This is readonly, copyable text",
             };
             
             ShowWindow(opts);

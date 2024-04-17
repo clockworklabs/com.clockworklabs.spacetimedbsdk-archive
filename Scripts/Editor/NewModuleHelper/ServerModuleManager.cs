@@ -11,9 +11,9 @@ namespace SpacetimeDB.Editor
     public static class ServerModuleManager
     {
         const string OPEN_EXPLORER_BTN_STR = "Open Folder";
-        
+        const string TEST_INIT_PROJ_DIR_PATH = "%USERPROFILE/temp/stdbMod";
 
-        [MenuItem("Window/SpacetimeDB/New Server Module/C# %#&p")] // CTRL+SHIFT+ALT+P
+        [MenuItem("Window/SpacetimeDB/New Server Module/C#")]
         public static async void CreateNewCsModule()
         {
             await createNewModule(SpacetimeMeta.ModuleLang.CSharp);
@@ -64,8 +64,6 @@ namespace SpacetimeDB.Editor
                 // Show modal editor popup error message with a [Close] button
                 return;
             }
-
-            string bodyStr = "Success";
             
             // Log -> Create a cancellable success window with 2 buttons: [Open Project] [Open in Explorer]
             Debug.Log($"Successfully created new SpacetimeDB Server Module at {initProjDirPath}");
@@ -77,18 +75,19 @@ namespace SpacetimeDB.Editor
                 { openExplorerBtnStr, () => onOpenExplorerBtnClick(lang, initProjDirPath) },
             };
 
+            string bodyStr = "Success";
             if (!createNewServerModuleResult.HasCargo)
             {
                 Debug.Log("Warning: Missing Rust's `cargo` project/package manager. " + 
                     "Install @ https://www.rust-lang.org/tools/install");
                 
-                const string installCargoBtnStr = "Install Cargo (Website)";
+                const string installCargoBtnStr = "Install `cargo` (Website)";
                 btnNameActionDict.Add(installCargoBtnStr, () => Application.OpenURL(SpacetimeMeta.INSTALL_CARGO_URL));
 
                 bodyStr += " (but missing `cargo`)";
             }
             
-            showInitServerModuleSuccessWindow(bodyStr, btnNameActionDict);
+            showInitServerModuleSuccessWindow(lang, bodyStr, btnNameActionDict);
         }
 
         /// Ensures `wasi-experimental` workload is installed via `dotnet`
@@ -107,7 +106,7 @@ namespace SpacetimeDB.Editor
             bool hasDotnet8Plus = hasDotnet8PlusResult.HasDotnet8Plus;
             if (!hasDotnet8Plus)
             {
-                showInstallDotnet8PlusWindow();
+                showInstallDotnet8PlusWasiWindow();
                 throw new Exception("dotnet 8+ is required for `wasi-experimental` workload (SpacetimeDB Server Module)");
             }
             
@@ -134,40 +133,46 @@ namespace SpacetimeDB.Editor
         
         #region Show Windows
         private static void showInitServerModuleSuccessWindow(
+            SpacetimeMeta.ModuleLang lang,
             string bodyStr = "Success", 
             Dictionary<string, Action> btnNameActionDict = null)
         {
             SpacetimePopupWindow.ShowWindowOpts opts = new()
             {
-                title = "Server Module Created",
+                title = $"{lang} Server Module Created",
                 Body = bodyStr, // "Success [(but missing `cargo`)]"
                 PrefixBodyIcon = SpacetimePopupWindow.PrefixBodyIcon.SuccessCircle,
                 Width = 250,
                 Height = 100,
                 isModal = true,
                 ButtonNameActionDict = btnNameActionDict,
+                AlignMiddleCenter = true,
             };
             
             SpacetimePopupWindow.ShowWindow(opts);
         }
         
         /// Show modal editor popup error message with an [Install .NET 8+ (Website)] button
+        /// If missing .NET 8, we're also going to be missing `wasm-experimental` workload, so we +show this below
         // [MenuItem("Window/SpacetimeDB/Test/showInstallDotnet8PlusWindow %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
-        private static void showInstallDotnet8PlusWindow()
+        private static void showInstallDotnet8PlusWasiWindow()
         {
-            const string installDotnetBtnStr = "Install .NET 8+ (Website)";
+            const string installDotnetBtnStr = "Install .NET 8+ (website)";
             Dictionary<string, Action> btnNameActionDict = new()
             {
-                { installDotnetBtnStr, () => Application.OpenURL("https://dotnet.microsoft.com/download") },
+                { installDotnetBtnStr, () => Application.OpenURL(SpacetimeMeta.DOTNET_8PLUS_URL) },
+                { "Copy code below (for admin terminal)", () => GUIUtility.systemCopyBuffer = SpacetimeMeta.DOTNET_INSTALL_WASM_CMD },
             };
             
             SpacetimePopupWindow.ShowWindowOpts opts = new()
             {
-                title = "dotnet 8+ Required",
-                Body = "Missing Prerequisite",
+                title = "Failed to Initialize C# Module",
+                Body = "Missing Prerequisites:\n(1) Install .NET 8+\n(2) Copy to admin terminal:",
+                ReadonlyBlockAfterBody = SpacetimeMeta.DOTNET_INSTALL_WASM_CMD,
+                ReadonlyBlockBeforeBtns = false, // after
                 PrefixBodyIcon = SpacetimePopupWindow.PrefixBodyIcon.ErrorCircle,
-                Width = 250,
-                Height = 70,
+                Width = 300,
+                Height = 150,
                 isModal = true,
                 ButtonNameActionDict = btnNameActionDict,
             };
@@ -179,17 +184,16 @@ namespace SpacetimeDB.Editor
         // [MenuItem("Window/SpacetimeDB/Test/showInstallWasiWorkloadWindow %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
         private static void showInstallWasiWorkloadWindow()
         {
-            const string cmdToCopy = "dotnet workload install wasm-experimental";
             Dictionary<string, Action> btnNameActionDict = new()
             {
-                { "Copy", () => GUIUtility.systemCopyBuffer = cmdToCopy },
+                { "Copy", () => GUIUtility.systemCopyBuffer = SpacetimeMeta.DOTNET_INSTALL_WASM_CMD },
             };
             
             SpacetimePopupWindow.ShowWindowOpts opts = new()
             {
                 title = "dotnet workload missing",
                 Body = "Missing Prerequisite - copy to admin terminal:",
-                readonlyBlockAfterBody = "dotnet workload install wasm-experimental",
+                ReadonlyBlockAfterBody = "dotnet workload install wasm-experimental",
                 PrefixBodyIcon = SpacetimePopupWindow.PrefixBodyIcon.ErrorCircle,
                 Width = 350,
                 Height = 100,
@@ -202,36 +206,42 @@ namespace SpacetimeDB.Editor
         #endregion // Show Windows
         
         
-        #region Tests
-        // [MenuItem("Window/SpacetimeDB/Test/testShowInitModuleSuccessWindow %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
-        private static void testShowInitModuleSuccessWindow()
+        #region Tests (using `TEST_` constants @ file top)
+        // [MenuItem("Window/SpacetimeDB/Test/testShowInitCsharpModuleSuccessWindow %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
+        private static void testShowInitCsharpModuleSuccessWindow()
         {
-            const string initProjPath = "%USERPROFILE/temp/stdbMod"; // << Set test path here
-
             // Create buttons
             Dictionary<string, Action> btnNameActionDict = new()
             {
-                { OPEN_EXPLORER_BTN_STR, () => onOpenExplorerBtnClick(SpacetimeMeta.ModuleLang.Rust, initProjPath) },
+                { OPEN_EXPLORER_BTN_STR, () => onOpenExplorerBtnClick(SpacetimeMeta.ModuleLang.Rust, TEST_INIT_PROJ_DIR_PATH) },
             };
             
-            showInitServerModuleSuccessWindow("Success", btnNameActionDict);
+            showInitServerModuleSuccessWindow(
+                SpacetimeMeta.ModuleLang.CSharp, 
+                bodyStr: "Success", 
+                btnNameActionDict);
         }
         
-        [MenuItem("Window/SpacetimeDB/Test/testShowInitModuleSuccessButNoCargoWindow %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
+        // [MenuItem("Window/SpacetimeDB/Test/testShowInitModuleSuccessButNoCargoWindow %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
         private static void testShowInitModuleSuccessButNoCargoWindow()
         {
-            const string initProjPath = "%USERPROFILE/temp/stdbMod"; // << Set test path here
-
             // Create buttons
-            const string installCargoBtnStr = "Install Cargo (Website)";
+            const string installCargoBtnStr = "Install `cargo` (website)";
             Dictionary<string, Action> btnNameActionDict = new()
             {
                 { installCargoBtnStr, () => Application.OpenURL(SpacetimeMeta.INSTALL_CARGO_URL) },
-                { OPEN_EXPLORER_BTN_STR, () => onOpenExplorerBtnClick(SpacetimeMeta.ModuleLang.Rust, initProjPath) },
+                { OPEN_EXPLORER_BTN_STR, () => onOpenExplorerBtnClick(SpacetimeMeta.ModuleLang.Rust, TEST_INIT_PROJ_DIR_PATH) },
             };
             
-            showInitServerModuleSuccessWindow("Success (but missing `cargo`)", btnNameActionDict);
+            showInitServerModuleSuccessWindow(
+                SpacetimeMeta.ModuleLang.Rust, 
+                bodyStr: "Success (but missing `cargo`)", 
+                btnNameActionDict);
         }
+        
+        // [MenuItem("Window/SpacetimeDB/Test/testShowInitModuleCsharpFail %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
+        private static void testShowInitModuleCsharpFail() =>
+            showInstallDotnet8PlusWasiWindow();
         #endregion // Tests
     }
 }

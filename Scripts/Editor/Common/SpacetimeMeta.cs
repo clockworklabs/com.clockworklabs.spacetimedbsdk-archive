@@ -3,9 +3,14 @@ public static class SpacetimeMeta
 {
     #region Names & Paths
     public const ushort DEFAULT_PORT = 3000;
-    public const string NEW_INSTALL_DEFAULT_SERVER = LOCAL_SERVER_NAME; 
     public const string LOCAL_SERVER_NAME = "local";
     public const string TESTNET_SERVER_NAME = "testnet";
+    
+    /// The CLI, itself, sets this default server.
+    /// 4/17 it's `local`, but there's a pre-approved open PR to have this set to `testnet`:
+    /// https://github.com/clockworklabs/SpacetimeDB/pull/1078 
+    public const string NEW_INSTALL_SERVER_CLI_DEFAULT = TESTNET_SERVER_NAME;
+    
     public const string TESTNET_HOST_URL = "https://" + TESTNET_SERVER_NAME + ".spacetimedb.com";
     public static string LOCAL_HOST_URL => $"http://127.0.0.1:{DEFAULT_PORT}";
     

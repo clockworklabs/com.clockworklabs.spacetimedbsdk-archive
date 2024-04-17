@@ -149,11 +149,12 @@ namespace SpacetimeDB.Editor
             await onInstallSpacetimeDbCliSuccess();
         }
 
-        /// We may need to restart Unity, due to env var refreshes, 
-        /// since child Processes use Unity's launched env vars
+        /// Normally, we need to restart Unity to env vars (since child Processes use Unity's launched env vars),
+        /// but we have a special env var injection when using SpacetimeDBCli that inits after 1st install that
+        /// persists until Unity is closed (workaround) 
         private async Task onInstallSpacetimeDbCliSuccess()
          {
-            // Validate
+            // Validate install success
             installCliProgressBar.title = "Validating SpacetimeDB CLI Installation ...";
             
             SpacetimeCliResult validateCliResult = await SpacetimeDbCliActions.GetIsSpacetimeCliInstalledAsync();
@@ -163,6 +164,10 @@ namespace SpacetimeDB.Editor
             
             if (isNotRecognizedCmd)
             {
+                // ########################################################################################
+                // (!) This err below technically shouldn't happen anymore due to the env var workaround,
+                //     but *just in case*
+                // ########################################################################################
                 // This is only a "partial" error: We probably installed, but the env vars didn't refresh
                 // We need to restart Unity to refresh the spawned child Process env vars since manual refresh failed
                 onInstallSpacetimeDbCliSoftFail(); // Throws
@@ -178,6 +183,7 @@ namespace SpacetimeDB.Editor
             HideUi(installCliGroupBox);
         }
 
+        /// It's actually faster to just set default than to 1st check if it's already set: So we just set
         private async Task newInstallSetTestnetAsDefaultServerAsync()
         {
             Debug.Log($"[{nameof(onInstallSpacetimeDbCliSuccess)}] Setting default server to `testnet` ...");
@@ -213,6 +219,8 @@ namespace SpacetimeDB.Editor
 
         /// Technically success, but we need to restart Unity to refresh PATH env vars
         /// Throws to prevent further execution in the init chain
+        /// (!) This technically shouldn't happen anymore due to the env var workaround,
+        ///     but *just in case*
         private void onInstallSpacetimeDbCliSoftFail()
         {
             onInstallSpacetimeDbFailUi();
@@ -752,10 +760,18 @@ namespace SpacetimeDB.Editor
         private void onPublishFail(PublishResult publishResult)
         {
             _cachedPublishResult = null;
+
+            if (publishResult.PublishErrCode == PublishResult.PublishErrorCode.Dotnet8PlusMissing)
+            {
+                // Launch installation URL + add to err
+                publishResult.StyledFriendlyErrorMessage += ": Launching installation website. Install -> try again";
+                Application.OpenURL("https://dotnet.microsoft.com/en-us/download/dotnet/8.0");
+            }
+            
             updatePublishStatus(
                 SpacetimeMeta.StringStyle.Error, 
                 publishResult.StyledFriendlyErrorMessage 
-                    ?? Utils.ClipString(publishResult.CliError, maxLength: 4000));
+                ?? Utils.ClipString(publishResult.CliError, maxLength: 4000));
         }
         
         /// There may be a false-positive wasm-opt err here; in which case, we'd still run success.

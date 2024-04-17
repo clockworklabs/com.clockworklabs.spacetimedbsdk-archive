@@ -14,9 +14,9 @@ This repository contains the [Unity](https://unity.com/) SDK for SpacetimeDB. Th
 
 ## Documentation
 
-The Unity SDK uses the same code as the C# SDK. You can find the documentation for the C# SDK in the [C# SDK Reference](https://spacetimedb.com/docs/client-languages/csharp/csharp-sdk-reference)
-
-There is also a comprehensive Unity tutorial available in the [Unity Tutorial](https://spacetimedb.com/docs/unity-tutorial/unity-tutorial-part-1)
+- The Unity SDK uses the same code as the C# SDK. You can find the documentation for the C# SDK in the [C# SDK Reference](https://spacetimedb.com/docs/client-languages/csharp/csharp-sdk-reference)
+- There is also a comprehensive Unity tutorial available in the [Unity Tutorial](https://spacetimedb.com/docs/unity-tutorial/unity-tutorial-part-1)
+- README for included [SpacetimeDB Unity editor tools](Scripts/Editor/README.md)
 
 ## Installation
 

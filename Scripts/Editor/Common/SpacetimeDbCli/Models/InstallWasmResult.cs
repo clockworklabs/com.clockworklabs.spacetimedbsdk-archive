@@ -13,30 +13,43 @@ namespace SpacetimeDB.Editor
         {
             Unknown,
             NpmNotRecognized,
+            FalsePositiveNpmNotice,
         }
         
 
         public InstallWasmResult(SpacetimeCliResult cliResult)
             : base(cliResult)
         {
-            this.IsSuccessfulInstall = cliResult.CliOutput
-                .TrimStart()
-                .StartsWith("changed ");
+            // Err? Care of several false-positives!
+            if (cliResult.HasCliErr)
+            {
+                // Check for false-positive err
+                bool isFalsePositiveNpmNotice = cliResult.CliError.TrimStart().StartsWith("npm notice");
+                bool isMissingNpm = SpacetimeDbCli.CheckCmdNotFound(cliResult.CliError, expectedCmd: "npm");
+
+                if (isFalsePositiveNpmNotice)
+                {
+                    this.InstallWasmError = InstallWasmErrorType.FalsePositiveNpmNotice;
+                }
+                else if (isMissingNpm)
+                {
+                    this.InstallWasmError = InstallWasmErrorType.NpmNotRecognized; // Critical err
+                    return;
+                }
+            }
+
+            // Success?
+            string trimmedOutput = cliResult.CliOutput.TrimStart();
+            this.IsSuccessfulInstall =
+                trimmedOutput.StartsWith("changed") ||
+                trimmedOutput.StartsWith("added");
 
             if (this.IsSuccessfulInstall)
             {
                 return;
             }
             
-            bool missingNpm = SpacetimeDbCli.CheckCmdNotFound(cliResult.CliError, expectedCmd: "npm");
-            if (missingNpm)
-            {
-                this.InstallWasmError = InstallWasmErrorType.NpmNotRecognized;
-            }
-            else
-            {
-                this.InstallWasmError = InstallWasmErrorType.Unknown;
-            }
+
         }
     }
 }

@@ -5,6 +5,7 @@
 ## Tools
 
 - Publisher
+- Reducer
 
 ## Docs
 

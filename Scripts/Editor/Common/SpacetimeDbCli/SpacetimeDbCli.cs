@@ -75,7 +75,6 @@ namespace SpacetimeDB.Editor
         
         
         #region Core CLI
-
         private static Process createCliProcess(
             string terminal,
             string fullParsedArgs,
@@ -134,7 +133,7 @@ namespace SpacetimeDB.Editor
         }
         
         /// Starts a detached Process, allowing a domain reload to not freeze Unity or kill the process.
-        public static void startDetachedCliProcess(string argSuffix)
+        public static SpacetimeCliRequest startDetachedCliProcess(string argSuffix)
         {
             // Args
             string terminal = getTerminalPrefix(); // Determine terminal based on platform
@@ -144,6 +143,14 @@ namespace SpacetimeDB.Editor
             // Process + StartInfo
             Process asyncCliProcess = createCliProcess(terminal, fullParsedArgs, detachedProcess: true);
             logInput(terminal, fullParsedArgs);
+            
+            // Package request to pass along to result
+            SpacetimeCliRequest cliRequest = new(
+                terminal, 
+                argPrefix, 
+                argSuffix, 
+                runInBackground: false, 
+                asyncCliProcess.StartInfo);
             
             try
             {
@@ -155,6 +162,8 @@ namespace SpacetimeDB.Editor
                 Debug.LogError($"Failed to {nameof(startDetachedCliProcess)}: {e.Message}");
                 throw;
             }
+
+            return cliRequest;
         }
 
         // /// Issue a cross-platform *async* (EnableRaisingEvents) CLI cmd, where we'll start with terminal prefixes
@@ -304,7 +313,7 @@ namespace SpacetimeDB.Editor
             
             if (isLocalFingerprintErr)
             {
-                isResolvedTryAgain = await fixLocalFingerprintErr(cliError);
+                isResolvedTryAgain = await fixLocalFingerprintErr(cliResult);
             }
             else if (isTestnetFingerprintErr)
             {
@@ -324,20 +333,23 @@ namespace SpacetimeDB.Editor
             return isResolvedTryAgain;
         }
 
-        private static async Task<bool> fixLocalFingerprintErr(string cliError)
+        /// Attempt to fix the local fingerprint error by temporarily running a local server on default port
+        /// This one's a bit tricky since we need to start the server, create a fingerprint, and then stop the server
+        private static async Task<bool> fixLocalFingerprintErr(SpacetimeCliResult cliResult)
         {
-            bool serverOfflineErr = cliError.Contains("target machine actively refused");
-            
-            // Ensure the local server is running
-            PingServerResult pingResult = await SpacetimeDbCliActions.PingServerAsync();
+            // See if the default server is running on the default port
+            const string localServerName = SpacetimeMeta.LOCAL_SERVER_NAME;
+            PingServerResult pingResult = await SpacetimeDbCliActions.PingServerAsync(localServerName);
             if (!pingResult.IsServerOnline)
             {
-                pingResult = await SpacetimeDbCliActions.StartDetachedLocalServerWaitUntilOnlineAsync(); // Temporarily start the server
+                // Temporarily start the server on the default port
+                await runCliCommandAsync("spacetime start local");
             }
             
-            // Attempt to create a fingerprint for the server
+            // Attempt just once to create a fingerprint for the server
+            // This would only fail if port 3000 is in use by a 3rd-party app
             SpacetimeCliResult fingerprintResult = await SpacetimeDbCliActions
-                .CreateFingerprintAsync(SpacetimeMeta.LOCAL_SERVER_NAME);
+                .CreateFingerprintAsync(localServerName);
 
             bool isResolvedTryAgain = !fingerprintResult.HasCliErr;
             return isResolvedTryAgain;

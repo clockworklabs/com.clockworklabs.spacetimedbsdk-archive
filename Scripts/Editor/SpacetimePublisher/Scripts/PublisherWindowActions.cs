@@ -402,6 +402,7 @@ namespace SpacetimeDB.Editor
 
         /// When local and testnet are missing, it's 99% due to a bug:
         /// We'll add them back. Assuming default ports (3000) and testnet targets.
+        /// `testnet` will become default 
         private async Task regenerateServers()
         {
             Debug.Log("Regenerating default servers: [ local, testnet* ] *Becomes default");
@@ -647,19 +648,20 @@ namespace SpacetimeDB.Editor
             Debug.Log("Localhost server selected: Pinging for online status ...");
             
             // Run CLI cmd
-            bool isOnline = await checkIsLocalServerOnlineAsync();
-            
-            Debug.Log("Local server online? " + isOnline);
+            string serverName = serverSelectedDropdown.value;
+            bool isOnline = await checkIsLocalServerOnlineAsync(serverName);
+            Debug.Log($"Local server online? {isOnline}");
+
             toggleLocalServerStartOrStopBtnGroup(isOnline);
         }
 
         /// <returns>isOnline (successful ping) with short timeout</returns>
-        private async Task<bool> checkIsLocalServerOnlineAsync()
+        private async Task<bool> checkIsLocalServerOnlineAsync(string serverName)
         {
             Assert.IsTrue(checkIsLocalhostServerSelected(), $"Expected {nameof(checkIsLocalhostServerSelected)}");
 
             // Run CLI command with short timeout
-            _lastServerPingSuccess = await SpacetimeDbCliActions.PingServerAsync();
+            _lastServerPingSuccess = await SpacetimeDbCliActions.PingServerAsync(serverName);
             
             // Process result
             bool isSuccess = _lastServerPingSuccess.IsServerOnline;
@@ -678,7 +680,7 @@ namespace SpacetimeDB.Editor
                 setPublishReadyStatusIfOnline();
             }
             else // Offline
-            {
+            { 
                 ShowUi(publishStartLocalServerBtn);
                 HideUi(publishStopLocalServerBtn);
                 
@@ -911,6 +913,7 @@ namespace SpacetimeDB.Editor
             
             // Show: Cancel btn, show progress bar,
             ShowUi(publishCancelBtn);
+            
             _ = startProgressBarAsync(
                 publishInstallProgressBar,
                 barTitle: "Publishing to SpacetimeDB ...",
@@ -1449,7 +1452,10 @@ namespace SpacetimeDB.Editor
             setStartingLocalServerUi();
             
             // Run async CLI cmd => wait for connection => Save to state cache
-            PingServerResult pingResult = await SpacetimeDbCliActions.StartDetachedLocalServerWaitUntilOnlineAsync();
+            string serverName = serverSelectedDropdown.value;
+            PingServerResult pingResult = await SpacetimeDbCliActions
+                .StartDetachedLocalServerWaitUntilOnlineAsync(serverName);
+            
             if (pingResult.IsServerOnline)
             {
                 _lastServerPingSuccess = pingResult;
@@ -1511,8 +1517,8 @@ namespace SpacetimeDB.Editor
         {
             if (_lastServerPingSuccess.Port == 0)
             {
-                // TODO: Set port from ping
-                _lastServerPingSuccess = await SpacetimeDbCliActions.PingServerAsync();
+                string serverName = serverSelectedDropdown.value;
+                _lastServerPingSuccess = await SpacetimeDbCliActions.PingServerAsync(serverName);
             }
             
             // Validate + Logs + UI

@@ -5,6 +5,8 @@ namespace SpacetimeDB.Editor
     /// Result from SpacetimeDbCli.runCliCommandAsync
     public class SpacetimeCliResult
     {
+        public SpacetimeCliRequest CliRequest { get; }
+
         /// Raw, unparsed CLI output
         public string CliOutput { get; }
         

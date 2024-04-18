@@ -773,7 +773,7 @@ namespace SpacetimeDB.Editor
             updatePublishStatus(
                 SpacetimeMeta.StringStyle.Error, 
                 publishResult.StyledFriendlyErrorMessage 
-                ?? Utils.ClipString(publishResult.CliError, maxLength: 4000));
+                    ?? ClipString(publishResult.CliError, maxLength: 4000));
         }
         
         /// There may be a false-positive wasm-opt err here; in which case, we'd still run success.
@@ -1281,7 +1281,7 @@ namespace SpacetimeDB.Editor
         {
             serverSelectedDropdown.SetEnabled(true);
 
-            string clippedCliErr = Utils.ClipString(cliResult.CliError, maxLength: 4000);
+            string clippedCliErr = ClipString(cliResult.CliError, maxLength: 4000);
             serverConnectingStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error,
                 $"<b>Failed to Change Servers:</b>\n{clippedCliErr}");
@@ -1399,7 +1399,7 @@ namespace SpacetimeDB.Editor
 
             resetGenerateUi();
             
-            string clippedCliErr = Utils.ClipString(cliResult.CliError, maxLength: 4000);
+            string clippedCliErr = ClipString(cliResult.CliError, maxLength: 4000);
             publishResultStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error,
                 $"<b>Failed to Generate:</b>\n{clippedCliErr}");

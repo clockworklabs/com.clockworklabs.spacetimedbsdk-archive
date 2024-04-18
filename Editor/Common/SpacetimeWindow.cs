@@ -7,6 +7,23 @@ namespace SpacetimeDB.Editor
     /// Common static utils class for a SpacetimeWindow editor tool
     public static class SpacetimeWindow
     {
+        /// Clips input to maxLength. If we clipped anything,
+        /// we'll replace the last 3 characters with "..."
+        public static string ClipString(string input, int maxLength)
+        {
+            if (string.IsNullOrEmpty(input) || maxLength <= 0)
+            {
+                return string.Empty;
+            }
+
+            if (input.Length > maxLength)
+            {
+                return input[..(maxLength - 3)] + "...";
+            }
+
+            return input;
+        }
+        
         public static string ReplaceSpacesWithDashes(string str) =>
             str?.Replace(" ", "-");
         

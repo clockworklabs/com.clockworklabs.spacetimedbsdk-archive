@@ -160,7 +160,7 @@ namespace SpacetimeDB.Editor
                 this.PublishErrCode = PublishErrorCode.UnknownError;
 
                 string clippedIteratedErrs = string.Join("\n\n", cliResult.ErrsFoundFromCliOutput);
-                clippedIteratedErrs = Utils.ClipString(clippedIteratedErrs, maxLength: 4000);
+                clippedIteratedErrs = SpacetimeWindow.ClipString(clippedIteratedErrs, maxLength: 4000);
 
                 this.StyledFriendlyErrorMessage = SpacetimeMeta.GetStyledStr(
                     SpacetimeMeta.StringStyle.Error,

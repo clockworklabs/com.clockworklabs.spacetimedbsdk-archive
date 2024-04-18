@@ -15,7 +15,7 @@ public static class SpacetimeMeta
     public static string LOCAL_HOST_URL => $"http://127.0.0.1:{DEFAULT_PORT}";
     
     public const string SDK_PACKAGE_NAME = "com.clockworklabs.spacetimedbsdk";
-    public const string COMMON_DIR_PATH = "Packages/" + SDK_PACKAGE_NAME + "/Scripts/Editor/Common";
+    public const string COMMON_DIR_PATH = "Packages/" + SDK_PACKAGE_NAME + "/Editor/Common";
     
     /// Path to common SpacetimeDB Editor USS styles
     public static string PathToCommonUss => $"{COMMON_DIR_PATH}/CommonStyles.uss";

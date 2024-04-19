@@ -24,18 +24,15 @@ namespace SpacetimeDB.Editor
         {
             await startTests(); // Only if PublisherWindowTester.PUBLISH_WINDOW_TESTS
             await ensureSpacetimeCliInstalledAsync(); // installSpacetimeDbCliAsync() => onInstallSpacetimeDbCliSuccess()
-            await getServersSetDropdown(autoProgressIdentities: false);
-            bool revealedIdentityFoldout = await revealIdentitiesGroupIfNotOfflineLocalServerAsync();
-            if (!revealedIdentityFoldout)
-            {
-                return;
-            }
-            
-            await getIdentitiesSetDropdown(autoProgressPublisher: false);
-            await revealPublishGroupAndResultCacheIfReady();
-            // => onGetSetIdentitiesSuccessEnsureDefault()
-            // => onEnsureIdentityDefaultSuccess()
-            // => revealPublishResultCacheIfHostExists()
+            // await getServersSetDropdown(autoProgressIdentities: false);
+            // bool revealedIdentityFoldout = await revealIdentitiesGroupIfNotOfflineLocalServerAsync();
+            // if (!revealedIdentityFoldout)
+            // {
+            //     return;
+            // }
+            //
+            // await getIdentitiesSetDropdown(autoProgressPublisher: false);
+            // await revealPublishGroupAndResultCacheIfReady();
         }
         
         /// Initially called by PublisherWindow @ CreateGUI
@@ -360,9 +357,9 @@ namespace SpacetimeDB.Editor
         }
         
         /// (1) Suggest module name, if empty
-        /// (2) Reveal publisher group
-        /// (3) Ensure spacetimeDB CLI is installed async
-        private async Task onPublishModulePathSetAsync()
+        /// (2) Reveal publisher group, if autoProgressPublisher (false on init)
+        /// (3) Ensure spacetimeDB CLI is installed async, if autoProgressPublisher
+        private async Task onPublishModulePathSetAsync(bool autoProgressPublisher)
         {
             // We just updated the path - hide old publishAsync result cache
             HideUi(publishResultFoldout);
@@ -375,18 +372,20 @@ namespace SpacetimeDB.Editor
             
             // ServerModulePathTxt persists: If previously entered, show the publishAsync group
             bool hasPathSet = !string.IsNullOrEmpty(publishModulePathTxt.value);
-            if (hasPathSet)
+            if (!hasPathSet || autoProgressPublisher)
             {
-                try
-                {
-                    // +Ensures SpacetimeDB CLI is installed async
-                    await revealPublisherGroupUiAsync();
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError(e.Message);
-                    throw;
-                }
+                return;
+            }
+            
+            try
+            {
+                // +Ensures SpacetimeDB CLI is installed async
+                await revealPublisherGroupUiAsync();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e.Message);
+                throw;
             }
         }
         

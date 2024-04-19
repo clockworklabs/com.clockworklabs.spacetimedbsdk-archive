@@ -72,13 +72,6 @@ namespace SpacetimeDB.Editor
             }
         }
         
-        /// Hide a visual element via setting visible to false
-        /// - (!) Does not ripple the UI, as if it's still there
-        /// - (!) Does not trigger transition animations
-        /// - Show again via ShowUi(element, useVisibilityNotDisplay: true)
-        public static void HideUiNoRipple(VisualElement element) =>
-            element.visible = false;
-        
         /// Sets opacity to 0, triggering `transition` properties, if set
         /// - (!) Does not ripple the UI, as if it's still there
         public static void FadeOutUi(VisualElement element) =>
@@ -89,10 +82,8 @@ namespace SpacetimeDB.Editor
             element.resolvedStyle.display == DisplayStyle.None ||
             element.resolvedStyle.opacity == 0 ||
             !element.visible;
-        
+
         public static bool IsShowingUi(VisualElement element) =>
-            element.resolvedStyle.display == DisplayStyle.Flex ||
-            element.resolvedStyle.opacity >= 1 ||
-            element.visible;
+            element.resolvedStyle.display == DisplayStyle.Flex;
     }
 }

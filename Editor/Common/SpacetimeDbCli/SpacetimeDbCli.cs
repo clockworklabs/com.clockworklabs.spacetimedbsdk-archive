@@ -291,7 +291,8 @@ namespace SpacetimeDB.Editor
 
         /// <summary>
         /// Attempts to detect + resolve common cli errors:
-        /// 1. "Error: Cannot list identities for server without a saved fingerprint: local"
+        /// 1. "Error: Cannot list identities for server without a saved fingerprint: {serverName}"
+        /// (!) We'll only attempt to auto-resolve fingerprint issues for !local
         /// </summary>
         /// <returns>isResolvedTryAgain</returns>
         private static async Task<bool> autoResolveCommonCliErrors(SpacetimeCliResult cliResult)
@@ -302,24 +303,29 @@ namespace SpacetimeDB.Editor
             
             string cliError = cliResult.CliError;
             bool isFingerprintErr = cliError.Contains("without a saved fingerprint");
-            bool isLocalFingerprintErr = false;
-            bool isTestnetFingerprintErr = false;
-
-            if (isFingerprintErr)
+            if (!isFingerprintErr)
             {
-                isLocalFingerprintErr = cliError.Contains("local");
-                isTestnetFingerprintErr = cliError.Contains("testnet");
+                return isResolvedTryAgain;
             }
             
+            bool isLocalFingerprintErr = cliError.Contains("local");
+            bool isTestnetFingerprintErr = cliError.Contains("testnet");
+
             if (isLocalFingerprintErr)
             {
-                isResolvedTryAgain = await fixLocalFingerprintErr(cliResult);
+                #region Local Fingerprint Graveyard
+                // // (!) Too much to consider for localhost fingerprint issues to handle automatically:
+                // // - Localhost server may not be running
+                // // - Localhost server may be running on a different port than the default 3000
+                // // - If you run localhost on default port when running on a different, it'll fail
+                // isResolvedTryAgain = await fixLocalFingerprintErr(cliResult);
+                #endregion // Local Fingerprint Graveyard
             }
             else if (isTestnetFingerprintErr)
             {
                 isResolvedTryAgain = await fixTestnetFingerprintErr(cliError);
             }
-            
+
             return isResolvedTryAgain;
         }
 

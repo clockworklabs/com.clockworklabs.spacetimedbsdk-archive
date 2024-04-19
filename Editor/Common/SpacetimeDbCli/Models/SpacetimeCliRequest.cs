@@ -53,7 +53,11 @@ namespace SpacetimeDB.Editor
             this.IsDetachedProcess = processStartInfo.UseShellExecute;
             this.FullParsedArgs = ProcessStartInfo.Arguments;
             this.PathKeyName = Application.platform == RuntimePlatform.WindowsEditor ? "Path" : "PATH";
-            this.UpdatedPathEnvVar = ProcessStartInfo.EnvironmentVariables.ContainsKey(PathKeyName);
+
+            // (!) Mysterious observation: Simply getting .ContainsKey below will trigger
+            // a detached process to fail without `!IsDetachedProcess &&`
+            this.UpdatedPathEnvVar = !IsDetachedProcess && ProcessStartInfo
+                .EnvironmentVariables.ContainsKey(PathKeyName);
         }
     }
 }

@@ -195,7 +195,7 @@ namespace SpacetimeDB.Editor
         
         #region Tests
         /// Test the `spacetime start` CLI command
-        [MenuItem("SpacetimeDB/Test/startDetachedLocalServer %#&T")] // (!) Comment out when done testing
+        // [MenuItem("SpacetimeDB/Test/startDetachedLocalServer %#&T")] // (!) Comment out when done testing
         private static void TestLaunchServer() =>
             startDetachedLocalServer();
         #endregion // Tests

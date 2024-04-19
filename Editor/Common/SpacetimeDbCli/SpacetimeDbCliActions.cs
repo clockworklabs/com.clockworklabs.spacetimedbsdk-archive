@@ -132,11 +132,10 @@ namespace SpacetimeDB.Editor
         /// Uses the `spacetime start` CLI command. Runs in background in a detached service.
         /// - Checks if an existing localhost of the same port is already running
         /// - Awaits up to 2s for the server to come online.
-        public static async Task<PingServerResult> StartDetachedLocalServerWaitUntilOnlineAsync(string port)
+        public static async Task<PingServerResult> StartDetachedLocalServerWaitUntilOnlineAsync(string serverName)
         {
             // First, see if it's already running locally
-            string localhostUrl = $"http://127.0.0.1:{port}";
-            PingServerResult pingServerResult = await PingServerAsync(localhostUrl);
+            PingServerResult pingServerResult = await PingServerAsync(serverName);
             if (pingServerResult.IsServerOnline)
             {
                 return pingServerResult;
@@ -147,7 +146,7 @@ namespace SpacetimeDB.Editor
             await Task.Delay(200); // Give it a chance to spin up
             
             // Await success, pinging the CLI every 100ms to ensure online. Max 2 seconds.
-            return await PingServerUntilOnlineAsync(localhostUrl);
+            return await PingServerUntilOnlineAsync(serverName);
         }
         
         /// <param name="cancelToken">If left default, set to 200ms timeout (3 attempts @ 1 per 100ms)</param>
@@ -159,16 +158,18 @@ namespace SpacetimeDB.Editor
             using CancellationTokenSource globalTimeoutCts = cancelToken == default
                 ? new CancellationTokenSource(TimeSpan.FromMilliseconds(300)) 
                 : CancellationTokenSource.CreateLinkedTokenSource(cancelToken);
-            
+
             try
             {
                 while (!globalTimeoutCts.Token.IsCancellationRequested)
                 {
                     try
                     {
-                        PingServerResult pingServerResult = await PingServerAsync(serverName, cancelToken: default); // 200ms iteration timeout
+                        PingServerResult pingServerResult = await PingServerAsync(
+                            serverName, 
+                            cancelToken: default); // 200ms iteration timeout
+                        
                         bool isOnline = pingServerResult.IsServerOnline;
-
                         if (isOnline)
                         {
                             return pingServerResult;

@@ -1581,26 +1581,24 @@ namespace SpacetimeDB.Editor
             PingServerResult pingResult = await SpacetimeDbCliActions
                 .StartDetachedLocalServerWaitUntilOnlineAsync(serverName);
             
-            if (pingResult.IsServerOnline)
-            {
-                _lastServerPingSuccess = pingResult;
-            }
-            
             // Process result -> Update UI
-            if (!_lastServerPingSuccess.IsServerOnline)
+            if (!pingResult.IsServerOnline)
             {
-                onStartLocalServerFail();
+                // Offline
+                onStartLocalServerFail(pingResult);
                 return false; // !startedServer 
             }
             
-            onStartLocalServerSuccess();
+            // Online
+            onStartLocalServerSuccess(pingResult);
             return true; // startedServer
         }
 
-        private void onStartLocalServerSuccess()
+        private void onStartLocalServerSuccess(PingServerResult pingResult)
         {
             Debug.Log($"Started local server on port `{_lastServerPingSuccess}`");
-            
+            _lastServerPingSuccess = pingResult;
+
             HideUi(publishStartLocalServerBtn);
             
             // The server is now running: Show the button to stop it (with a slight delay to enable)
@@ -1629,7 +1627,8 @@ namespace SpacetimeDB.Editor
         }
 
         /// The last ping was cached to _lastServerPinged
-        private void onStartLocalServerFail()
+        /// <param name="pingResult"></param>
+        private void onStartLocalServerFail(PingServerResult pingResult)
         {
             Debug.LogError($"Failed to {nameof(startLocalServer)}");
 
@@ -1689,6 +1688,9 @@ namespace SpacetimeDB.Editor
             
             setLocalServerOfflineLabels();
             publishBtn.SetEnabled(false);
+            
+            // We should only show the Servers dropdown since we can't do anything with an offline local server
+            toggleFoldoutRipple(FoldoutGroupType.Identity, show: false);
         }
     }
 }

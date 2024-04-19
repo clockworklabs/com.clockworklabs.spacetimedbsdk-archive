@@ -401,7 +401,9 @@ namespace SpacetimeDB.Editor
         /// Used for init only, for when the persistent ViewDataKey
         private async void onPublishModulePathTxtInitChanged(ChangeEvent<string> evt)
         {
-            await onPublishModulePathSetAsync();
+            Debug.Log(nameof(onPublishModulePathTxtInitChanged));
+            
+            await onPublishModulePathSetAsync(autoProgressPublisher: false); // Just false on init
             revealPublishResultCacheIfHostExists(openFoldout: null);
             publishModulePathTxt.UnregisterValueChangedCallback(onPublishModulePathTxtInitChanged);
         }
@@ -574,7 +576,7 @@ namespace SpacetimeDB.Editor
 
             // Path changed: set path val + reveal next UI group
             publishModulePathTxt.value = selectedPath;
-            await onPublishModulePathSetAsync();
+            await onPublishModulePathSetAsync(autoProgressPublisher: true); // Only false @ init
         }
         
         /// Show [Install Package] btn if !optimized

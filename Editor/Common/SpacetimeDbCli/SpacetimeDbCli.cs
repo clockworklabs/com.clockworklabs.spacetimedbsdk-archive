@@ -25,7 +25,7 @@ namespace SpacetimeDB.Editor
 
         /// If you *just* installed SpacetimeDB CLI, this will update PATH in the spawned Process.
         /// Prevents restarting Unity to refresh paths (UX).
-        public static string NewlyInstalledCliEnvDirPath { get; set; }
+        public static string NewlyInstalledCliEnvDirPath { get; private set; }
 
         private static bool _autoResolvedBugIsTryingAgain;
         #endregion // Static state/opts

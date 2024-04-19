@@ -24,15 +24,15 @@ namespace SpacetimeDB.Editor
         {
             await startTests(); // Only if PublisherWindowTester.PUBLISH_WINDOW_TESTS
             await ensureSpacetimeCliInstalledAsync(); // installSpacetimeDbCliAsync() => onInstallSpacetimeDbCliSuccess()
-            // await getServersSetDropdown(autoProgressIdentities: false);
-            // bool revealedIdentityFoldout = await revealIdentitiesGroupIfNotOfflineLocalServerAsync();
-            // if (!revealedIdentityFoldout)
-            // {
-            //     return;
-            // }
-            //
-            // await getIdentitiesSetDropdown(autoProgressPublisher: false);
-            // await revealPublishGroupAndResultCacheIfReady();
+            await getServersSetDropdown(autoProgressIdentities: false);
+            bool revealedIdentityFoldout = await revealIdentitiesGroupIfNotOfflineLocalServerAsync();
+            if (!revealedIdentityFoldout)
+            {
+                return;
+            }
+            
+            await getIdentitiesSetDropdown(autoProgressPublisher: false);
+            await revealPublishGroupAndResultCacheIfReady();
         }
         
         /// Initially called by PublisherWindow @ CreateGUI
@@ -66,6 +66,7 @@ namespace SpacetimeDB.Editor
         private void resetPublish()
         {
             // Hide publish
+            HideUi(publishFoldout);
             HideUi(publishGroupBox);
             HideUi(publishCancelBtn);
             HideUi(publishInstallProgressBar);
@@ -367,12 +368,12 @@ namespace SpacetimeDB.Editor
             // Set the tooltip to equal the path, since it's likely cutoff
             publishModulePathTxt.tooltip = publishModulePathTxt.value;
             
-            // Since we changed the path, we should wipe stale publishAsync info
+            // Since we changed the path, we should wipe stale publishAsync info 
             resetPublishResultCache();
             
             // ServerModulePathTxt persists: If previously entered, show the publishAsync group
             bool hasPathSet = !string.IsNullOrEmpty(publishModulePathTxt.value);
-            if (!hasPathSet || autoProgressPublisher)
+            if (!hasPathSet || !autoProgressPublisher)
             {
                 return;
             }
@@ -602,7 +603,7 @@ namespace SpacetimeDB.Editor
         {
             // Logs for each found, with default shown
             foreach (SpacetimeServer server in servers)
-                Debug.Log($"Found server: {server}");
+                Debug.Log($"Discovered server: {server}");
             
             // Setting will trigger the onIdentitySelectedDropdownChangedAsync event @ PublisherWindow
             for (int i = 0; i < servers.Count; i++)
@@ -720,6 +721,7 @@ namespace SpacetimeDB.Editor
             }
             
             Debug.Log("Localhost server selected: Pinging for online status ...");
+            setPingingLocalServerUi();
             
             // Run CLI cmd
             string serverName = serverSelectedDropdown.value;
@@ -728,6 +730,16 @@ namespace SpacetimeDB.Editor
 
             onLocalServerOnlineOffline(isOnline);
             return !isOnline; // isLocalServerAndOffline
+        }
+
+        private void setPingingLocalServerUi()
+        {
+            publishStartLocalServerBtn.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Action, "Connecting to local server ...");
+            
+            publishStartLocalServerBtn.SetEnabled(false);
+            ShowUi(publishStartLocalServerBtn);
+            HideUi(serverConnectingStatusLabel);
         }
 
         /// <returns>isOnline (successful ping) with short timeout</returns>
@@ -752,16 +764,7 @@ namespace SpacetimeDB.Editor
         {
             if (!isOnline)
             {
-                // Offline
-                ShowUi(publishStartLocalServerBtn);
-                HideUi(publishStopLocalServerBtn);
-                
-                setLocalServerOfflineLabels(); // "Local server offline"
-                publishBtn.SetEnabled(false);
-                
-                // Hide other groups
-                toggleFoldoutRipple(FoldoutGroupType.Identity, show: false);
-                
+                setLocalServerOfflineUi(); // "Local server offline"
                 return;
             }
             
@@ -781,7 +784,7 @@ namespace SpacetimeDB.Editor
         }
         
         /// serverConnectingStatusLabel + publishStatusLabel
-        private void setLocalServerOfflineLabels()
+        private void setLocalServerOfflineUi()
         {
             const string serverOfflineMsg = "Local server offline";
             
@@ -793,6 +796,16 @@ namespace SpacetimeDB.Editor
             
             ShowUi(serverConnectingStatusLabel);
             ShowUi(publishStatusLabel);
+
+            HideUi(publishStopLocalServerBtn);
+            publishStartLocalServerBtn.text = "Start Local Server";
+            publishStartLocalServerBtn.SetEnabled(true);
+            ShowUi(publishStartLocalServerBtn);
+            
+            publishBtn.SetEnabled(false); // Just in case
+
+            // Hide other groups
+            toggleFoldoutRipple(FoldoutGroupType.Identity, show: false);
         }
         
         /// Sets status label to "Ready" and enables+shows Publisher btn
@@ -803,7 +816,7 @@ namespace SpacetimeDB.Editor
 
             if (_lastServerPingSuccess?.IsServerOnline == false)
             {
-                setLocalServerOfflineLabels();
+                setLocalServerOfflineUi();
             }
             else
             {
@@ -963,7 +976,7 @@ namespace SpacetimeDB.Editor
 
             while (IsShowingUi(progressBar))
             {
-                await Task.Delay(TimeSpan.FromSeconds(0.5));
+                await Task.Delay(TimeSpan.FromSeconds(0.2));
 
                 // Replace the 1st character with the next spinner character
                 progressBar.title = spinner[spinnerIndex] + progressBar.title[1..]; 
@@ -1409,7 +1422,12 @@ namespace SpacetimeDB.Editor
             bool isLocalServerAndOffline = await pingLocalServerSetBtnsAsync();
             
             // UI: Hide label fast so it doesn't look laggy
-            HideUi(serverConnectingStatusLabel);
+            if (!isLocalServerAndOffline)
+            {
+                // Don't hide: It should say server offline
+                HideUi(serverConnectingStatusLabel);
+            }
+            
             serverSelectedDropdown.SetEnabled(true);
             serverAddNewShowUiBtn.text = "+";
             resetPublishResultCache(); // We don't want stale info from a different server's publish showing
@@ -1687,7 +1705,7 @@ namespace SpacetimeDB.Editor
             publishStartLocalServerBtn.SetEnabled(true);
             ShowUi(publishStartLocalServerBtn);
             
-            setLocalServerOfflineLabels();
+            setLocalServerOfflineUi();
             publishBtn.SetEnabled(false);
             
             // We should only show the Servers dropdown since we can't do anything with an offline local server

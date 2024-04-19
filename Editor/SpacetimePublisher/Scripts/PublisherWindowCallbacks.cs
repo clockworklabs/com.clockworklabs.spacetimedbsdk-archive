@@ -359,7 +359,7 @@ namespace SpacetimeDB.Editor
             // Process via CLI => Set default, revalidate identities
             try
             {
-                await setDefaultServerRefreshIdentitiesAsync(serverNickname);
+                await setDefaultServerRefreshIdentitiesAsync(serverNickname, autoProgressPublish: true);
             }
             catch (Exception e)
             {
@@ -598,7 +598,7 @@ namespace SpacetimeDB.Editor
             
             try
             {
-                await addIdentityAsync(nickname, email);
+                await addIdentityAsync(nickname, email, autoProgressPublisher: true);
             }
             catch (Exception e)
             {
@@ -615,7 +615,7 @@ namespace SpacetimeDB.Editor
             
             try
             {
-                await addServerAsync(nickname, host);
+                await addServerAsync(nickname, host, autoProgressIdentities: true);
             }
             catch (Exception e)
             {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEditor;
 using static SpacetimeDB.Editor.SpacetimeDbCli;
 
 namespace SpacetimeDB.Editor
@@ -190,5 +191,13 @@ namespace SpacetimeDB.Editor
         
         
         #endregion // Compounded Actions
+        
+        
+        #region Tests
+        /// Test the `spacetime start` CLI command
+        [MenuItem("SpacetimeDB/Test/startDetachedLocalServer %#&T")] // (!) Comment out when done testing
+        private static void TestLaunchServer() =>
+            startDetachedLocalServer();
+        #endregion // Tests
     }
 }

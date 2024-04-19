@@ -19,17 +19,23 @@ namespace SpacetimeDB.Editor
         #region Init from PublisherWindow.CreateGUI
         /// Installs CLI tool, shows identity dropdown, gets identities.
         /// Initially called by PublisherWindow @ CreateGUI.
+        /// !autoProgress so we can better see init order here, manually
         private async Task initDynamicEventsFromPublisherWindow()
         {
             await startTests(); // Only if PublisherWindowTester.PUBLISH_WINDOW_TESTS
-            await ensureSpacetimeCliInstalledAsync();
-            await getServersSetDropdown();
-            await pingLocalServerSetBtnsAsync();
-            // => Continues @ onGetServersSetDropdownSuccess()
-            //     => Localhost? pingLocalServerSetBtnsAsync()
-            // => Continues @ onGetSetIdentitiesSuccessEnsureDefault()
-            // => Continues @ onEnsureIdentityDefaultSuccess()
-            // => Finishes @ revealPublishResultCacheIfHostExists()
+            await ensureSpacetimeCliInstalledAsync(); // installSpacetimeDbCliAsync() => onInstallSpacetimeDbCliSuccess()
+            await getServersSetDropdown(autoProgressIdentities: false);
+            bool revealedIdentityFoldout = await revealIdentitiesGroupIfNotOfflineLocalServerAsync();
+            if (!revealedIdentityFoldout)
+            {
+                return;
+            }
+            
+            await getIdentitiesSetDropdown(autoProgressPublisher: false);
+            await revealPublishGroupAndResultCacheIfReady();
+            // => onGetSetIdentitiesSuccessEnsureDefault()
+            // => onEnsureIdentityDefaultSuccess()
+            // => revealPublishResultCacheIfHostExists()
         }
         
         /// Initially called by PublisherWindow @ CreateGUI
@@ -44,10 +50,20 @@ namespace SpacetimeDB.Editor
             resetServer();
             resetIdentity();
             resetPublish();
+            resetLocalServerGroup();
             resetPublishResultCache();
+            clearLabels();
             
             // Hide all foldouts and labels from Identity+ (show Server)
             toggleFoldoutRipple(startRippleFrom: FoldoutGroupType.Identity, show:false);
+        }
+
+        private void resetLocalServerGroup()
+        {
+            HideUi(publishLocalBtnsHoriz);
+            HideUi(publishStartLocalServerBtn);
+            HideUi(publishStopLocalServerBtn);
+            HideUi(serverConnectingStatusLabel);
         }
 
         private void resetPublish()
@@ -60,7 +76,6 @@ namespace SpacetimeDB.Editor
             resetPublishAdvanced();
             
             HideUi(publishLocalBtnsHoriz);
-            toggleLocalServerStartOrStopBtnGroup(isOnline: false);
         }
 
         private void resetPublishAdvanced()
@@ -251,7 +266,8 @@ namespace SpacetimeDB.Editor
 
         /// Try to get get list of Servers from CLI.
         /// This should be called at init at runtime from PublisherWIndow at CreateGUI time.
-        private async Task getServersSetDropdown()
+        /// autoProgress to reveal Identities group on success?
+        private async Task getServersSetDropdown(bool autoProgressIdentities)
         {
             // Run CLI cmd
             GetServersResult getServersResult = await SpacetimeDbCliActions.GetServersAsync();
@@ -265,23 +281,36 @@ namespace SpacetimeDB.Editor
             }
             
             // Success
-            await onGetServersSetDropdownSuccess(getServersResult);
+            await onGetServersSetDropdownSuccess(getServersResult, autoProgressIdentities);
         }
         #endregion // Init from PublisherWindow.CreateGUI
-        
-        
+
+
         /// Success:
         /// - Get server list and ensure it's default
         /// - Refresh identities, since they are bound per-server
-        private async Task onGetServersSetDropdownSuccess(GetServersResult getServersResult)
+        /// autoProgress to reveal Identities group on success?
+        private async Task onGetServersSetDropdownSuccess(
+            GetServersResult getServersResult,
+            bool autoProgress)
         {
-            await onGetSetServersSuccessEnsureDefaultAsync(getServersResult.Servers);
-            await getIdentitiesSetDropdown(); // Process and reveal the next UI group
+            await onGetSetServersSuccessEnsureDefaultAsync(getServersResult.Servers, autoProgress);
+
+            bool isLocalServerAndOffline = await pingLocalServerSetBtnsAsync();
+            if (isLocalServerAndOffline)
+            {
+                return;
+            }
+
+            if (autoProgress)
+            {
+                await getIdentitiesSetDropdown(autoProgressPublisher: true); // Process and reveal the next UI group
+            }
         }
 
-        /// Try to get list of Identities from CLI.
-        /// (!) Servers must already be set.
-        private async Task getIdentitiesSetDropdown()
+        /// Try to get list of Identities from CLI. (!) Servers must already be set.
+        /// autoProgress to reveal Publisher group on success?
+        private async Task getIdentitiesSetDropdown(bool autoProgressPublisher)
         {
             Debug.Log($"Gathering identities for selected '{serverSelectedDropdown.value}' server...");
             
@@ -305,7 +334,9 @@ namespace SpacetimeDB.Editor
             }
             
             // Success
-            await onGetSetIdentitiesSuccessEnsureDefault(getIdentitiesResult.Identities);
+            await populateIdentitiesDropdownEnsureDefaultAsync(
+                getIdentitiesResult.Identities, 
+                autoProgressPublisher);
         }
         
         /// Validates if we at least have a host name before revealing
@@ -424,7 +455,7 @@ namespace SpacetimeDB.Editor
             _ = await SpacetimeDbPublisherCliActions.AddServerAsync(addServerRequest);
             
             // Success - try again
-            _ = getServersSetDropdown();
+            _ = getServersSetDropdown(autoProgressIdentities: true);
         }
 
         private void onGetSetIdentitiesFail()
@@ -466,8 +497,11 @@ namespace SpacetimeDB.Editor
             HideUi(serverConnectingStatusLabel);
         }
         
-        /// Set the selected identity dropdown. If identities found but no default, [0] will be set. 
-        private async Task onGetSetIdentitiesSuccessEnsureDefault(List<SpacetimeIdentity> identities)
+        /// Set the selected identity dropdown. If identities found but no default, [0] will be set.
+        /// autoProgress to reveal Publisher group on success?
+        private async Task populateIdentitiesDropdownEnsureDefaultAsync(
+            List<SpacetimeIdentity> identities, 
+            bool autoProgressPublisher)
         {
             // Logs for each found, with default shown
             foreach (SpacetimeIdentity identity in identities)
@@ -501,16 +535,17 @@ namespace SpacetimeDB.Editor
             }
 
             // Process result -> Update UI
-            await onEnsureIdentityDefaultSuccessAsync();
+            await onEnsureIdentityDefaultSuccessAsync(autoProgressPublisher);
         }
         
-        private async Task onEnsureIdentityDefaultSuccessAsync()
+        /// autoProgress to reveal Publisher group on success?
+        private async Task onEnsureIdentityDefaultSuccessAsync(bool autoProgressPublisher)
         {
-            // Allow selection, show [+] new reveal ui btn
+            // Allow selection, show [+] identity new reveal ui btn
             identitySelectedDropdown.pickingMode = PickingMode.Position;
             ShowUi(identityAddNewShowUiBtn);
             
-            // Hide UI
+            // Hide "new id" group + status label
             HideUi(identityStatusLabel);
             HideUi(identityNewGroupBox);
             
@@ -518,29 +553,39 @@ namespace SpacetimeDB.Editor
             // if a server was recently changed
             ShowUi(identityFoldout);
             ShowUi(identitySelectedDropdown);
+
+            _foundIdentity = true;
             
-            // Show the next section + UX: Focus the 1st field
-            ShowUi(publishFoldout);
-            ShowUi(identityFoldout);
-            toggleDebugModeIfNotLocalhost(); // Always false if called from init
-            publishModuleNameTxt.Focus();
-            publishModuleNameTxt.SelectNone();
-            
-            // Continue even further to the publish button+?
-            bool readyToPublish = checkIsReadyToPublish();
-            if (readyToPublish)
+            // Show the next section+? +UX: Focus the 1st field
+            if (!autoProgressPublisher)
             {
-                await revealPublisherGroupUiAsync();
+                return;
             }
+
+            await revealPublishGroupAndResultCacheIfReady();
+        }
+
+        private async Task revealPublishGroupAndResultCacheIfReady()
+        {
+            await revealPublisherGroupUiAsync();
             
             // If we have a cached result, show that (minimized)
-            _foundIdentity = true;
             revealPublishResultCacheIfHostExists(openFoldout: false);
         }
 
-        private bool checkIsReadyToPublish() =>
-            !string.IsNullOrEmpty(publishModuleNameTxt.value) &&
-            !string.IsNullOrEmpty(publishModulePathTxt.value);
+        /// <returns>shouldEnablePubBtn</returns>
+        private bool checkShouldEnablePublishBtn()
+        {
+            // Is local server && offline?
+            if (checkIsLocalhostServerSelected() && publishStatusLabel.text.ToLowerInvariant().Contains("offline"))
+            {
+                return false; // !shouldEnablePubBtn
+            }
+            
+            bool hasPubModuleName = !string.IsNullOrEmpty(publishModuleNameTxt.value);
+            bool hasPubModulePath = !string.IsNullOrEmpty(publishModulePathTxt.value);
+            return hasPubModuleName && hasPubModulePath; // shouldEnablePubBtn
+        }
 
         /// Only allow --debug for !localhost (for numerous reasons, including a buffer overload bug)
         /// Always false if called from init (since it will be "Discovering ...")
@@ -552,7 +597,9 @@ namespace SpacetimeDB.Editor
 
         /// Set the selected server dropdown. If servers found but no default, [0] will be set.
         /// Also can be called by OnAddServerSuccess by passing a single server
-        private async Task onGetSetServersSuccessEnsureDefaultAsync(List<SpacetimeServer> servers)
+        private async Task onGetSetServersSuccessEnsureDefaultAsync(
+            List<SpacetimeServer> servers, 
+            bool autoProgressIdentities)
         {
             // Logs for each found, with default shown
             foreach (SpacetimeServer server in servers)
@@ -587,12 +634,13 @@ namespace SpacetimeDB.Editor
             }
 
             // Process result -> Update UI
-            onEnsureServerDefaultSuccess();
+            await onEnsureServerDefaultSuccessAsync(autoProgressIdentities);
         }
 
-        private void onEnsureServerDefaultSuccess()
+        /// autoProgress to reveal Identities group on success?
+        private async Task onEnsureServerDefaultSuccessAsync(bool autoProgressIdentities)
         {
-            // Allow selection, show [+] new reveal ui btn
+            // Allow selection, show [+] server new reveal ui btn
             serverSelectedDropdown.pickingMode = PickingMode.Position;
             ShowUi(serverAddNewShowUiBtn);
             
@@ -600,10 +648,29 @@ namespace SpacetimeDB.Editor
             HideUi(serverStatusLabel);
             HideUi(serverNewGroupBox);
             
-            // Show the next section
-            ShowUi(identityFoldout);
-            
+            // Show the next section, if !isLocalServerAndOffline
             _foundServer = true;
+
+            if (!autoProgressIdentities)
+            {
+                return;
+            }
+
+            _ = await revealIdentitiesGroupIfNotOfflineLocalServerAsync();
+        }
+
+        /// <summary>autoProgress to reveal Publisher group on success?</summary>
+        /// <returns>revealedIdentityFoldout</returns>
+        private async Task<bool> revealIdentitiesGroupIfNotOfflineLocalServerAsync()
+        {
+            bool isLocalServerAndOffline = await pingLocalServerSetBtnsAsync();
+            if (!isLocalServerAndOffline)
+            {
+                ShowUi(identityFoldout);
+                return true; // revealedIdentityFoldout
+            }
+
+            return false; // !revealedIdentityFoldout
         }
 
         /// This will reveal the group and initially check for the spacetime cli tool
@@ -611,26 +678,34 @@ namespace SpacetimeDB.Editor
         {
             // Show and enable group, but disable the publishAsync btn
             // to check/install Spacetime CLI tool
+            clearLabels();
             publishGroupBox.SetEnabled(true);
             publishBtn.SetEnabled(false);
             setPublishReadyStatusIfOnline();
             ShowUi(publishStatusLabel);
             ShowUi(publishGroupBox);
-            toggleDebugModeIfNotLocalhost();
-            
+            toggleDebugModeIfNotLocalhost(); // Always false if called from init
+            ShowUi(publishFoldout);
+
             // If localhost, show start|stop server btns async on separate thread
             if (_foundServer)
             {
-                await pingLocalServerSetBtnsAsync();
+                bool isLocalServerAndOffline = await pingLocalServerSetBtnsAsync();
             }
+            
+            publishModuleNameTxt.Focus();
+            publishModuleNameTxt.SelectNone();
         }
 
+        /// <summary>
         /// 1. Shows or hide localhost btns if localhost
         /// 2. If localhost:
         ///     a. Pings the local server to see if it's online
         ///     b. Shows either Start|Stop local server btn
-        ///     c. If offline, disable Publish btn
-        private async Task pingLocalServerSetBtnsAsync()
+        ///     c. If offline, hide identities group + disable Publish btn
+        /// </summary>
+        /// <returns>isLocalServerAndOffline</returns>
+        private async Task<bool> pingLocalServerSetBtnsAsync()
         {
             HideUi(publishLocalBtnsHoriz);
             
@@ -642,7 +717,7 @@ namespace SpacetimeDB.Editor
             else
             {
                 HideUi(publishLocalBtnsHoriz);
-                return;
+                return false; // !isLocalServerAndOffline
             }
             
             Debug.Log("Localhost server selected: Pinging for online status ...");
@@ -652,7 +727,8 @@ namespace SpacetimeDB.Editor
             bool isOnline = await checkIsLocalServerOnlineAsync(serverName);
             Debug.Log($"Local server online? {isOnline}");
 
-            toggleLocalServerStartOrStopBtnGroup(isOnline);
+            onLocalServerOnlineOffline(isOnline);
+            return !isOnline; // isLocalServerAndOffline
         }
 
         /// <returns>isOnline (successful ping) with short timeout</returns>
@@ -661,40 +737,62 @@ namespace SpacetimeDB.Editor
             Assert.IsTrue(checkIsLocalhostServerSelected(), $"Expected {nameof(checkIsLocalhostServerSelected)}");
 
             // Run CLI command with short timeout
-            _lastServerPingSuccess = await SpacetimeDbCliActions.PingServerAsync(serverName);
+            PingServerResult pingResult = await SpacetimeDbCliActions.PingServerAsync(serverName);
             
             // Process result
-            bool isSuccess = _lastServerPingSuccess.IsServerOnline;
+            bool isSuccess = pingResult.IsServerOnline;
+            if (isSuccess)
+            {
+                _lastServerPingSuccess = pingResult;
+            }
+            
             return isSuccess;
         }
 
-        /// This includes the Publish btn, disabling if !online
-        private void toggleLocalServerStartOrStopBtnGroup(bool isOnline)
+        private void onLocalServerOnlineOffline(bool isOnline)
         {
-            if (isOnline)
+            if (!isOnline)
             {
-                HideUi(publishStartLocalServerBtn);
-                ShowUi(publishStopLocalServerBtn);
-                
-                setStopLocalServerBtnTxt();
-                setPublishReadyStatusIfOnline();
-            }
-            else // Offline
-            { 
+                // Offline
                 ShowUi(publishStartLocalServerBtn);
                 HideUi(publishStopLocalServerBtn);
                 
-                setLocalServerOfflinePublishLabel();
+                setLocalServerOfflineLabels(); // "Local server offline"
+                publishBtn.SetEnabled(false);
+                
+                // Hide other groups
+                toggleFoldoutRipple(FoldoutGroupType.Identity, show: false);
+                
+                return;
             }
-
-            publishBtn.SetEnabled(isOnline);
+            
+            // Online
+            clearLabels();
+            HideUi(publishStartLocalServerBtn);
+            ShowUi(publishStopLocalServerBtn);
+                
+            setStopLocalServerBtnTxt();
+            setPublishReadyStatusIfOnline();
         }
 
-        private void setLocalServerOfflinePublishLabel()
+        private void clearLabels()
         {
+            publishStatusLabel.text = "";
+            serverConnectingStatusLabel.text = "";
+        }
+        
+        /// serverConnectingStatusLabel + publishStatusLabel
+        private void setLocalServerOfflineLabels()
+        {
+            const string serverOfflineMsg = "Local server offline";
+            
+            serverConnectingStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Error, serverOfflineMsg);
+            
             publishStatusLabel.text = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Error, 
-                "Local server offline");
+                SpacetimeMeta.StringStyle.Error, serverOfflineMsg);
+            
+            ShowUi(serverConnectingStatusLabel);
             ShowUi(publishStatusLabel);
         }
         
@@ -706,7 +804,7 @@ namespace SpacetimeDB.Editor
 
             if (_lastServerPingSuccess?.IsServerOnline == false)
             {
-                setLocalServerOfflinePublishLabel();
+                setLocalServerOfflineLabels();
             }
             else
             {
@@ -1003,7 +1101,11 @@ namespace SpacetimeDB.Editor
             HideUi(publishResultFoldout);
         }
         
-        private async Task addIdentityAsync(string nickname, string email)
+        /// autoProgress to reveal Publisher group on success?
+        private async Task addIdentityAsync(
+            string nickname,
+            string email,
+            bool autoProgressPublisher)
         {
             // Sanity check
             if (string.IsNullOrEmpty(nickname) || string.IsNullOrEmpty(email))
@@ -1025,17 +1127,20 @@ namespace SpacetimeDB.Editor
             }
             else
             {
-                onAddIdentitySuccess(identity);
+                onAddIdentitySuccess(identity, autoProgressPublisher);
             }
         }
         
         /// Success: Add to dropdown + set default + show. Hide the [+] add group.
         /// Don't worry about caching choices; we'll get the new choices via CLI each load
-        private async void onAddIdentitySuccess(SpacetimeIdentity identity)
+        /// autoProgress to reveal Publisher group on success?
+        private async void onAddIdentitySuccess(SpacetimeIdentity identity, bool autoProgressPublisher)
         {
             Debug.Log($"Add new identity success: {identity.Nickname}");
             resetPublishResultCache();
-            await onGetSetIdentitiesSuccessEnsureDefault(new List<SpacetimeIdentity> { identity });
+            
+            List<SpacetimeIdentity> identities = new() { identity };
+            await populateIdentitiesDropdownEnsureDefaultAsync(identities, autoProgressPublisher);
         }
         
         private void onAddIdentityFail(SpacetimeIdentity identity, AddIdentityResult addIdentityResult)
@@ -1071,7 +1176,11 @@ namespace SpacetimeDB.Editor
             HideUi(publishResultFoldout);
         }
         
-        private async Task addServerAsync(string nickname, string host)
+        /// autoProgress Identities on success?
+        private async Task addServerAsync(
+            string nickname,
+            string host,
+            bool autoProgressIdentities)
         {
             // Sanity check
             if (string.IsNullOrEmpty(nickname) || string.IsNullOrEmpty(host))
@@ -1094,7 +1203,7 @@ namespace SpacetimeDB.Editor
             }
             else
             {
-                onAddServerSuccess(serverAdded);
+                onAddServerSuccess(serverAdded, autoProgressIdentities);
             }
         }
         
@@ -1110,11 +1219,14 @@ namespace SpacetimeDB.Editor
         
         /// Success: Add to dropdown + set default + show. Hide the [+] add group.
         /// Don't worry about caching choices; we'll get the new choices via CLI each load
-        private void onAddServerSuccess(SpacetimeServer server)
+        /// autoProgress to reveal Identities group on success?
+        private void onAddServerSuccess(SpacetimeServer server, bool autoProgressIdentities)
         {
             Debug.Log($"Add new server success: {server.Nickname}");
             resetPublishResultCache();
-            _ = onGetSetServersSuccessEnsureDefaultAsync(new List<SpacetimeServer> { server });
+
+            List<SpacetimeServer> serverList = new() { server };
+            _ = onGetSetServersSuccessEnsureDefaultAsync(serverList, autoProgressIdentities);
         }
 
         private async Task setDefaultIdentityAsync(string idNicknameOrDbAddress)
@@ -1243,7 +1355,10 @@ namespace SpacetimeDB.Editor
         /// Change to a *known* nicknameOrHost
         /// - Changes CLI default server
         /// - Revalidates identities, since they are bound per-server
-        private async Task setDefaultServerRefreshIdentitiesAsync(string nicknameOrHost)
+        /// - autoProgress to reveal Publish group on success?
+        private async Task setDefaultServerRefreshIdentitiesAsync(
+            string nicknameOrHost, 
+            bool autoProgressPublish)
         {
             // Sanity check
             if (string.IsNullOrEmpty(nicknameOrHost))
@@ -1264,7 +1379,7 @@ namespace SpacetimeDB.Editor
             }
             else
             {
-                await onChangeDefaultServerSuccessAsync();
+                await onChangeDefaultServerSuccessAsync(autoProgressPublish);
             }
             
             toggleSelectedServerProcessingEnabled(setEnabled: true);
@@ -1289,19 +1404,29 @@ namespace SpacetimeDB.Editor
         }
         
         /// Invalidate identities
-        private async Task onChangeDefaultServerSuccessAsync()
+        /// autoProgress to reveal Identities group on success?
+        private async Task onChangeDefaultServerSuccessAsync(bool autoProgressIdentities)
         {
-            await pingLocalServerSetBtnsAsync();
+            bool isLocalServerAndOffline = await pingLocalServerSetBtnsAsync();
             
             // UI: Hide label fast so it doesn't look laggy
             HideUi(serverConnectingStatusLabel);
-            
-            await getIdentitiesSetDropdown(); // Process and reveal the next UI group
-            
             serverSelectedDropdown.SetEnabled(true);
             serverAddNewShowUiBtn.text = "+";
-            HideUi(serverConnectingStatusLabel);
             resetPublishResultCache(); // We don't want stale info from a different server's publish showing
+            
+            // Process and reveal the next UI group
+            if (!autoProgressIdentities)
+            {
+                return;
+            }
+
+            // (!) Don't reveal the identities group if we selected a local server and it's offline
+            // Any Identity interactions (or anything after this) requires a live server
+            if (!isLocalServerAndOffline)
+            {
+                await getIdentitiesSetDropdown(autoProgressPublisher: true);
+            }
         }
 
         /// Disable generate btn, show "GGenerating..." label
@@ -1518,7 +1643,9 @@ namespace SpacetimeDB.Editor
             if (_lastServerPingSuccess.Port == 0)
             {
                 string serverName = serverSelectedDropdown.value;
-                _lastServerPingSuccess = await SpacetimeDbCliActions.PingServerAsync(serverName);
+                PingServerResult pingResult = await SpacetimeDbCliActions.PingServerAsync(serverName);
+                if (pingResult.IsServerOnline)
+                    _lastServerPingSuccess = pingResult;
             }
             
             // Validate + Logs + UI
@@ -1560,7 +1687,7 @@ namespace SpacetimeDB.Editor
             publishStartLocalServerBtn.SetEnabled(true);
             ShowUi(publishStartLocalServerBtn);
             
-            setLocalServerOfflinePublishLabel();
+            setLocalServerOfflineLabels();
             publishBtn.SetEnabled(false);
         }
     }

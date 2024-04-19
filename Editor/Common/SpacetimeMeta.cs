@@ -1,3 +1,5 @@
+using System.IO;
+
 /// Static metadata for SpacetimeDB editor scripts
 public static class SpacetimeMeta
 {
@@ -15,10 +17,11 @@ public static class SpacetimeMeta
     public static string LOCAL_HOST_URL => $"http://127.0.0.1:{DEFAULT_PORT}";
     
     public const string SDK_PACKAGE_NAME = "com.clockworklabs.spacetimedbsdk";
-    public const string COMMON_DIR_PATH = "Packages/" + SDK_PACKAGE_NAME + "/Editor/Common";
+    public static string SPACETIMEDB_EDITOR_DIR_PATH => Path.Join("Packages", SDK_PACKAGE_NAME, "Editor"); 
+    public static string COMMON_DIR_PATH => Path.Join(SPACETIMEDB_EDITOR_DIR_PATH, "Common");
     
     /// Path to common SpacetimeDB Editor USS styles
-    public static string PathToCommonUss => $"{COMMON_DIR_PATH}/CommonStyles.uss";
+    public static string PathToCommonUss => Path.Join(COMMON_DIR_PATH, "CommonStyles.uss");
     
     /// Useful for adding new servers and you want the "Host" to be an alias
     /// to prevent forcing the user to memorize full urls and default ports

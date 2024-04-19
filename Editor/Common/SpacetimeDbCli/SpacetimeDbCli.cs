@@ -211,7 +211,8 @@ namespace SpacetimeDB.Editor
         public static async Task<SpacetimeCliResult> runCliCommandAsync(
             string argSuffix,
             CancellationToken cancelToken = default,
-            bool runInBackground = false)
+            bool runInBackground = false,
+            bool logErrs = true)
         {
             // Args
             string terminal = getTerminalPrefix(); // Determine terminal based on platform
@@ -273,7 +274,7 @@ namespace SpacetimeDB.Editor
             
             // Process results, log err (if any), return parsed Result 
             SpacetimeCliResult cliResult = new(output, error);
-            logCliResults(cliResult);
+            logCliResults(cliResult, logErrs);
 
             // Can we auto-resolve this issue and try again?
             if (cliResult.HasCliErr && cliResult.CliError != "Canceled" && !_autoResolvedBugIsTryingAgain)
@@ -381,7 +382,7 @@ namespace SpacetimeDB.Editor
             }
         }
 
-        private static void logCliResults(SpacetimeCliResult cliResult)
+        private static void logCliResults(SpacetimeCliResult cliResult, bool logErrs)
         {
             bool hasOutput = !string.IsNullOrEmpty(cliResult.CliOutput);
             bool hasLogLevelInfoNoErr = CLI_LOG_LEVEL == CliLogLevel.Info && !cliResult.HasCliErr;
@@ -402,6 +403,11 @@ namespace SpacetimeDB.Editor
                 if (isWarning)
                 {
                     Debug.LogWarning($"CLI Warning: {cliResult.CliError}");
+                }
+                else if (!logErrs)
+                {
+                    // Err, bug instructed to skip logs
+                    return;
                 }
                 else
                 {

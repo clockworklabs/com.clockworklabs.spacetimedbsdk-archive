@@ -78,27 +78,16 @@ namespace SpacetimeDB.Editor
         /// <param name="cancelToken">If left default, set to 200ms timeout</param>
         public static async Task<PingServerResult> PingServerAsync(
             string serverName, 
-            CancellationToken cancelToken = default)
+            CancellationToken cancelToken = default,
+            bool logErrors = false)
         {
-            CancellationTokenSource cts = null;
+            string argSuffix = $"spacetime server ping {serverName}";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(
+                argSuffix, 
+                cancelToken, 
+                logErrs: logErrors);
             
-            try
-            {
-                // If no cancel token was provided, set to default 200ms timeout
-                if (cancelToken == default)
-                {
-                    cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
-                    cancelToken = cts.Token;
-                }
-    
-                string argSuffix = $"spacetime server ping {serverName}";
-                SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix, cancelToken);
-                return new PingServerResult(cliResult);
-            }
-            finally
-            {
-                cts?.Dispose();
-            }
+            return new PingServerResult(cliResult);
         }
         
         /// Uses the `spacetime start` CLI command. Runs in background in a detached service.

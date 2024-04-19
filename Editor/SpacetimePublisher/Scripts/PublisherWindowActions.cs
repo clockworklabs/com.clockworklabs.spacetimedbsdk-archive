@@ -439,10 +439,10 @@ namespace SpacetimeDB.Editor
             Debug.Log("Regenerating default servers: [ local, testnet* ] *Becomes default");
             
             // UI
-            serverStatusLabel.text = SpacetimeMeta.GetStyledStr(
+            serverConnectingStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, 
                 "<b>Regenerating default servers:</b>\n[ local, testnet* ]");
-            ShowUi(serverStatusLabel);
+            ShowUi(serverConnectingStatusLabel);
 
             AddServerRequest addServerRequest = null;
             
@@ -645,7 +645,7 @@ namespace SpacetimeDB.Editor
             ShowUi(serverAddNewShowUiBtn);
             
             // Hide UI
-            HideUi(serverStatusLabel);
+            HideUi(serverConnectingStatusLabel);
             HideUi(serverNewGroupBox);
             
             // Show the next section, if !isLocalServerAndOffline
@@ -1164,9 +1164,9 @@ namespace SpacetimeDB.Editor
         {
             // UI: Disable btn + show installing status to id label
             serverAddBtn.SetEnabled(false);
-            serverStatusLabel.text = SpacetimeMeta.GetStyledStr(
+            serverConnectingStatusLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, $"Adding {nickname} ...");
-            ShowUi(serverStatusLabel);
+            ShowUi(serverConnectingStatusLabel);
             
             // Hide the other sections (while clearing out their labels), since we rely on servers
             HideUi(identityStatusLabel);
@@ -1210,11 +1210,11 @@ namespace SpacetimeDB.Editor
         private void onAddServerFail(SpacetimeServer serverAdded, AddServerResult addServerResult)
         {
             serverAddBtn.SetEnabled(true);
-            serverStatusLabel.text = SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Error, 
+            serverConnectingStatusLabel.text = SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Error, 
                 $"<b>Failed:</b> Couldn't add `{serverAdded.Nickname}` server</b>\n" +
                 addServerResult.StyledFriendlyErrorMessage);
                 
-            ShowUi(serverStatusLabel);
+            ShowUi(serverConnectingStatusLabel);
         }
         
         /// Success: Add to dropdown + set default + show. Hide the [+] add group.
@@ -1293,7 +1293,7 @@ namespace SpacetimeDB.Editor
                 }
                 else
                 {
-                    HideUi(serverStatusLabel);
+                    HideUi(serverConnectingStatusLabel);
                     HideUi(serverFoldout);
                 }
             }
@@ -1563,6 +1563,7 @@ namespace SpacetimeDB.Editor
 
         private void setStartingLocalServerUi()
         {
+            FadeOutUi(serverConnectingStatusLabel);
             FadeOutUi(publishStatusLabel);
             publishStartLocalServerBtn.SetEnabled(false);
             publishStartLocalServerBtn.text = SpacetimeMeta.GetStyledStr(
@@ -1596,9 +1597,10 @@ namespace SpacetimeDB.Editor
 
         private void onStartLocalServerSuccess(PingServerResult pingResult)
         {
-            Debug.Log($"Started local server on port `{_lastServerPingSuccess}`");
+            Debug.Log($"Started local server @ `{_lastServerPingSuccess}`");
             _lastServerPingSuccess = pingResult;
 
+            HideUi(serverConnectingStatusLabel);
             HideUi(publishStartLocalServerBtn);
             
             // The server is now running: Show the button to stop it (with a slight delay to enable)

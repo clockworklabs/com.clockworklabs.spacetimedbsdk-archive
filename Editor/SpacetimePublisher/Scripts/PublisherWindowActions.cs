@@ -32,7 +32,13 @@ namespace SpacetimeDB.Editor
             }
             
             await getIdentitiesSetDropdown(autoProgressPublisher: false);
-            await revealPublishGroupAndResultCacheIfReady();
+
+            bool selectedIdentity = identitySelectedDropdown.index >= 0;
+            bool identitySelectedAndVisible = selectedIdentity && IsShowingUi(identitySelectedDropdown);
+            if (identitySelectedAndVisible)
+            {
+                await revealPublishGroupAndResultCache();
+            }
         }
         
         /// Initially called by PublisherWindow @ CreateGUI
@@ -475,6 +481,9 @@ namespace SpacetimeDB.Editor
             // UX: Focus Nickname field
             identityNicknameTxt.Focus();
             identityNicknameTxt.SelectAll();
+            
+            // We shouldn't show anything below
+            toggleFoldoutRipple(FoldoutGroupType.Publish, show: false);
         }
 
         /// Works around UI Builder bug on init that will add the literal "string" type to [0]
@@ -562,10 +571,10 @@ namespace SpacetimeDB.Editor
                 return;
             }
 
-            await revealPublishGroupAndResultCacheIfReady();
+            await revealPublishGroupAndResultCache();
         }
 
-        private async Task revealPublishGroupAndResultCacheIfReady()
+        private async Task revealPublishGroupAndResultCache()
         {
             await revealPublisherGroupUiAsync();
             

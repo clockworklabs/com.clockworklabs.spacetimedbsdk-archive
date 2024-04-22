@@ -46,7 +46,7 @@ namespace SpacetimeDB.Editor
             switch (Application.platform)
             {
                 case RuntimePlatform.WindowsEditor:
-                    argSuffix = "powershell -Command \"iwr https://windows.spacetimedb.com -UseBasicParsing | iex\"\n";
+                    argSuffix = "powershell -Command \"iwr https://windows.spacetimedb.com -UseBasicParsing | iex";
                     break;
                 
                 case RuntimePlatform.OSXEditor:

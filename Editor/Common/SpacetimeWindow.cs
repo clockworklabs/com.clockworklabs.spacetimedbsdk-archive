@@ -88,22 +88,14 @@ namespace SpacetimeDB.Editor
         public static bool IsShowingUi(VisualElement element) =>
             element.resolvedStyle.display == DisplayStyle.Flex;
         
-        /// Cross-platform
-        public static void OpenDirectoryWindow(string pathToDir)
+        /// Copies to clipboard + logs
+        public static void CopyToClipboard(string str)
         {
-            // Open the folder based on the operating system
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Process.Start("explorer.exe", pathToDir);
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                Process.Start("open", pathToDir);
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                Process.Start("xdg-open", pathToDir);
-            }
+            GUIUtility.systemCopyBuffer = str;
+            Debug.Log($"Copied to clipboard: {str}");
         }
+
+        public static string NormalizePath(string pathToProjFile) =>
+            pathToProjFile.Replace(@"\", "/");
     }
 }

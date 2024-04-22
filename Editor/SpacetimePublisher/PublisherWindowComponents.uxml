@@ -69,7 +69,7 @@
                 <ui:TextField picking-mode="Ignore" label="DB Address:" name="publishResultDbAddressTxt" multiline="true" tooltip="The DB Address mapped to your Server Module Name" view-data-key="publishResultDbAddressTxt" readonly="true" focusable="false" />
                 <ui:VisualElement name="optimizedHorizontal" style="flex-grow: 1; flex-direction: row;">
                     <ui:Toggle label="Optimized Build:" name="publishResultIsOptimizedBuildToggle" view-data-key="publishResultIsOptimizedBuildToggle" tooltip="via `opt-wasm`" value="false" focusable="false" style="flex-direction: row; align-self: center;" />
-                    <ui:Button text="Install via GitHub" parse-escape-sequences="true" display-tooltip-when-elided="true" name="installWasmOptBtn" tooltip="https://github.com/WebAssembly/binaryen/releases" style="flex-grow: 1; font-size: 12px;" />
+                    <ui:Button text="Get Optimization Pkg (GitHub)" parse-escape-sequences="true" display-tooltip-when-elided="true" name="installWasmOptBtn" tooltip="https://github.com/WebAssembly/binaryen/releases" style="flex-grow: 1; font-size: 12px;" />
                 </ui:VisualElement>
                 <ui:VisualElement name="horizWrapper" style="flex-grow: 1; flex-direction: row;">
                     <ui:Button text="Generate Client Typings" parse-escape-sequences="true" display-tooltip-when-elided="true" name="publishResultGenerateClientFilesBtn" tooltip="Outputs client files to `Assets/StdbAutogen`" style="flex-grow: 1; font-size: 12px; width: 130px;" />

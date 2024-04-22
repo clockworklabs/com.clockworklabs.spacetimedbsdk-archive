@@ -930,7 +930,7 @@ namespace SpacetimeDB.Editor
             publishResultIsOptimizedBuildToggle.value = publishResult.IsPublishWasmOptimized;
             
             // Show install pkg button, to optionally optimize next publish
-            if (publishResult.IsPublishWasmOptimized)
+            if (publishResult.IsPublishWasmOptimized || publishResultIsOptimizedBuildToggle.value)
             {
                 HideUi(installWasmOptBtn);
             }
@@ -1288,7 +1288,7 @@ namespace SpacetimeDB.Editor
             publishResultDbAddressTxt.value = "";
             
             publishResultIsOptimizedBuildToggle.value = false;
-            HideUi(installWasmOptBtn);
+            ShowUi(installWasmOptBtn);
             HideUi(installWasmOptProgressBar);
             
             HideUi(publishResultStatusLabel);

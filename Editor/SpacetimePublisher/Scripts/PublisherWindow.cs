@@ -24,6 +24,9 @@ namespace SpacetimeDB.Editor
         /// awkwardly if you jump from input to a file picker button
         private bool _isFilePicking;
 
+        /// On fingerprint err, we'll regenerate => try again once
+        private bool _justRegeneratedFingerprint;
+
         /// There's a known bug where default servers get wiped with no apparent pattern.
         /// We'll try once to add them back in.
         private bool _isRegeneratingDefaultServers;

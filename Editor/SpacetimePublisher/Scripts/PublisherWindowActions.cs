@@ -31,7 +31,7 @@ namespace SpacetimeDB.Editor
                 return;
             }
             
-            await getIdentitiesSetDropdown(autoProgressPublisher: false);
+            await getIdentitiesSetDropdownAsync(autoProgressPublisher: false);
 
             bool selectedIdentity = identitySelectedDropdown.index >= 0;
             bool identitySelectedAndVisible = selectedIdentity && IsShowingUi(identitySelectedDropdown);
@@ -316,13 +316,13 @@ namespace SpacetimeDB.Editor
 
             if (autoProgress)
             {
-                await getIdentitiesSetDropdown(autoProgressPublisher: true); // Process and reveal the next UI group
+                await getIdentitiesSetDropdownAsync(autoProgressPublisher: true); // Process and reveal the next UI group
             }
         }
 
         /// Try to get list of Identities from CLI. (!) Servers must already be set.
         /// autoProgress to reveal Publisher group on success?
-        private async Task getIdentitiesSetDropdown(bool autoProgressPublisher)
+        private async Task getIdentitiesSetDropdownAsync(bool autoProgressPublisher)
         {
             Debug.Log($"Gathering identities for selected '{serverSelectedDropdown.value}' server...");
             
@@ -341,7 +341,7 @@ namespace SpacetimeDB.Editor
             bool isSuccess = getIdentitiesResult.HasIdentity;
             if (!isSuccess)
             {
-                onGetSetIdentitiesFail();
+                await onGetIdentitiesFailAsync(getIdentitiesResult);
                 return;
             }
             
@@ -471,9 +471,68 @@ namespace SpacetimeDB.Editor
             // Success - try again
             _ = getServersSetDropdown(autoProgressIdentities: true);
         }
-
-        private void onGetSetIdentitiesFail()
+        
+        /// Attempt to regenerate the fingerprint for the selected server
+        /// This should not be called in response to a bad ping or server offline issue (eg: Local server may be offline)
+        private async Task regenerateFingerprintAsync()
         {
+            if (_justRegeneratedFingerprint)
+            {
+                _justRegeneratedFingerprint = false;
+                throw new Exception("Auto-regenerate fingerprint failed. " +
+                    "Try manually via terminal: `spacetime server fingerprint {serverName}`");
+            }
+            
+            _justRegeneratedFingerprint = true;
+            string serverName = serverSelectedDropdown.value;
+            Debug.Log($"Regenerating fingerprint for {serverName}");
+            
+            // UI
+            serverConnectingStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                SpacetimeMeta.StringStyle.Action, 
+                "Regenerating fingerprint ...");
+            ShowUi(serverConnectingStatusLabel);
+
+            SpacetimeCliResult cliResult = await SpacetimeDbCliActions.CreateFingerprintAsync(serverName);
+            bool isSuccess = !cliResult.HasCliErr;
+            Assert.IsTrue(isSuccess, $"Expected {nameof(regenerateFingerprintAsync)} {nameof(isSuccess)}: " +
+                "Try restarting Publisher tool");
+        }
+
+        /// <summary>Specific fixes will have flags to prevent infinite loops</summary>
+        /// <returns>isResolvedTryAgain</returns>
+        private async Task<bool> tryResolveCommonCliErrorsAsync(SpacetimeCliResult cliResult)
+        {
+            bool isMissingFingerprintErr = cliResult.RawCliErrorCode == SpacetimeCliResult.CliErrorCode.NoFingerprint;
+            
+            if (isMissingFingerprintErr)
+            {
+                Debug.LogError("No saved fingerprint found: " +
+                               "Regenerating default fingerprint and trying again...");
+                await regenerateFingerprintAsync();
+                
+                // Try again
+                await getIdentitiesSetDropdownAsync(autoProgressPublisher: true);
+                
+                Debug.Log($"{nameof(tryResolveCommonCliErrorsAsync)} resolved the issue with {nameof(regenerateFingerprintAsync)}");
+                return true; // isResolvedTryAgain            
+            }
+
+            return false; // !isResolved
+        }
+
+        /// On failure, regenerate fingerprint
+        private async Task onGetIdentitiesFailAsync(GetIdentitiesResult getIdentitiesResult)
+        {
+            // 1st, ensure it's not an auto-fixable error, such as a fingerprint issue
+            bool resolvedErrTryAgain = await tryResolveCommonCliErrorsAsync(getIdentitiesResult);
+            if (resolvedErrTryAgain)
+            {
+                // The above func set a flag to prevent infinite loops: Try again!
+                await getIdentitiesSetDropdownAsync(autoProgressPublisher: true);
+                return;                
+            }
+            
             // Hide dropdown, reveal new ui group
             Debug.Log("No identities found - revealing 'add new identity' group");
             
@@ -757,6 +816,7 @@ namespace SpacetimeDB.Editor
             publishStartLocalServerBtn.SetEnabled(false);
             ShowUi(publishStartLocalServerBtn);
             HideUi(serverConnectingStatusLabel);
+            HideUi(publishStopLocalServerBtn);
         }
 
         /// <returns>isOnline (successful ping) with short timeout</returns>
@@ -881,13 +941,22 @@ namespace SpacetimeDB.Editor
             }
             else
             {
-                onPublishFail(publishResult);
+                onPublishFailAsync(publishResult);
             }
         }
         
         /// Critical err - show label
-        private void onPublishFail(PublishResult publishResult)
+        private async void onPublishFailAsync(PublishResult publishResult)
         {
+            // 1st, ensure it's not an auto-fixable error, such as a fingerprint issue
+            bool resolvedErrTryAgain = await tryResolveCommonCliErrorsAsync(publishResult);
+            if (resolvedErrTryAgain)
+            {
+                // The above func set a flag to prevent infinite loops: Try again!
+                await publishAsync();
+                return;                
+            }
+            
             _cachedPublishResult = null;
 
             if (publishResult.PublishErrCode == PublishResult.PublishErrorCode.Dotnet8PlusMissing)
@@ -1418,7 +1487,7 @@ namespace SpacetimeDB.Editor
             // Any Identity interactions (or anything after this) requires a live server
             if (!isLocalServerAndOffline)
             {
-                await getIdentitiesSetDropdown(autoProgressPublisher: true);
+                await getIdentitiesSetDropdownAsync(autoProgressPublisher: true);
             }
         }
 
@@ -1603,7 +1672,7 @@ namespace SpacetimeDB.Editor
             _ = WaitEnableElementAsync(publishStopLocalServerBtn, TimeSpan.FromSeconds(1));
             
             // setPublishReadyStatusIfOnline();
-            await getIdentitiesSetDropdown(autoProgressPublisher: true);
+            await getIdentitiesSetDropdownAsync(autoProgressPublisher: true);
         }
 
         /// Sets stop server btn to "Stop {server}@{hostUrlWithoutHttp}"
@@ -1635,6 +1704,11 @@ namespace SpacetimeDB.Editor
         /// <returns>stoppedServer</returns>
         private async Task<bool> stopLocalServer()
         {
+            // Validate + Logs + UI
+            Debug.Log($"Attempting to force stop local server running on port:{_lastKnownPort}");
+            setStoppingLocalServerUi();
+            
+            // Get known port, if any -- or ensure _lastServerPingSuccess is set
             if (_lastServerPingSuccess.Port == 0)
             {
                 string serverName = serverSelectedDropdown.value;
@@ -1642,10 +1716,6 @@ namespace SpacetimeDB.Editor
                 if (pingResult.IsServerOnline)
                     _lastServerPingSuccess = pingResult;
             }
-            
-            // Validate + Logs + UI
-            Debug.Log($"Attempting to force stop local server running on port:{_lastKnownPort}");
-            setStoppingLocalServerUi();
             
             // Run CLI cmd => Save to state cache
             SpacetimeCliResult cliResult = await SpacetimeDbCliActions.ForceStopLocalServerAsync(_lastKnownPort);
@@ -1669,6 +1739,7 @@ namespace SpacetimeDB.Editor
             publishStopLocalServerBtn.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Action, "Stopping ...");
             FadeOutUi(publishStatusLabel);
+            toggleFoldoutRipple(FoldoutGroupType.Identity, show: false);
         }
 
         /// We stopped -> So now we want to show start (+disable publish)

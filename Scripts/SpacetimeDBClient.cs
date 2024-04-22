@@ -276,7 +276,10 @@ namespace SpacetimeDB
                 {
                     var message = _messageQueue.Take(_preProcessCancellationToken);
                     var preprocessedMessage = PreProcessMessage(message.Item1, message.Item2);
-                    _preProcessedNetworkMessages.Add(preprocessedMessage, _preProcessCancellationToken);
+                    if (preprocessedMessage.HasValue)
+                    {
+                        _preProcessedNetworkMessages.Add(preprocessedMessage.Value, _preProcessCancellationToken);    
+                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -285,12 +288,20 @@ namespace SpacetimeDB
                 }
             }
 
-            PreProcessedMessage PreProcessMessage(byte[] bytes, DateTime timestamp)
+            PreProcessedMessage? PreProcessMessage(byte[] bytes, DateTime timestamp)
             {
                 var dbOps = new List<DbOp>();
                 using var compressedStream = new MemoryStream(bytes);
                 using var decompressedStream = new BrotliStream(compressedStream, CompressionMode.Decompress);
                 var message = Message.Parser.ParseFrom(decompressedStream);
+                if (message.TypeCase == Message.TypeOneofCase.TransactionUpdate)
+                {
+                    var callerId = Identity.From(message.TransactionUpdate.Event.CallerIdentity.ToByteArray());
+                    if (callerId != clientIdentity)
+                    {
+                        return null;
+                    }
+                }
                 using var stream = new MemoryStream();
                 using var reader = new BinaryReader(stream);
 

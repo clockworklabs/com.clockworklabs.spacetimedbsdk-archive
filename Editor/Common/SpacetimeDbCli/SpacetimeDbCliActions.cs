@@ -113,15 +113,6 @@ namespace SpacetimeDB.Editor
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
             return cliResult;
         }
-        
-        /// Uses the `spacetime init` CLI command.
-        public static async Task<SpacetimeCliResult> CreateNewServerModule(SpacetimeMeta.ModuleLang lang, string initProjDirPath)
-        {
-            string langArg = lang.ToString().ToLowerInvariant();
-            string argSuffix = $"spacetime init --lang {langArg} {initProjDirPath}";
-            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
-            return cliResult;
-        }
         #endregion // High Level CLI Actions
         
         

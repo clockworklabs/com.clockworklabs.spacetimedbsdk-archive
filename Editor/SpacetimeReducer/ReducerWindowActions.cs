@@ -424,7 +424,7 @@ namespace SpacetimeDB.Editor
         {
             string clippedParsedError = string.IsNullOrWhiteSpace(cliResult.CliError)
                 ? "(No error message)"
-                : Utils.ClipString(cliResult.CliError, 4000);
+                : ClipString(cliResult.CliError, 4000);
             
             actionsResultLabel.text = SpacetimeMeta.GetStyledStr(
                 SpacetimeMeta.StringStyle.Error,

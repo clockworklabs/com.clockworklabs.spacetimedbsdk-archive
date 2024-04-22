@@ -757,6 +757,7 @@ namespace SpacetimeDB.Editor
             publishStartLocalServerBtn.SetEnabled(false);
             ShowUi(publishStartLocalServerBtn);
             HideUi(serverConnectingStatusLabel);
+            HideUi(publishStopLocalServerBtn);
         }
 
         /// <returns>isOnline (successful ping) with short timeout</returns>

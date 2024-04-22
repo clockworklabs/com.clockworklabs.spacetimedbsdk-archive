@@ -44,8 +44,8 @@ namespace SpacetimeDB
             public TableOp op;
             public object newValue;
             public object oldValue;
-            public byte[] deletedBytes;
-            public byte[] insertedBytes;
+            public byte[] deletedPk;
+            public byte[] insertedPk;
             public AlgebraicValue rowValue;
             public AlgebraicValue primaryKeyValue;
         }
@@ -338,11 +338,12 @@ namespace SpacetimeDB
 
                             foreach (var row in update.TableRowOperations)
                             {
-                                var rowBytes = row.Row.ToByteArray();
+                                var rowPk = row.RowPk.ToByteArray();
+                                var rowValue = row.Row.ToByteArray();
                                 stream.Position = 0;
-                                stream.Write(rowBytes, 0, rowBytes.Length);
+                                stream.Write(rowValue, 0, rowValue.Length);
                                 stream.Position = 0;
-                                stream.SetLength(rowBytes.Length);
+                                stream.SetLength(rowValue.Length);
                                 var deserializedRow = AlgebraicValue.Deserialize(table.RowSchema, reader);
                                 if (deserializedRow == null)
                                 {
@@ -359,8 +360,8 @@ namespace SpacetimeDB
                                 var op = new DbOp
                                 {
                                     table = table,
-                                    deletedBytes = null,
-                                    insertedBytes = rowBytes,
+                                    deletedPk = null,
+                                    insertedPk = rowPk,
                                     op = TableOp.Insert,
                                     newValue = obj,
                                     oldValue = null,
@@ -368,9 +369,9 @@ namespace SpacetimeDB
                                     rowValue = deserializedRow,
                                 };
 
-                                if (!hashSet.Add(rowBytes))
+                                if (!hashSet.Add(rowPk))
                                 {
-                                    logger.LogError($"Multiple of the same insert in the same subscription update: table={table.Name} rowBytes={rowBytes}");
+                                    logger.LogError($"Multiple of the same insert in the same subscription update: table={table.Name} rowPk={rowPk}");
                                 }
                                 else
                                 {
@@ -396,11 +397,12 @@ namespace SpacetimeDB
 
                             foreach (var row in update.TableRowOperations)
                             {
-                                var rowBytes = row.Row.ToByteArray();
+                                var rowPk = row.RowPk.ToByteArray();
+                                var rowValue = row.Row.ToByteArray();
                                 stream.Position = 0;
-                                stream.Write(rowBytes, 0, rowBytes.Length);
+                                stream.Write(rowValue, 0, rowValue.Length);
                                 stream.Position = 0;
-                                stream.SetLength(rowBytes.Length);
+                                stream.SetLength(rowValue.Length);
                                 var deserializedRow = AlgebraicValue.Deserialize(table.RowSchema, reader);
                                 if (deserializedRow == null)
                                 {
@@ -414,10 +416,10 @@ namespace SpacetimeDB
                                 var op = new DbOp
                                 {
                                     table = table,
-                                    deletedBytes =
-                                        row.Op == TableRowOperation.Types.OperationType.Delete ? rowBytes : null,
-                                    insertedBytes =
-                                        row.Op == TableRowOperation.Types.OperationType.Delete ? null : rowBytes,
+                                    deletedPk =
+                                        row.Op == TableRowOperation.Types.OperationType.Delete ? rowPk : null,
+                                    insertedPk =
+                                        row.Op == TableRowOperation.Types.OperationType.Delete ? null : rowPk,
                                     op = row.Op == TableRowOperation.Types.OperationType.Delete
                                         ? TableOp.Delete
                                         : TableOp.Insert,
@@ -455,8 +457,8 @@ namespace SpacetimeDB
                                             op = TableOp.Update,
                                             newValue = insertOp.newValue,
                                             oldValue = deleteOp.oldValue,
-                                            deletedBytes = deleteOp.deletedBytes,
-                                            insertedBytes = insertOp.insertedBytes,
+                                            deletedPk = deleteOp.deletedPk,
+                                            insertedPk = insertOp.insertedPk,
                                             primaryKeyValue = insertOp.primaryKeyValue,
                                             rowValue = insertOp.rowValue,
                                         };
@@ -554,14 +556,14 @@ namespace SpacetimeDB
                 {
                     foreach (var table in clientDB.GetTables())
                     {
-                        foreach (var rowBytes in table.entries.Keys)
+                        foreach (var rowPk in table.entries.Keys)
                         {
                             if (!preProcessedMessage.inserts.TryGetValue(table.Name, out var hashSet))
                             {
                                 continue;
                             }
                             
-                            if (!hashSet.Contains(rowBytes))
+                            if (!hashSet.Contains(rowPk))
                             {
                                 // This is a row that we had before, but we do not have it now.
                                 // This must have been a delete.
@@ -570,9 +572,9 @@ namespace SpacetimeDB
                                     table = table,
                                     op = TableOp.Delete,
                                     newValue = null,
-                                    oldValue = table.entries[rowBytes].Item2,
-                                    deletedBytes = rowBytes,
-                                    insertedBytes = null,
+                                    oldValue = table.entries[rowPk].Item2,
+                                    deletedPk = rowPk,
+                                    insertedPk = null,
                                     primaryKeyValue = null
                                 });
                             }
@@ -699,7 +701,7 @@ namespace SpacetimeDB
                         switch (update.op)
                         {
                             case TableOp.Delete:
-                                if (dbOps[i].table.DeleteEntry(update.deletedBytes))
+                                if (dbOps[i].table.DeleteEntry(update.deletedPk))
                                 {
                                     InternalDeleteCallback(update);
                                 }
@@ -711,7 +713,7 @@ namespace SpacetimeDB
                                 }
                                 break;
                             case TableOp.Insert:
-                                if (dbOps[i].table.InsertEntry(update.insertedBytes, update.rowValue))
+                                if (dbOps[i].table.InsertEntry(update.insertedPk, update.rowValue))
                                 {
                                     InternalInsertCallback(update);
                                 }
@@ -723,7 +725,7 @@ namespace SpacetimeDB
                                 }
                                 break;
                             case TableOp.Update:
-                                if (dbOps[i].table.DeleteEntry(update.deletedBytes))
+                                if (dbOps[i].table.DeleteEntry(update.deletedPk))
                                 {
                                     InternalDeleteCallback(update);
                                 }
@@ -734,7 +736,7 @@ namespace SpacetimeDB
                                     dbOps[i] = op;
                                 }
                                 
-                                if (dbOps[i].table.InsertEntry(update.insertedBytes, update.rowValue))
+                                if (dbOps[i].table.InsertEntry(update.insertedPk, update.rowValue))
                                 {
                                     InternalInsertCallback(update);
                                 }

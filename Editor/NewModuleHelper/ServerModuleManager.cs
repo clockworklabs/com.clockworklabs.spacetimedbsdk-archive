@@ -246,7 +246,7 @@ namespace SpacetimeDB.Editor
         private static void testShowInitModuleCsharpFail() =>
             showInstallDotnet8PlusWasiWindow();
         
-        [MenuItem("Window/SpacetimeDB/Test/testPopupWindow %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
+        // [MenuItem("Window/SpacetimeDB/Test/testPopupWindow %#&T")] // CTRL+ALT+SHIFT+T // (!) Commment out when !testing
         private static async void testInstallSpacetimeDbCliShowModalProgressBarAsync() =>
             await SpacetimeWindow.InstallSpacetimeDbCliShowModalProgressBarAsync();
         #endregion // Tests

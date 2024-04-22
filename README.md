@@ -144,3 +144,8 @@ Reducer.MovePlayer(new StdbVector2(0.0f, 0.0f), new StdbVector2(1.0f, 1.0f));
 ## Collaboration
 
 Be sure to follow Unity's [custom package](https://docs.unity3d.com/Manual/CustomPackages.html) and [package layout](https://docs.unity3d.com/Manual/cus-layout.html) standards.
+
+
+## Architecture Change Notice
+
+⚠️ TODO: Rename `/Scripts` to `/Runtime` to follow Unity package standards

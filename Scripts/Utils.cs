@@ -4,23 +4,6 @@ namespace SpacetimeDB
 {
     public static class Utils
     {
-        /// Clips input to maxLength. If we clipped anything,
-        /// we'll replace the last 3 characters with "..."
-        public static string ClipString(string input, int maxLength)
-        {
-            if (string.IsNullOrEmpty(input) || maxLength <= 0)
-            {
-                return string.Empty;
-            }
-
-            if (input.Length > maxLength)
-            {
-                return input[..(maxLength - 3)] + "...";
-            }
-
-            return input;
-        }
-        
         public static bool ByteArrayCompare(byte[] a1, byte[] a2)
         {
             if (a1 == null || a2 == null)

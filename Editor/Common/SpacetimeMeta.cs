@@ -1,3 +1,5 @@
+using System.IO;
+
 /// Static metadata for SpacetimeDB editor scripts
 public static class SpacetimeMeta
 {
@@ -9,17 +11,23 @@ public static class SpacetimeMeta
     public const string DEFAULT_CS_MODULE_PROJ_FILE = "StdbModule.csproj";
     
     public const ushort DEFAULT_PORT = 3000;
-    public const string NEW_INSTALL_DEFAULT_SERVER = LOCAL_SERVER_NAME; 
     public const string LOCAL_SERVER_NAME = "local";
     public const string TESTNET_SERVER_NAME = "testnet";
+    
+    /// The CLI, itself, sets this default server.
+    /// 4/17 it's `local`, but there's a pre-approved open PR to have this set to `testnet`:
+    /// https://github.com/clockworklabs/SpacetimeDB/pull/1078 
+    public const string NEW_INSTALL_SERVER_CLI_DEFAULT = TESTNET_SERVER_NAME;
+    
     public const string TESTNET_HOST_URL = "https://" + TESTNET_SERVER_NAME + ".spacetimedb.com";
     public static string LOCAL_HOST_URL => $"http://127.0.0.1:{DEFAULT_PORT}";
     
     public const string SDK_PACKAGE_NAME = "com.clockworklabs.spacetimedbsdk";
-    public const string COMMON_DIR_PATH = "Packages/" + SDK_PACKAGE_NAME + "/Scripts/Editor/Common";
+    public static string SPACETIMEDB_EDITOR_DIR_PATH => Path.Join("Packages", SDK_PACKAGE_NAME, "Editor"); 
+    public static string COMMON_DIR_PATH => Path.Join(SPACETIMEDB_EDITOR_DIR_PATH, "Common");
     
     /// Path to common SpacetimeDB Editor USS styles
-    public static string PathToCommonUss => $"{COMMON_DIR_PATH}/CommonStyles.uss";
+    public static string PathToCommonUss => Path.Join(COMMON_DIR_PATH, "CommonStyles.uss");
     
     /// Useful for adding new servers and you want the "Host" to be an alias
     /// to prevent forcing the user to memorize full urls and default ports
@@ -35,7 +43,7 @@ public static class SpacetimeMeta
             _ => serverName
         };
     }
-    
+        
     public enum ModuleLang
     {
         CSharp,
@@ -45,6 +53,19 @@ public static class SpacetimeMeta
     
 
     #region Colors & Formatting
+    public static readonly string[] PROGRESS_BAR_SPINNER_CHARS =
+    {
+        "<mspace=8>[    ]</mspace>", 
+        "<mspace=8>[=   ]</mspace>", 
+        "<mspace=8>[==  ]</mspace>", 
+        "<mspace=8>[=== ]</mspace>", 
+        "<mspace=8>[ ===]</mspace>", 
+        "<mspace=8>[  ==]</mspace>", 
+        "<mspace=8>[   =]</mspace>", 
+        "<mspace=8>[    ]</mspace>",
+    };
+    // public static readonly string[] PROGRESS_BAR_SPINNER_CHARS = { "◴", "◷", "◶", "◵" }; // Unicode !works in UI Builder yet
+
     // Colors pulled from docs, often coincided with UI elements >>
     public const string ACTION_COLOR_HEX = "#FFEA30"; // Corn Yellow
     public const string ERROR_COLOR_HEX = "#FDBE01"; // Golden Orange

@@ -27,7 +27,7 @@ namespace SpacetimeDB.Editor
 
         /// If you *just* installed SpacetimeDB CLI, this will update PATH in the spawned Process.
         /// Prevents restarting Unity to refresh paths (UX).
-        public static string NewlyInstalledCliEnvDirPath { get; set; }
+        public static string NewlyInstalledCliEnvDirPath { get; private set; }
 
         private static bool _autoResolvedBugIsTryingAgain;
         #endregion // Static state/opts
@@ -35,7 +35,8 @@ namespace SpacetimeDB.Editor
         
         #region Init
         /// Install the SpacetimeDB CLI | https://spacetimedb.com/install
-        /// After installed, the default server is `local` 
+        /// After installed, the default server is normally `local`, but there's a pre-approved open PR
+        /// to change the default to `testnet` soon: https://github.com/clockworklabs/SpacetimeDB/pull/1078 
         public static async Task<InstallSpacetimeDbCliResult> InstallSpacetimeCliAsync()
         {
             if (CLI_LOG_LEVEL == CliLogLevel.Info)
@@ -47,7 +48,7 @@ namespace SpacetimeDB.Editor
             switch (Application.platform)
             {
                 case RuntimePlatform.WindowsEditor:
-                    argSuffix = "powershell -Command \"iwr https://windows.spacetimedb.com -UseBasicParsing | iex\"\n";
+                    argSuffix = "powershell -Command \"iwr https://windows.spacetimedb.com -UseBasicParsing | iex";
                     break;
                 
                 case RuntimePlatform.OSXEditor:
@@ -134,16 +135,24 @@ namespace SpacetimeDB.Editor
         }
         
         /// Starts a detached Process, allowing a domain reload to not freeze Unity or kill the process.
-        public static void startDetachedCliProcess(string argSuffix)
+        public static SpacetimeCliRequest startDetachedCliProcess(string argSuffix)
         {
             // Args
             string terminal = getTerminalPrefix(); // Determine terminal based on platform
             string argPrefix = getCommandPrefix(); // Determine command prefix (cmd /c, etc.)
-            string fullParsedArgs = $"{argPrefix} \"{argSuffix}\"";
+            string fullParsedArgs = $"{argPrefix} \"{argSuffix.Trim()}\"";
             
             // Process + StartInfo
             Process asyncCliProcess = createCliProcess(terminal, fullParsedArgs, detachedProcess: true);
             logInput(terminal, fullParsedArgs);
+            
+            // Package request to pass along to result for easier debugging / err handling
+            SpacetimeCliRequest cliRequest = new(
+                terminal, 
+                argPrefix, 
+                argSuffix, 
+                runInBackground: false, 
+                asyncCliProcess.StartInfo);
             
             try
             {
@@ -155,54 +164,20 @@ namespace SpacetimeDB.Editor
                 Debug.LogError($"Failed to {nameof(startDetachedCliProcess)}: {e.Message}");
                 throw;
             }
+
+            return cliRequest;
         }
 
-        // /// Issue a cross-platform *async* (EnableRaisingEvents) CLI cmd, where we'll start with terminal prefixes
-        // /// as the CLI "command" and some arg prefixes for compatibility.
-        // /// This particular overload is useful for streaming logs or running a cancellable listen server in the background
-        // /// For async CLI calls, a CancellationToken is *required* (create a CancellationTokenSource)
-        // /// (!) YOU MANUALLY START THIS PROCESS (to give you a chance to subscribe to logs early)
-        // /// - Usage: asyncCliResult.Start() 
-        // [Obsolete("BUG: Domain refresh will both kill the process and freeze Unity")]
-        // public static Task<SpacetimeStreamingCliResult> runStreamingCliCommand(
-        //     string argSuffix,
-        //     bool stopOnError,
-        //     CancellationTokenSource cancelTokenSrc)
-        // {
-        //     // Args
-        //     string terminal = getTerminalPrefix(); // Determine terminal based on platform
-        //     string argPrefix = getCommandPrefix(); // Determine command prefix (cmd /c, etc.)
-        //     string fullParsedArgs = $"{argPrefix} \"{argSuffix}\"";
-        //     
-        //     // Process + StartInfo
-        //     Process asyncCliProcess = createCliProcess(terminal, fullParsedArgs, isAsync: true);
-        //
-        //     // Cancellation Token + Async CLI Result (set early to prepare streaming logs *before* proc start)
-        //     SpacetimeStreamingCliRequest streamingCliRequest = new(
-        //         asyncCliProcess, 
-        //         stopOnError, 
-        //         continueFollowingLogsAfterDone: true, 
-        //         cancelTokenSrc);
-        //     
-        //     SpacetimeStreamingCliResult streamingCliResult = new(streamingCliRequest);
-        //     
-        //     // TODO: Show later just before we start the proc @ SpacetimeAsyncCliResult?
-        //     logInput(terminal, fullParsedArgs);
-        //     
-        //     // (!) Manually start this proc when you want
-        //     return Task.FromResult(streamingCliResult);
-        // }
-        
         /// Issue a cross-platform CLI cmd, where we'll start with terminal prefixes
         /// as the CLI "command" and some arg prefixes for compatibility.
         /// Usage: Pass an argSuffix, such as "spacetime version",
         ///        along with an optional cancel token
         /// - Supports cancellations and timeouts via CancellationToken (create a CancellationTokenSource)
-        /// TODO: runInBackground, with SpacetimeAsyncCliResult, probably supports streaming (--follow) logs: give it a shot!
         public static async Task<SpacetimeCliResult> runCliCommandAsync(
             string argSuffix,
             CancellationToken cancelToken = default,
-            bool runInBackground = false)
+            bool runInBackground = false,
+            bool logErrs = true)
         {
             // Args
             string terminal = getTerminalPrefix(); // Determine terminal based on platform
@@ -262,9 +237,17 @@ namespace SpacetimeDB.Editor
                 cliProcess.Dispose(); // No async ver for this Dispose
             }
             
+            // Package request to pass along to result for easier debugging / err handling
+            SpacetimeCliRequest cliRequest = new(
+                terminal, 
+                argPrefix, 
+                argSuffix, 
+                runInBackground: true, 
+                cliProcess.StartInfo);
+            
             // Process results, log err (if any), return parsed Result 
-            SpacetimeCliResult cliResult = new(output, error);
-            logCliResults(cliResult);
+            SpacetimeCliResult cliResult = new(output, error, cliRequest);
+            logCliResults(cliResult, logErrs);
 
             // Can we auto-resolve this issue and try again?
             if (cliResult.HasCliErr && cliResult.CliError != "Canceled" && !_autoResolvedBugIsTryingAgain)
@@ -282,7 +265,8 @@ namespace SpacetimeDB.Editor
 
         /// <summary>
         /// Attempts to detect + resolve common cli errors:
-        /// 1. "Error: Cannot list identities for server without a saved fingerprint: local"
+        /// 1. "Error: Cannot list identities for server without a saved fingerprint: {serverName}"
+        /// (!) We'll only attempt to auto-resolve fingerprint issues for !local
         /// </summary>
         /// <returns>isResolvedTryAgain</returns>
         private static async Task<bool> autoResolveCommonCliErrors(SpacetimeCliResult cliResult)
@@ -293,24 +277,29 @@ namespace SpacetimeDB.Editor
             
             string cliError = cliResult.CliError;
             bool isFingerprintErr = cliError.Contains("without a saved fingerprint");
-            bool isLocalFingerprintErr = false;
-            bool isTestnetFingerprintErr = false;
-
-            if (isFingerprintErr)
+            if (!isFingerprintErr)
             {
-                isLocalFingerprintErr = cliError.Contains("local");
-                isTestnetFingerprintErr = cliError.Contains("testnet");
+                return isResolvedTryAgain;
             }
             
+            bool isLocalFingerprintErr = cliError.Contains("local");
+            bool isTestnetFingerprintErr = cliError.Contains("testnet");
+
             if (isLocalFingerprintErr)
             {
-                isResolvedTryAgain = await fixLocalFingerprintErr(cliError);
+                #region Local Fingerprint Graveyard
+                // // (!) Too much to consider for localhost fingerprint issues to handle automatically:
+                // // - Localhost server may not be running
+                // // - Localhost server may be running on a different port than the default 3000
+                // // - If you run localhost on default port when running on a different, it'll fail
+                // isResolvedTryAgain = await fixLocalFingerprintErr(cliResult);
+                #endregion // Local Fingerprint Graveyard
             }
             else if (isTestnetFingerprintErr)
             {
                 isResolvedTryAgain = await fixTestnetFingerprintErr(cliError);
             }
-            
+
             return isResolvedTryAgain;
         }
 
@@ -324,20 +313,23 @@ namespace SpacetimeDB.Editor
             return isResolvedTryAgain;
         }
 
-        private static async Task<bool> fixLocalFingerprintErr(string cliError)
+        /// Attempt to fix the local fingerprint error by temporarily running a local server on default port
+        /// This one's a bit tricky since we need to start the server, create a fingerprint, and then stop the server
+        private static async Task<bool> fixLocalFingerprintErr(SpacetimeCliResult cliResult)
         {
-            bool serverOfflineErr = cliError.Contains("target machine actively refused");
-            
-            // Ensure the local server is running
-            PingServerResult pingResult = await SpacetimeDbCliActions.PingServerAsync();
+            // See if the default server is running on the default port
+            const string localServerName = SpacetimeMeta.LOCAL_SERVER_NAME;
+            PingServerResult pingResult = await SpacetimeDbCliActions.PingServerAsync(localServerName);
             if (!pingResult.IsServerOnline)
             {
-                pingResult = await SpacetimeDbCliActions.StartDetachedLocalServerWaitUntilOnlineAsync(); // Temporarily start the server
+                // Temporarily start the server on the default port
+                await runCliCommandAsync("spacetime start local");
             }
             
-            // Attempt to create a fingerprint for the server
+            // Attempt just once to create a fingerprint for the server
+            // This would only fail if port 3000 is in use by a 3rd-party app
             SpacetimeCliResult fingerprintResult = await SpacetimeDbCliActions
-                .CreateFingerprintAsync(SpacetimeMeta.LOCAL_SERVER_NAME);
+                .CreateFingerprintAsync(localServerName);
 
             bool isResolvedTryAgain = !fingerprintResult.HasCliErr;
             return isResolvedTryAgain;
@@ -363,7 +355,7 @@ namespace SpacetimeDB.Editor
             }
         }
 
-        private static void logCliResults(SpacetimeCliResult cliResult)
+        private static void logCliResults(SpacetimeCliResult cliResult, bool logErrs)
         {
             bool hasOutput = !string.IsNullOrEmpty(cliResult.CliOutput);
             bool hasLogLevelInfoNoErr = CLI_LOG_LEVEL == CliLogLevel.Info && !cliResult.HasCliErr;
@@ -384,6 +376,11 @@ namespace SpacetimeDB.Editor
                 if (isWarning)
                 {
                     Debug.LogWarning($"CLI Warning: {cliResult.CliError}");
+                }
+                else if (!logErrs)
+                {
+                    // Err, bug instructed to skip logs
+                    return;
                 }
                 else
                 {

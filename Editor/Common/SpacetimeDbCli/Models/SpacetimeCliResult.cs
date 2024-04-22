@@ -5,6 +5,8 @@ namespace SpacetimeDB.Editor
     /// Result from SpacetimeDbCli.runCliCommandAsync
     public class SpacetimeCliResult
     {
+        public SpacetimeCliRequest CliRequest { get; }
+
         /// Raw, unparsed CLI output
         public string CliOutput { get; }
         
@@ -16,28 +18,55 @@ namespace SpacetimeDB.Editor
         public List<string> ErrsFoundFromCliOutput { get; }
         public bool HasErrsFoundFromCliOutput => 
             ErrsFoundFromCliOutput?.Count > 0;
+
+        /// Common, caught CLI Errs such as "NoFingerprint" || "Canceled"
+        public CliErrorCode RawCliErrorCode { get; }
+        public enum CliErrorCode
+        {
+            Unknown,
+            NoFingerprint,
+            Canceled,
+        }
         
         /// Did we pass a CancellationToken and cancel the operation?
-        public bool Cancelled { get; private set; }
+        public bool Canceled { get; private set; }
         
-        /// (!) While this may be a CLI error, it could be a false positive
-        /// for what you really want to do. For example, `spacetime publish`
-        /// will succeed, but throw a CliError for `wasm-opt` not found (unoptimized build).
-        public bool HasCliErr => 
-            !string.IsNullOrWhiteSpace(CliError) ||
-            ErrsFoundFromCliOutput?.Count > 0;
+        /// HasRawCliError || caught ErrsFoundFromCliOutput
+        public bool HasCliErr { get; }
         
-        public SpacetimeCliResult(string cliOutput, string cliError)
+        /// CLI-triggered exit code -- nothing to do with SpacetimeDB
+        public bool HasRawCliErr { get; }
+        
+        public SpacetimeCliResult(
+            string cliOutput, 
+            string cliError, 
+            SpacetimeCliRequest cliRequest = null)
         {
+            this.CliRequest = cliRequest;
+            
             // To prevent strange log formatting when paths are present, we replace `\` with `/`
             this.CliOutput = cliOutput?.Replace("\\", "/");
             this.CliError = cliError?.Replace("\\", "/");
+            this.HasRawCliErr = !string.IsNullOrWhiteSpace(CliError); 
             
             this.ErrsFoundFromCliOutput = getErrsFoundFromCliOutput();
+            this.HasCliErr = HasRawCliErr || ErrsFoundFromCliOutput?.Count > 0;
 
+            if (!HasRawCliErr)
+            {
+                return;
+            }
+            
+            // ----------------------------
+            // Raw CLI Errors
             if (CliError == "Canceled")
             {
-                this.Cancelled = true;
+                this.Canceled = true;
+                this.RawCliErrorCode = CliErrorCode.Canceled;
+            }
+            else if (CliError.Contains("No fingerprint"))
+            {
+                this.RawCliErrorCode = CliErrorCode.NoFingerprint;
             }
         }
 
@@ -57,17 +86,17 @@ namespace SpacetimeDB.Editor
             return errsFound;
         }
 
-        public SpacetimeCliResult(SpacetimeCliResult cliResult)
+        protected SpacetimeCliResult(SpacetimeCliResult cliResult)
         {
+            this.CliRequest = cliResult.CliRequest;
             this.CliOutput = cliResult.CliOutput;
-            
-            // To prevent strange log formatting when paths are present, we replace `\` with `/`
-            this.CliError = cliResult.CliError?.Replace("\\", "/");
+            this.CliError = cliResult.CliError;
 
-            if (CliError == "Canceled")
-            {
-                this.Cancelled = true;
-            }
+            this.Canceled = cliResult.Canceled;
+            this.RawCliErrorCode = cliResult.RawCliErrorCode;
+            this.ErrsFoundFromCliOutput = cliResult.ErrsFoundFromCliOutput;
+            this.HasCliErr = cliResult.HasCliErr;
+            this.HasRawCliErr = cliResult.HasRawCliErr;
         }
     }
 }

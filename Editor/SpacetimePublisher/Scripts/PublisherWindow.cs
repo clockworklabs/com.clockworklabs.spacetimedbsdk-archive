@@ -58,7 +58,6 @@ namespace SpacetimeDB.Editor
         private TextField serverNicknameTxt;
         private TextField serverHostTxt;
         private Button serverAddBtn;
-        private Label serverStatusLabel;
 
         private Foldout identityFoldout;
         private DropdownField identitySelectedDropdown; // Don't set ViewDataKey; we'll set the default set in CLI
@@ -183,7 +182,6 @@ namespace SpacetimeDB.Editor
             serverNicknameTxt = rootVisualElement.Q<TextField>(nameof(serverNicknameTxt));
             serverHostTxt = rootVisualElement.Q<TextField>(nameof(serverHostTxt));
             serverAddBtn = rootVisualElement.Q<Button>(nameof(serverAddBtn));
-            serverStatusLabel = rootVisualElement.Q<Label>(nameof(serverStatusLabel));
             
             identityFoldout = rootVisualElement.Q<Foldout>(nameof(identityFoldout));
             identitySelectedDropdown = rootVisualElement.Q<DropdownField>(nameof(identitySelectedDropdown));

@@ -359,7 +359,7 @@ namespace SpacetimeDB.Editor
             // Process via CLI => Set default, revalidate identities
             try
             {
-                await setDefaultServerRefreshIdentitiesAsync(serverNickname);
+                await setDefaultServerRefreshIdentitiesAsync(serverNickname, autoProgressPublish: true);
             }
             catch (Exception e)
             {
@@ -401,7 +401,9 @@ namespace SpacetimeDB.Editor
         /// Used for init only, for when the persistent ViewDataKey
         private async void onPublishModulePathTxtInitChanged(ChangeEvent<string> evt)
         {
-            await onPublishModulePathSetAsync();
+            Debug.Log(nameof(onPublishModulePathTxtInitChanged));
+            
+            await onPublishModulePathSetAsync(autoProgressPublisher: false); // Just false on init
             revealPublishResultCacheIfHostExists(openFoldout: null);
             publishModulePathTxt.UnregisterValueChangedCallback(onPublishModulePathTxtInitChanged);
         }
@@ -468,11 +470,15 @@ namespace SpacetimeDB.Editor
             suggestModuleNameIfEmpty();
 
         /// Curry to an async Task to install `wasm-opt` npm pkg
-        private async void onInstallWasmOptBtnClick()
+        private void onInstallWasmOptBtnClick()
         {
             try
             {
-                await installWasmOptPackageViaNpmAsync();
+                // BUG: (!) Binaryen doesn't detect `wasm-opt` path in Windows when installed via npm
+                // await installWasmOptPackageViaNpmAsync();
+                
+                // Workaround, for now, until they fix the path detection issue:
+                Application.OpenURL(INSTALL_WASM_OPT_URL);
             }
             catch (Exception e)
             {
@@ -574,7 +580,7 @@ namespace SpacetimeDB.Editor
 
             // Path changed: set path val + reveal next UI group
             publishModulePathTxt.value = selectedPath;
-            await onPublishModulePathSetAsync();
+            await onPublishModulePathSetAsync(autoProgressPublisher: true); // Only false @ init
         }
         
         /// Show [Install Package] btn if !optimized
@@ -598,7 +604,7 @@ namespace SpacetimeDB.Editor
             
             try
             {
-                await addIdentityAsync(nickname, email);
+                await addIdentityAsync(nickname, email, autoProgressPublisher: true);
             }
             catch (Exception e)
             {
@@ -615,7 +621,7 @@ namespace SpacetimeDB.Editor
             
             try
             {
-                await addServerAsync(nickname, host);
+                await addServerAsync(nickname, host, autoProgressIdentities: true);
             }
             catch (Exception e)
             {
@@ -639,7 +645,7 @@ namespace SpacetimeDB.Editor
             }
 
             // Hide UI: Progress bar, cancel btn
-            HideUi(publishInstallProgressBar);
+            hideProgressBarAndCancel(publishInstallProgressBar);
             HideUi(publishCancelBtn);
 
             // Show UI: Canceled status, publish btn
@@ -678,7 +684,7 @@ namespace SpacetimeDB.Editor
             }
             finally
             {
-                HideUi(publishInstallProgressBar);
+                hideProgressBarAndCancel(publishInstallProgressBar);
                 _publishCts?.Dispose();
             }
         }

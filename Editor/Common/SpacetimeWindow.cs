@@ -9,6 +9,23 @@ namespace SpacetimeDB.Editor
     /// Common static utils class for a SpacetimeWindow editor tool
     public static class SpacetimeWindow
     {
+        /// Clips input to maxLength. If we clipped anything,
+        /// we'll replace the last 3 characters with "..."
+        public static string ClipString(string input, int maxLength)
+        {
+            if (string.IsNullOrEmpty(input) || maxLength <= 0)
+            {
+                return string.Empty;
+            }
+
+            if (input.Length > maxLength)
+            {
+                return input[..(maxLength - 3)] + "...";
+            }
+
+            return input;
+        }
+        
         public static string ReplaceSpacesWithDashes(string str) =>
             str?.Replace(" ", "-");
         
@@ -57,13 +74,6 @@ namespace SpacetimeDB.Editor
             }
         }
         
-        /// Hide a visual element via setting visible to false
-        /// - (!) Does not ripple the UI, as if it's still there
-        /// - (!) Does not trigger transition animations
-        /// - Show again via ShowUi(element, useVisibilityNotDisplay: true)
-        public static void HideUiNoRipple(VisualElement element) =>
-            element.visible = false;
-        
         /// Sets opacity to 0, triggering `transition` properties, if set
         /// - (!) Does not ripple the UI, as if it's still there
         public static void FadeOutUi(VisualElement element) =>
@@ -74,11 +84,9 @@ namespace SpacetimeDB.Editor
             element.resolvedStyle.display == DisplayStyle.None ||
             element.resolvedStyle.opacity == 0 ||
             !element.visible;
-        
+
         public static bool IsShowingUi(VisualElement element) =>
-            element.resolvedStyle.display == DisplayStyle.Flex ||
-            element.resolvedStyle.opacity >= 1 ||
-            element.visible;
+            element.resolvedStyle.display == DisplayStyle.Flex;
         
         /// Cross-platform
         public static void OpenDirectoryWindow(string pathToDir)

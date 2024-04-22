@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEditor;
@@ -76,27 +75,18 @@ namespace SpacetimeDB.Editor
         
         /// <summary>Uses the `spacetime server ping` CLI command.</summary>
         /// <param name="cancelToken">If left default, set to 200ms timeout</param>
-        public static async Task<PingServerResult> PingServerAsync(CancellationToken cancelToken = default)
+        public static async Task<PingServerResult> PingServerAsync(
+            string serverName, 
+            CancellationToken cancelToken = default,
+            bool logErrors = false)
         {
-            CancellationTokenSource cts = null;
+            string argSuffix = $"spacetime server ping {serverName}";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(
+                argSuffix, 
+                cancelToken, 
+                logErrs: logErrors);
             
-            try
-            {
-                // If no cancel token was provided, set to default 200ms timeout
-                if (cancelToken == default)
-                {
-                    cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
-                    cancelToken = cts.Token;
-                }
-    
-                const string argSuffix = "spacetime server ping";
-                SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix, cancelToken);
-                return new PingServerResult(cliResult);
-            }
-            finally
-            {
-                cts?.Dispose();
-            }
+            return new PingServerResult(cliResult);
         }
         
         /// Uses the `spacetime start` CLI command. Runs in background in a detached service.
@@ -104,7 +94,7 @@ namespace SpacetimeDB.Editor
         private static void startDetachedLocalServer()
         {
             const string argSuffix = "spacetime start";
-            startDetachedCliProcess(argSuffix);
+            _ = startDetachedCliProcess(argSuffix); // returns SpacetimeCliRequest
         }
         
         /// Cross-platform kills process by port num (there's no universal `stop` command)
@@ -139,10 +129,10 @@ namespace SpacetimeDB.Editor
         /// Uses the `spacetime start` CLI command. Runs in background in a detached service.
         /// - Checks if an existing localhost of the same port is already running
         /// - Awaits up to 2s for the server to come online.
-        public static async Task<PingServerResult> StartDetachedLocalServerWaitUntilOnlineAsync()
+        public static async Task<PingServerResult> StartDetachedLocalServerWaitUntilOnlineAsync(string serverName)
         {
             // First, see if it's already running locally
-            PingServerResult pingServerResult = await PingServerAsync();
+            PingServerResult pingServerResult = await PingServerAsync(serverName);
             if (pingServerResult.IsServerOnline)
             {
                 return pingServerResult;
@@ -153,26 +143,30 @@ namespace SpacetimeDB.Editor
             await Task.Delay(200); // Give it a chance to spin up
             
             // Await success, pinging the CLI every 100ms to ensure online. Max 2 seconds.
-            return await PingServerUntilOnlineAsync();
+            return await PingServerUntilOnlineAsync(serverName);
         }
         
         /// <param name="cancelToken">If left default, set to 200ms timeout (3 attempts @ 1 per 100ms)</param>
-        public static async Task<PingServerResult> PingServerUntilOnlineAsync(CancellationToken cancelToken = default)
+        public static async Task<PingServerResult> PingServerUntilOnlineAsync(
+            string serverName, 
+            CancellationToken cancelToken = default)
         {
             // If default, set to 200ms timeout
             using CancellationTokenSource globalTimeoutCts = cancelToken == default
                 ? new CancellationTokenSource(TimeSpan.FromMilliseconds(300)) 
                 : CancellationTokenSource.CreateLinkedTokenSource(cancelToken);
-            
+
             try
             {
                 while (!globalTimeoutCts.Token.IsCancellationRequested)
                 {
                     try
                     {
-                        PingServerResult pingServerResult = await PingServerAsync(cancelToken: default); // 200ms iteration timeout
+                        PingServerResult pingServerResult = await PingServerAsync(
+                            serverName, 
+                            cancelToken: default); // 200ms iteration timeout
+                        
                         bool isOnline = pingServerResult.IsServerOnline;
-
                         if (isOnline)
                         {
                             return pingServerResult;
@@ -195,5 +189,13 @@ namespace SpacetimeDB.Editor
         
         
         #endregion // Compounded Actions
+        
+        
+        #region Tests
+        /// Test the `spacetime start` CLI command
+        // [MenuItem("SpacetimeDB/Test/startDetachedLocalServer %#&T")] // (!) Comment out when done testing
+        private static void TestLaunchServer() =>
+            startDetachedLocalServer();
+        #endregion // Tests
     }
 }

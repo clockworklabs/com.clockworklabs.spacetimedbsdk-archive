@@ -19,7 +19,7 @@ namespace SpacetimeDB.Editor
             HideUi(serverSelectedDropdown);
             serverFoldout.text = "PublisherWindowTester.PUBLISH_WINDOW_TESTS";
             
-            testInstallWasmOpt();
+            // testInstallWasmOpt();
             _ = testProgressBar();
             
             // Stop everything else
@@ -32,14 +32,12 @@ namespace SpacetimeDB.Editor
             ShowUi(installCliGroupBox);
             ShowUi(installCliProgressBar);
             
-            await startProgressBarAsync(
+            _ = startProgressBarAsync(
                 installCliProgressBar,
                 barTitle: "TestProgressBar ...",
                 initVal: 5,
                 valIncreasePerSec: 20,
                 autoHideOnComplete: false);
-            
-
         }
 
         private void testInstallWasmOpt()

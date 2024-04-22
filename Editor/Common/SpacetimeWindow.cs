@@ -122,5 +122,8 @@ namespace SpacetimeDB.Editor
             GUIUtility.systemCopyBuffer = str;
             Debug.Log($"Copied to clipboard: {str}");
         }
+
+        public static string NormalizePath(string pathToProjFile) =>
+            pathToProjFile.Replace(@"\", "/");
     }
 }

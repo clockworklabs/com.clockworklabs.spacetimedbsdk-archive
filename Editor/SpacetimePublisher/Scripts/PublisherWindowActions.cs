@@ -579,6 +579,8 @@ namespace SpacetimeDB.Editor
             List<SpacetimeIdentity> identities, 
             bool autoProgressPublisher)
         {
+            HideUi(serverConnectingStatusLabel); // In case auto err fix was showing the label
+
             // Logs for each found, with default shown
             foreach (SpacetimeIdentity identity in identities)
                 Debug.Log($"Found identity: {identity}");
@@ -991,6 +993,7 @@ namespace SpacetimeDB.Editor
             _cachedPublishResult = publishResult;
             
             // Success - reset UI back to normal
+            HideUi(serverConnectingStatusLabel); // In case auto err fix was showing the label
             setPublishReadyStatusIfOnline();
             setPublishResultGroupUi(publishResult);
             
@@ -1194,6 +1197,7 @@ namespace SpacetimeDB.Editor
         private async void onAddIdentitySuccess(SpacetimeIdentity identity, bool autoProgressPublisher)
         {
             Debug.Log($"Add new identity success: {identity.Nickname}");
+            HideUi(serverConnectingStatusLabel); // In case auto err fix was showing the label
             resetPublishResultCache();
             
             List<SpacetimeIdentity> identities = new() { identity };

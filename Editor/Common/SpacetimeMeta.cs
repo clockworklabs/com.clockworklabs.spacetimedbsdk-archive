@@ -1,10 +1,9 @@
+using System.IO;
+
 /// Static metadata for SpacetimeDB editor scripts
 public static class SpacetimeMeta
 {
     #region Names & Paths
-    public const string DEFAULT_RUST_MODULE_PROJ_FILE = "Cargo.toml";
-    public const string DEFAULT_CS_MODULE_PROJ_FILE = "StdbModule.csproj";
-    
     public const ushort DEFAULT_PORT = 3000;
     public const string LOCAL_SERVER_NAME = "local";
     public const string TESTNET_SERVER_NAME = "testnet";
@@ -18,10 +17,11 @@ public static class SpacetimeMeta
     public static string LOCAL_HOST_URL => $"http://127.0.0.1:{DEFAULT_PORT}";
     
     public const string SDK_PACKAGE_NAME = "com.clockworklabs.spacetimedbsdk";
-    public const string COMMON_DIR_PATH = "Packages/" + SDK_PACKAGE_NAME + "/Scripts/Editor/Common";
+    public static string SPACETIMEDB_EDITOR_DIR_PATH => Path.Join("Packages", SDK_PACKAGE_NAME, "Editor"); 
+    public static string COMMON_DIR_PATH => Path.Join(SPACETIMEDB_EDITOR_DIR_PATH, "Common");
     
     /// Path to common SpacetimeDB Editor USS styles
-    public static string PathToCommonUss => $"{COMMON_DIR_PATH}/CommonStyles.uss";
+    public static string PathToCommonUss => Path.Join(COMMON_DIR_PATH, "CommonStyles.uss");
     
     /// Useful for adding new servers and you want the "Host" to be an alias
     /// to prevent forcing the user to memorize full urls and default ports
@@ -36,12 +36,6 @@ public static class SpacetimeMeta
             "testnet" => TESTNET_HOST_URL,
             _ => serverName
         };
-    }
-    
-    public enum ModuleLang
-    {
-        CSharp,
-        Rust,
     }
     #endregion // Names & Paths
     

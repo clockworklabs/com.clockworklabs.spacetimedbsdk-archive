@@ -7,10 +7,17 @@ namespace SpacetimeDB.Editor
     /// Result of `spacetime identity list`
     public class GetIdentitiesResult : SpacetimeCliResult
     {
-        public List<SpacetimeIdentity> Identities { get; private set; }
-        public bool HasIdentity => Identities?.Count > 0;
-        public bool HasIdentitiesButNoDefault => HasIdentity && 
-            !Identities.Exists(id => id.IsDefault);
+        public enum GetIdentitiesErrorCode
+        {
+            Unknown,
+            
+            /// Resolved via CLI cmd: `spacetime server fingerprint {serverName}`
+            NoSavedFingerprint,
+        }
+        
+        public List<SpacetimeIdentity> Identities { get; }
+        public bool HasIdentity { get; }
+        public bool HasIdentitiesButNoDefault { get; }
         
         
         public GetIdentitiesResult(SpacetimeCliResult cliResult)
@@ -48,6 +55,10 @@ namespace SpacetimeDB.Editor
                     onIdentityFound(line, potentialNickname);
                 }
             }
+            
+            this.HasIdentity = Identities?.Count > 0;;
+            this.HasIdentitiesButNoDefault = HasIdentity && 
+                !Identities.Exists(id => id.IsDefault);
         }
         
         /// Set identityNicknames and isDefault

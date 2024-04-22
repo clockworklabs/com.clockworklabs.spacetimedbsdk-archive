@@ -144,7 +144,7 @@ namespace SpacetimeDB.Editor
             Process asyncCliProcess = createCliProcess(terminal, fullParsedArgs, detachedProcess: true);
             logInput(terminal, fullParsedArgs);
             
-            // Package request to pass along to result
+            // Package request to pass along to result for easier debugging / err handling
             SpacetimeCliRequest cliRequest = new(
                 terminal, 
                 argPrefix, 
@@ -272,8 +272,16 @@ namespace SpacetimeDB.Editor
                 cliProcess.Dispose(); // No async ver for this Dispose
             }
             
+            // Package request to pass along to result for easier debugging / err handling
+            SpacetimeCliRequest cliRequest = new(
+                terminal, 
+                argPrefix, 
+                argSuffix, 
+                runInBackground: true, 
+                cliProcess.StartInfo);
+            
             // Process results, log err (if any), return parsed Result 
-            SpacetimeCliResult cliResult = new(output, error);
+            SpacetimeCliResult cliResult = new(output, error, cliRequest);
             logCliResults(cliResult, logErrs);
 
             // Can we auto-resolve this issue and try again?

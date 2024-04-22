@@ -1038,78 +1038,79 @@ namespace SpacetimeDB.Editor
                 barTitle: "Publishing to SpacetimeDB ...",
                 autoHideOnComplete: false);
         }
-
-        /// Set 'installing' UI
-        private void setinstallWasmOptPackageViaNpmUi()
-        {
-            // Hide UI
-            publishBtn.SetEnabled(false);
-            installWasmOptBtn.SetEnabled(false);
-            
-            // Show UI
-            installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Action, "Installing ...");
-            ShowUi(installCliProgressBar);
-            
-            _ = startProgressBarAsync(
-                installWasmOptProgressBar,
-                barTitle: "Installing `wasm-opt` via npm ...",
-                autoHideOnComplete: false);
-        }
         
-        /// Install `wasm-opt` npm pkg for a "set and forget" publishAsync optimization boost
-        private async Task installWasmOptPackageViaNpmAsync()
-        {
-            setinstallWasmOptPackageViaNpmUi();
-            
-            // Run CLI cmd
-            InstallWasmResult installWasmResult = await SpacetimeDbPublisherCliActions.InstallWasmOptPkgAsync();
-
-            // Process result -> Update UI
-            bool isSuccess = installWasmResult.IsSuccessfulInstall;
-            onInstallWasmOptPackageViaNpmDone();
-            if (isSuccess)
-            {
-                onInstallWasmOptPackageViaNpmSuccess();
-            }
-            else
-            {
-                onInstallWasmOptPackageViaNpmFail(installWasmResult);
-            }
-        }
-
-        private void onInstallWasmOptPackageViaNpmDone()
-        {
-            HideUi(installWasmOptProgressBar);
-            publishBtn.SetEnabled(true);
-        }
-
-        /// Success: Show installed txt, keep button disabled, but don't actually check
-        /// the optimization box since *this* publishAsync is not optimized: Next one will be
-        private void onInstallWasmOptPackageViaNpmSuccess()
-        {
-            installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Success, "Installed");
-        }
-
-        private void onInstallWasmOptPackageViaNpmFail(InstallWasmResult installResult)
-        {
-            installWasmOptBtn.SetEnabled(true);
-            
-            // Caught err?
-            string friendlyErrDetails = "wasm-opt install failed";
-            if (installResult.InstallWasmError == InstallWasmResult.InstallWasmErrorType.NpmNotRecognized)
-            {
-                friendlyErrDetails = "Missing `npm`";
-            }
-            else
-            {
-                
-            }
-
-            installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
-                SpacetimeMeta.StringStyle.Error, friendlyErrDetails);
-        }
+        
+        #region Install npm `wasm-opt` | Disabled until https://github.com/WebAssembly/binaryen fixes their Windows PATH detection
+        // /// Set 'installing' UI
+        // private void setinstallWasmOptPackageViaNpmUi()
+        // {
+        //     // Hide UI
+        //     publishBtn.SetEnabled(false);
+        //     installWasmOptBtn.SetEnabled(false);
+        //     
+        //     // Show UI
+        //     installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
+        //         SpacetimeMeta.StringStyle.Action, "Installing ...");
+        //     ShowUi(installCliProgressBar);
+        //     
+        //     _ = startProgressBarAsync(
+        //         installWasmOptProgressBar,
+        //         barTitle: "Installing `wasm-opt` via npm ...",
+        //         autoHideOnComplete: false);
+        // }
+        //
+        // /// Install `wasm-opt` npm pkg for a "set and forget" publishAsync optimization boost
+        // /// BUG: (!) `wasm-opt` will show up in PATH, but not recognized by the publish util
+        // private async Task installWasmOptPackageViaNpmAsync()
+        // {
+        //     setinstallWasmOptPackageViaNpmUi();
+        //     
+        //     // Run CLI cmd
+        //     InstallWasmResult installWasmResult = await SpacetimeDbPublisherCliActions.InstallWasmOptPkgAsync();
+        //
+        //     // Process result -> Update UI
+        //     bool isSuccess = installWasmResult.IsSuccessfulInstall;
+        //     onInstallWasmOptPackageViaNpmDone();
+        //     if (isSuccess)
+        //     {
+        //         onInstallWasmOptPackageViaNpmSuccess();
+        //     }
+        //     else
+        //     {
+        //         onInstallWasmOptPackageViaNpmFail(installWasmResult);
+        //     }
+        // }
+        //
+        // private void onInstallWasmOptPackageViaNpmDone()
+        // {
+        //     HideUi(installWasmOptProgressBar);
+        //     publishBtn.SetEnabled(true);
+        // }
+        //
+        // /// Success: Show installed txt, keep button disabled, but don't actually check
+        // /// the optimization box since *this* publishAsync is not optimized: Next one will be
+        // private void onInstallWasmOptPackageViaNpmSuccess()
+        // {
+        //     installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
+        //         SpacetimeMeta.StringStyle.Success, "Installed");
+        // }
+        //
+        // private void onInstallWasmOptPackageViaNpmFail(InstallWasmResult installResult)
+        // {
+        //     installWasmOptBtn.SetEnabled(true);
+        //     
+        //     // Caught err?
+        //     string friendlyErrDetails = "wasm-opt install failed";
+        //     if (installResult.InstallWasmError == InstallWasmResult.InstallWasmErrorType.NpmNotRecognized)
+        //     {
+        //         friendlyErrDetails = "Missing `npm`";
+        //     }
+        //
+        //     installWasmOptBtn.text = SpacetimeMeta.GetStyledStr(
+        //         SpacetimeMeta.StringStyle.Error, friendlyErrDetails);
+        // }
+        #endregion // Install npm `wasm-opt` | Disabled until https://github.com/WebAssembly/binaryen fixes their Windows PATH detection
+        
 
         /// UI: Disable btn + show installing status to id label
         private void setAddIdentityUi(string nickname)
@@ -1617,11 +1618,11 @@ namespace SpacetimeDB.Editor
             }
             
             // Online
-            onStartLocalServerSuccess(pingResult);
+            await onStartLocalServerSuccessAsync(pingResult);
             return true; // startedServer
         }
 
-        private void onStartLocalServerSuccess(PingServerResult pingResult)
+        private async Task onStartLocalServerSuccessAsync(PingServerResult pingResult)
         {
             Debug.Log($"Started local server @ `{_lastServerPingSuccess}`");
             _lastServerPingSuccess = pingResult;
@@ -1635,7 +1636,8 @@ namespace SpacetimeDB.Editor
             publishStopLocalServerBtn.SetEnabled(false);
             _ = WaitEnableElementAsync(publishStopLocalServerBtn, TimeSpan.FromSeconds(1));
             
-            setPublishReadyStatusIfOnline();
+            // setPublishReadyStatusIfOnline();
+            await getIdentitiesSetDropdown(autoProgressPublisher: true);
         }
 
         /// Sets stop server btn to "Stop {server}@{hostUrlWithoutHttp}"

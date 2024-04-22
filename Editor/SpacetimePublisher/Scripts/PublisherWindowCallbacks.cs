@@ -470,11 +470,15 @@ namespace SpacetimeDB.Editor
             suggestModuleNameIfEmpty();
 
         /// Curry to an async Task to install `wasm-opt` npm pkg
-        private async void onInstallWasmOptBtnClick()
+        private void onInstallWasmOptBtnClick()
         {
             try
             {
-                await installWasmOptPackageViaNpmAsync();
+                // BUG: (!) Binaryen doesn't detect `wasm-opt` path in Windows when installed via npm
+                // await installWasmOptPackageViaNpmAsync();
+                
+                // Workaround, for now, until they fix the path detection issue:
+                Application.OpenURL(INSTALL_WASM_OPT_URL);
             }
             catch (Exception e)
             {

@@ -888,6 +888,12 @@ namespace SpacetimeDB.Editor
                 publishResult.StyledFriendlyErrorMessage += ": Launching installation website. Install -> try again";
                 Application.OpenURL("https://dotnet.microsoft.com/en-us/download/dotnet/8.0");
             }
+            else if (publishResult.PublishErrCode == PublishResult.PublishErrorCode.MSB1003_InvalidProjectDir)
+            {
+                // Focus + select the server module path input
+                publishModulePathTxt.Focus();
+                publishModulePathTxt.SelectAll();
+            }
             
             updatePublishStatus(
                 SpacetimeMeta.StringStyle.Error, 

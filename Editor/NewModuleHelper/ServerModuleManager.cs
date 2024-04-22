@@ -129,6 +129,7 @@ namespace SpacetimeDB.Editor
             };
             
             string pathToProjFile = Path.Join(initProjPathToProjDir, fileName);
+            pathToProjFile = SpacetimeWindow.NormalizePath(pathToProjFile);
             EditorUtility.RevealInFinder(pathToProjFile);
         }
         

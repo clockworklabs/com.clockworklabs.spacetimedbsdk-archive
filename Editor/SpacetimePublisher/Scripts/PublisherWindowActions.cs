@@ -902,6 +902,12 @@ namespace SpacetimeDB.Editor
                 publishModulePathTxt.Focus();
                 publishModulePathTxt.SelectAll();
             }
+            else if (publishResult.PublishErrCode == PublishResult.PublishErrorCode.DBUpdateRejected_PermissionDenied)
+            {
+                // Focus + select the server module name input
+                publishModuleNameTxt.Focus();
+                publishModuleNameTxt.SelectAll();
+            } 
             
             updatePublishStatus(
                 SpacetimeMeta.StringStyle.Error, 

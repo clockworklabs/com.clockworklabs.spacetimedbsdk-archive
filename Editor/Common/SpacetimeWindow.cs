@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace SpacetimeDB.Editor
@@ -88,6 +89,13 @@ namespace SpacetimeDB.Editor
         public static bool IsShowingUi(VisualElement element) =>
             element.resolvedStyle.display == DisplayStyle.Flex;
         
+        /// Copies to clipboard + logs
+        public static void CopyToClipboard(string str)
+        {
+            GUIUtility.systemCopyBuffer = str;
+            Debug.Log($"Copied to clipboard: {str}");
+        }
+
         public static string NormalizePath(string pathToProjFile) =>
             pathToProjFile.Replace(@"\", "/");
     }

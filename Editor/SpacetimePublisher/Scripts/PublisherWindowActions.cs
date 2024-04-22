@@ -75,11 +75,18 @@ namespace SpacetimeDB.Editor
             HideUi(publishFoldout);
             HideUi(publishGroupBox);
             HideUi(publishCancelBtn);
-            HideUi(publishInstallProgressBar);
             FadeOutUi(publishStatusLabel);
-            resetPublishAdvanced();
+
+            if (_progressBarCts is { IsCancellationRequested: true })
+            {
+                hideProgressBarAndCancel(publishInstallProgressBar);
+            }
+            else
+            {
+                HideUi(publishInstallProgressBar);
+            }
             
-            HideUi(publishLocalBtnsHoriz);
+            resetPublishAdvanced();
         }
 
         private void resetPublishAdvanced()
@@ -101,6 +108,7 @@ namespace SpacetimeDB.Editor
 
         private void resetServer()
         {
+            HideUi(publishLocalBtnsHoriz);
             HideUi(serverAddNewShowUiBtn);
             HideUi(serverNewGroupBox);
             serverNicknameTxt.value = "";
@@ -114,7 +122,7 @@ namespace SpacetimeDB.Editor
         private void resetInstallCli()
         {
             HideUi(installCliGroupBox);
-            HideUi(installCliProgressBar);
+            hideProgressBarAndCancel(installCliProgressBar);
             HideUi(installCliStatusLabel);
         }
 
@@ -233,7 +241,7 @@ namespace SpacetimeDB.Editor
         {
             ShowUi(installCliStatusLabel);
             ShowUi(installCliGroupBox);
-            HideUi(installCliProgressBar);
+            hideProgressBarAndCancel(installCliProgressBar);
         }
 
         /// Technically success, but we need to restart Unity to refresh PATH env vars
@@ -945,64 +953,10 @@ namespace SpacetimeDB.Editor
             revealPublishResultCacheIfHostExists(openFoldout: true);
         }
 
-        /// Show progress bar, clamped to 1~100, updating every 1s
-        /// Stops when reached 100, or if style display is hidden
-        private async Task startProgressBarAsync(
-            ProgressBar progressBar,
-            string barTitle = "Running CLI ...",
-            int initVal = 5, 
-            int valIncreasePerSec = 5,
-            bool autoHideOnComplete = true)
-        {
-            progressBar.title = barTitle;
-            
-            // Prepare the progress bar style and min/max
-            const int maxVal = 99;
-            progressBar.value = Mathf.Clamp(initVal, 1, maxVal);
-            ShowUi(progressBar);
-            
-            while (progressBar.value <= 100 && IsShowingUi(progressBar))
-            {
-                // Wait for 1 second, then update the bar
-                await Task.Delay(TimeSpan.FromSeconds(1));
-                progressBar.value += valIncreasePerSec;
-            }
-            
-            if (autoHideOnComplete)
-            {
-                HideUi(progressBar);
-                return;
-            }
-            
-            // We're at 100% and !autoHideOnComplete: 
-            // The test may still be going, so let's show some progress in a different way
-            // In case we reach 100%, we'll still show a spinny bar
-            await spinProgressBarAsync(progressBar);
-        }
-
-        private async Task spinProgressBarAsync(ProgressBar progressBar)
-        {
-            // string[] spinner = { "◴", "◷", "◶", "◵" }; // Unicode !works in UI Builder yet
-            string[] spinner = { "/", "|", @"\", "|" };
-            int spinnerIndex = 0;
-
-            // Prepend a spinner to title
-            progressBar.title = $"{spinner[spinnerIndex]} " + progressBar.title;
-
-            while (IsShowingUi(progressBar))
-            {
-                await Task.Delay(TimeSpan.FromSeconds(0.2));
-
-                // Replace the 1st character with the next spinner character
-                progressBar.title = spinner[spinnerIndex] + progressBar.title[1..]; 
-                spinnerIndex = (spinnerIndex + 1) % spinner.Length;
-            }
-        }
-
         /// Hide CLI group
         private void onSpacetimeCliAlreadyInstalled()
         {
-            HideUi(installCliProgressBar);
+            hideProgressBarAndCancel(installCliProgressBar);
             HideUi(installCliGroupBox);
         }
 
@@ -1089,7 +1043,7 @@ namespace SpacetimeDB.Editor
         //
         // private void onInstallWasmOptPackageViaNpmDone()
         // {
-        //     HideUi(installWasmOptProgressBar);
+        //     hideProgressBarAndCancel(installWasmOptProgressBar);
         //     publishBtn.SetEnabled(true);
         // }
         //
@@ -1289,7 +1243,7 @@ namespace SpacetimeDB.Editor
             
             publishResultIsOptimizedBuildToggle.value = false;
             ShowUi(installWasmOptBtn);
-            HideUi(installWasmOptProgressBar);
+            // hideProgressBarAndCancel(installWasmOptProgressBar);
             
             HideUi(publishResultStatusLabel);
             

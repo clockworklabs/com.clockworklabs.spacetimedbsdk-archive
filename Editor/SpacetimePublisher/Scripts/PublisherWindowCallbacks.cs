@@ -645,7 +645,7 @@ namespace SpacetimeDB.Editor
             }
 
             // Hide UI: Progress bar, cancel btn
-            HideUi(publishInstallProgressBar);
+            hideProgressBarAndCancel(publishInstallProgressBar);
             HideUi(publishCancelBtn);
 
             // Show UI: Canceled status, publish btn
@@ -684,7 +684,7 @@ namespace SpacetimeDB.Editor
             }
             finally
             {
-                HideUi(publishInstallProgressBar);
+                hideProgressBarAndCancel(publishInstallProgressBar);
                 _publishCts?.Dispose();
             }
         }

@@ -41,6 +41,19 @@ public static class SpacetimeMeta
     
 
     #region Colors & Formatting
+    public static readonly string[] PROGRESS_BAR_SPINNER_CHARS =
+    {
+        "<mspace=8>[    ]</mspace>", 
+        "<mspace=8>[=   ]</mspace>", 
+        "<mspace=8>[==  ]</mspace>", 
+        "<mspace=8>[=== ]</mspace>", 
+        "<mspace=8>[ ===]</mspace>", 
+        "<mspace=8>[  ==]</mspace>", 
+        "<mspace=8>[   =]</mspace>", 
+        "<mspace=8>[    ]</mspace>",
+    };
+    // public static readonly string[] PROGRESS_BAR_SPINNER_CHARS = { "◴", "◷", "◶", "◵" }; // Unicode !works in UI Builder yet
+
     // Colors pulled from docs, often coincided with UI elements >>
     public const string ACTION_COLOR_HEX = "#FFEA30"; // Corn Yellow
     public const string ERROR_COLOR_HEX = "#FDBE01"; // Golden Orange

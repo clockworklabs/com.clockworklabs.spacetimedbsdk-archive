@@ -1249,7 +1249,7 @@ namespace SpacetimeDB.Editor
             
             publishResultIsOptimizedBuildToggle.value = false;
             ShowUi(installWasmOptBtn);
-            // hideProgressBarAndCancel(installWasmOptProgressBar);
+            HideUi(installWasmOptProgressBar);
             
             HideUi(publishResultStatusLabel);
             

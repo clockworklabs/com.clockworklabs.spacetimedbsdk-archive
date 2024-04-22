@@ -166,48 +166,11 @@ namespace SpacetimeDB.Editor
             return cliRequest;
         }
 
-        // /// Issue a cross-platform *async* (EnableRaisingEvents) CLI cmd, where we'll start with terminal prefixes
-        // /// as the CLI "command" and some arg prefixes for compatibility.
-        // /// This particular overload is useful for streaming logs or running a cancellable listen server in the background
-        // /// For async CLI calls, a CancellationToken is *required* (create a CancellationTokenSource)
-        // /// (!) YOU MANUALLY START THIS PROCESS (to give you a chance to subscribe to logs early)
-        // /// - Usage: asyncCliResult.Start() 
-        // [Obsolete("BUG: Domain refresh will both kill the process and freeze Unity")]
-        // public static Task<SpacetimeStreamingCliResult> runStreamingCliCommand(
-        //     string argSuffix,
-        //     bool stopOnError,
-        //     CancellationTokenSource cancelTokenSrc)
-        // {
-        //     // Args
-        //     string terminal = getTerminalPrefix(); // Determine terminal based on platform
-        //     string argPrefix = getCommandPrefix(); // Determine command prefix (cmd /c, etc.)
-        //     string fullParsedArgs = $"{argPrefix} \"{argSuffix}\"";
-        //     
-        //     // Process + StartInfo
-        //     Process asyncCliProcess = createCliProcess(terminal, fullParsedArgs, isAsync: true);
-        //
-        //     // Cancellation Token + Async CLI Result (set early to prepare streaming logs *before* proc start)
-        //     SpacetimeStreamingCliRequest streamingCliRequest = new(
-        //         asyncCliProcess, 
-        //         stopOnError, 
-        //         continueFollowingLogsAfterDone: true, 
-        //         cancelTokenSrc);
-        //     
-        //     SpacetimeStreamingCliResult streamingCliResult = new(streamingCliRequest);
-        //     
-        //     // TODO: Show later just before we start the proc @ SpacetimeAsyncCliResult?
-        //     logInput(terminal, fullParsedArgs);
-        //     
-        //     // (!) Manually start this proc when you want
-        //     return Task.FromResult(streamingCliResult);
-        // }
-        
         /// Issue a cross-platform CLI cmd, where we'll start with terminal prefixes
         /// as the CLI "command" and some arg prefixes for compatibility.
         /// Usage: Pass an argSuffix, such as "spacetime version",
         ///        along with an optional cancel token
         /// - Supports cancellations and timeouts via CancellationToken (create a CancellationTokenSource)
-        /// TODO: runInBackground, with SpacetimeAsyncCliResult, probably supports streaming (--follow) logs: give it a shot!
         public static async Task<SpacetimeCliResult> runCliCommandAsync(
             string argSuffix,
             CancellationToken cancelToken = default,

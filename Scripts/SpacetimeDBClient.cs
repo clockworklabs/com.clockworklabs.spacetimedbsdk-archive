@@ -292,8 +292,8 @@ namespace SpacetimeDB
             {
                 var dbOps = new List<DbOp>();
                 using var compressedStream = new MemoryStream(bytes);
-                using var decompressedStream = new BrotliStream(compressedStream, CompressionMode.Decompress);
-                var message = Message.Parser.ParseFrom(decompressedStream);
+                // using var decompressedStream = new BrotliStream(compressedStream, CompressionMode.Decompress);
+                var message = Message.Parser.ParseFrom(compressedStream);
                 if (message.TypeCase == Message.TypeOneofCase.TransactionUpdate)
                 {
                     var callerId = Identity.From(message.TransactionUpdate.Event.CallerIdentity.ToByteArray());

@@ -138,7 +138,7 @@ namespace SpacetimeDB.Editor
             // Args
             string terminal = getTerminalPrefix(); // Determine terminal based on platform
             string argPrefix = getCommandPrefix(); // Determine command prefix (cmd /c, etc.)
-            string fullParsedArgs = $"{argPrefix} \"{argSuffix}\"";
+            string fullParsedArgs = $"{argPrefix} \"{argSuffix.Trim()}\"";
             
             // Process + StartInfo
             Process asyncCliProcess = createCliProcess(terminal, fullParsedArgs, detachedProcess: true);

@@ -141,7 +141,17 @@ namespace SpacetimeDB.Editor
             const string argSuffix = "dotnet --version";
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
             CheckHasDotnet8PlusResult checkHasDotnet8PlusResult = new(cliResult);
-            return checkHasDotnet8PlusResult;        
+            return checkHasDotnet8PlusResult;
+        }
+        
+        /// Uses the `spacetime identity remove` CLI command
+        /// (!) This is really only used for corrupt identities.
+        /// Eg: New fingerprint, new identity.
+        public static async Task<SpacetimeCliResult> RemoveIdentityAsync(string identityName)
+        {
+            string argSuffix = $"spacetime identity remove {identityName}";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
+            return cliResult;
         }
         #endregion // High Level CLI Actions
         

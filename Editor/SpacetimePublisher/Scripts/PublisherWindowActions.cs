@@ -955,6 +955,7 @@ namespace SpacetimeDB.Editor
             publishBtn.SetEnabled(false); // Just in case
 
             // Hide other groups
+            resetPublishResultCache();
             toggleFoldoutRipple(FoldoutGroupType.Identity, show: false);
         }
         

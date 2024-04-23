@@ -752,7 +752,9 @@ namespace SpacetimeDB.Editor
         {
             // Logs for each found, with default shown
             foreach (SpacetimeServer server in servers)
+            {
                 Debug.Log($"Discovered server: {server}");
+            }
             
             // Setting will trigger the onIdentitySelectedDropdownChangedAsync event @ PublisherWindow
             for (int i = 0; i < servers.Count; i++)
@@ -880,6 +882,23 @@ namespace SpacetimeDB.Editor
             onLocalServerOnlineOffline(isOnline);
             return !isOnline; // isLocalServerAndOffline
         }
+        
+        private void onLocalServerOnlineOffline(bool isOnline)
+        {
+            if (!isOnline)
+            {
+                setLocalServerOfflineUi(); // "Local server offline"
+                return;
+            }
+            
+            // Online
+            clearLabels();
+            HideUi(publishStartLocalServerBtn);
+            ShowUi(publishStopLocalServerBtn);
+                
+            setStopLocalServerBtnTxt();
+            setPublishReadyStatusIfOnline();
+        }
 
         private void setPingingLocalServerUi()
         {
@@ -908,23 +927,6 @@ namespace SpacetimeDB.Editor
             }
             
             return isSuccess;
-        }
-
-        private void onLocalServerOnlineOffline(bool isOnline)
-        {
-            if (!isOnline)
-            {
-                setLocalServerOfflineUi(); // "Local server offline"
-                return;
-            }
-            
-            // Online
-            clearLabels();
-            HideUi(publishStartLocalServerBtn);
-            ShowUi(publishStopLocalServerBtn);
-                
-            setStopLocalServerBtnTxt();
-            setPublishReadyStatusIfOnline();
         }
 
         private void clearLabels()

@@ -71,13 +71,14 @@ namespace SpacetimeDB.Editor
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
             return cliResult;
         }
-        
+
         /// <summary>Uses the `spacetime server ping` CLI command.</summary>
         /// <param name="cancelToken">If left default, set to 200ms timeout</param>
+        /// <param name="logErrors">If you know it's going to be spammy, we can skip offline errs</param>
         public static async Task<PingServerResult> PingServerAsync(
             string serverName, 
             CancellationToken cancelToken = default,
-            bool logErrors = false)
+            bool logErrors = true)
         {
             string argSuffix = $"spacetime server ping {serverName}";
             SpacetimeCliResult cliResult = await runCliCommandAsync(

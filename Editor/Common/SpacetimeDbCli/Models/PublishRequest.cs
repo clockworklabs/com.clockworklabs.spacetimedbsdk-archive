@@ -9,7 +9,8 @@ namespace SpacetimeDB.Editor
             /// When true, appends --clear-database to clear the db data
             public bool ClearDbData { get; }
             
-            /// When true, appends --debug and --skip_clippy 
+            /// When true, appends --debug and --skip_clippy
+            /// (!) --skip_clippy is technically only for Rust, but won't harm if added to C# 
             public bool IsDebugMode { get; }
             
             public AdvancedOpts(bool clearDbData, bool isDebugMode)

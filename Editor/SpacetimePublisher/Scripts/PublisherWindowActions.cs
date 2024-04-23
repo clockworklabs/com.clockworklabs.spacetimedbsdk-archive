@@ -472,8 +472,11 @@ namespace SpacetimeDB.Editor
             _ = getServersSetDropdown(autoProgressIdentities: true);
         }
         
+        /// <summary>
         /// Attempt to regenerate the fingerprint for the selected server
         /// This should not be called in response to a bad ping or server offline issue (eg: Local server may be offline)
+        /// </summary>
+        /// <returns>isSuccess></returns>
         private async Task regenerateFingerprintAsync()
         {
             if (_justRegeneratedFingerprint)
@@ -485,7 +488,7 @@ namespace SpacetimeDB.Editor
             
             _justRegeneratedFingerprint = true;
             string serverName = serverSelectedDropdown.value;
-            Debug.Log($"Regenerating fingerprint for {serverName}");
+            Debug.Log($"Regenerating fingerprint for `{serverName}` server");
             
             // UI
             serverConnectingStatusLabel.text = SpacetimeMeta.GetStyledStr(
@@ -503,27 +506,94 @@ namespace SpacetimeDB.Editor
         /// <returns>isResolvedTryAgain</returns>
         private async Task<bool> tryResolveCommonCliErrorsAsync(SpacetimeCliResult cliResult)
         {
+            bool isResolvedTryAgain = false;
             bool isMissingFingerprintErr = cliResult.RawCliErrorCode == SpacetimeCliResult.CliErrorCode.NoFingerprint;
+            bool isStaleIdentityMismatchingToken = cliResult.RawCliErrorCode == SpacetimeCliResult.CliErrorCode.StaleIdentityMismatchingKey;
             
             if (isMissingFingerprintErr)
             {
-                Debug.LogError("No saved fingerprint found: " +
-                               "Regenerating default fingerprint and trying again...");
-                await regenerateFingerprintAsync();
-                
-                // Try again
-                await getIdentitiesSetDropdownAsync(autoProgressPublisher: true);
-                
-                Debug.Log($"{nameof(tryResolveCommonCliErrorsAsync)} resolved the issue with {nameof(regenerateFingerprintAsync)}");
-                return true; // isResolvedTryAgain            
+                isResolvedTryAgain = await tryResolveFingerprintCliErrorAsync();
+            }
+            else if (isStaleIdentityMismatchingToken)
+            {
+                isResolvedTryAgain = await tryResolveStaleIdentityMismatchingTokenAsync();
             }
 
-            return false; // !isResolved
+            return isResolvedTryAgain;
+        }
+        
+        private bool checkSelectedRealServerName()
+        {
+            string serverName = serverSelectedDropdown.value;
+            return !string.IsNullOrEmpty(serverName) && !serverName.Contains("Discovering");
+        }
+
+        private async Task<bool> tryResolveStaleIdentityMismatchingTokenAsync()
+        {
+            string identityName = identitySelectedDropdown.value;
+            Debug.LogError($"Found corrupt/stale identity: Deleting identity `{identityName}` " +
+                $"-> {nameof(getIdentitiesSetDropdownAsync)} -> should trigger new id group");
+                
+            // Delete identity -> Try to get identities again (will trigger the "new" field, if need)
+            try
+            {
+                SpacetimeCliResult cliResult = await SpacetimeDbCliActions.RemoveIdentityAsync(identityName);
+                bool isSuccess = !cliResult.HasCliErr;
+                if (!isSuccess)
+                {
+                    throw new Exception($"Failed to {nameof(tryResolveStaleIdentityMismatchingTokenAsync)} " +
+                        "with identity: `{serverName}`");
+                }
+                    
+                // Try to get identities again
+                await getIdentitiesSetDropdownAsync(autoProgressPublisher: true);
+            }
+            catch (Exception e)
+            {
+                return false; // !isResolvedTryAgain
+            }
+            
+            Debug.Log($"{nameof(tryResolveCommonCliErrorsAsync)} resolved the issue " +
+                      $"with {nameof(tryResolveStaleIdentityMismatchingTokenAsync)}");
+            return true; // isResolvedTryAgain
+        }
+
+        private async Task<bool> tryResolveFingerprintCliErrorAsync()
+        {
+            Debug.LogError("No saved fingerprint found: " +
+                "Regenerating default fingerprint and trying again...");
+                
+            // Regenerate -> delete current identity -> try again
+            try
+            {
+                await regenerateFingerprintAsync(); // Throws on critical fail
+            
+                string serverName = serverSelectedDropdown.value;
+                bool selectedRealServerName = checkSelectedRealServerName();
+                if (selectedRealServerName)
+                {
+                    await SpacetimeDbCliActions.RemoveIdentityAsync(serverName);
+                }
+                    
+                // Try to get identities again
+                await getIdentitiesSetDropdownAsync(autoProgressPublisher: true);
+            }
+            catch (Exception e)
+            {
+                return false; // !isResolvedTryAgain
+            }
+            
+            Debug.Log($"{nameof(tryResolveCommonCliErrorsAsync)} resolved the issue " +
+                      $"with {nameof(regenerateFingerprintAsync)}");
+            return true; // isResolvedTryAgain            
         }
 
         /// On failure, regenerate fingerprint
         private async Task onGetIdentitiesFailAsync(GetIdentitiesResult getIdentitiesResult)
         {
+            // Early UI
+            HideUi(serverConnectingStatusLabel); // In case auto err fix was showing the label
+            
             // 1st, ensure it's not an auto-fixable error, such as a fingerprint issue
             bool resolvedErrTryAgain = await tryResolveCommonCliErrorsAsync(getIdentitiesResult);
             if (resolvedErrTryAgain)
@@ -579,6 +649,7 @@ namespace SpacetimeDB.Editor
             List<SpacetimeIdentity> identities, 
             bool autoProgressPublisher)
         {
+            // Early UI
             HideUi(serverConnectingStatusLabel); // In case auto err fix was showing the label
 
             // Logs for each found, with default shown

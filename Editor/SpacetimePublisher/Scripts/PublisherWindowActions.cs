@@ -1775,6 +1775,18 @@ namespace SpacetimeDB.Editor
         {
             Debug.LogError($"Failed to {nameof(startLocalServer)}");
 
+            bool isServerPoofBug = pingResult.CliError.Contains("No such saved server configuration");
+            if (isServerPoofBug)
+            {
+                Debug.LogError("<b>(!) Server poof bug detected:</b> Try restarting Publisher tool to auto-fix");
+                serverConnectingStatusLabel.text = SpacetimeMeta.GetStyledStr(
+                    SpacetimeMeta.StringStyle.Error, 
+                    "<b>Server poof bug detected:</b>\nRestart Publisher tool to auto-fix");
+                ShowUi(serverConnectingStatusLabel);
+                    
+                // await regenerateServers(); // << TODO: This is more-ideal, but involves more UX flows
+            }
+
             publishStartLocalServerBtn.text = "Start Local Server";
             publishStartLocalServerBtn.SetEnabled(true);
         }

@@ -176,8 +176,6 @@ namespace SpacetimeDB.Editor
             // Timed out
             return new PingServerResult(new SpacetimeCliResult("", "Canceled"));
         }
-        
-        
         #endregion // Compounded Actions
         
         

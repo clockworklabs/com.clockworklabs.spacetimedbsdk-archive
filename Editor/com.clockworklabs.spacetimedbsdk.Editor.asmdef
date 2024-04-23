@@ -1,8 +1,10 @@
 {
-    "name": "SpacetimeDB",
+    "name": "SpacetimeDB.Editor",
     "rootNamespace": "",
     "references": [],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

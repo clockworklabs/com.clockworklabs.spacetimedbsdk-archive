@@ -25,6 +25,7 @@ namespace SpacetimeDB.Editor
         {
             Unknown,
             NoFingerprint,
+            StaleIdentityMismatchingKey,
             Canceled,
         }
         
@@ -67,6 +68,10 @@ namespace SpacetimeDB.Editor
             else if (CliError.Contains("No fingerprint"))
             {
                 this.RawCliErrorCode = CliErrorCode.NoFingerprint;
+            }
+            else if (CliError.Contains("Token not signed by this instance"))
+            {
+                this.RawCliErrorCode = CliErrorCode.StaleIdentityMismatchingKey;
             }
         }
 

@@ -377,7 +377,7 @@ namespace SpacetimeDB.Editor
                 }
                 else if (!logErrs)
                 {
-                    // Err, bug instructed to skip logs
+                    // Err, bug instructed to skip logs - it'll still be in the CliError
                     return;
                 }
                 else

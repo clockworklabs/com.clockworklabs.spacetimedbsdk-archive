@@ -113,6 +113,16 @@ namespace SpacetimeDB.Editor
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
             return cliResult;
         }
+        
+        /// Uses the `spacetime identity remove` CLI command
+        /// (!) This is really only used for corrupt identities.
+        /// Eg: New fingerprint, new identity.
+        public static async Task<SpacetimeCliResult> RemoveIdentityAsync(string identityName)
+        {
+            string argSuffix = $"spacetime identity remove {identityName}";
+            SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);
+            return cliResult;
+        }
         #endregion // High Level CLI Actions
         
         

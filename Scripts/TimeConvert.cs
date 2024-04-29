@@ -8,22 +8,13 @@
      /// </summary>
      public static class TimeConvert
      {
-         private static readonly DateTimeOffset unixEpoch = new(
-             year: 1970,
-             month: 1,
-             day: 1,
-             hour: 0,
-             minute: 0,
-             second: 0,
-             offset: TimeSpan.Zero);
-
          /// <summary>
          /// Converts from long (Rust Timestamps / microseconds since UNIX epoch) to DateTimeOffset (UTC) 
          /// </summary>
          public static DateTimeOffset FromMicrosecondsTimestamp(long microseconds)
          {
              long ticks = microseconds * 10;
-             return unixEpoch.AddTicks(ticks);
+             return DateTime.UnixEpoch.AddTicks(ticks);
          }
 
          /// <summary>
@@ -31,7 +22,7 @@
          /// </summary>
          public static long ToMicrosecondsTimestamp(DateTimeOffset dateTimeOffset)
          {
-             TimeSpan elapsed = dateTimeOffset - unixEpoch;
+             TimeSpan elapsed = dateTimeOffset - DateTime.UnixEpoch;
              return elapsed.Ticks / 10;
          }
 
@@ -40,7 +31,7 @@
          /// </summary>
          public static long MicrosecondsTimestamp()
          {
-             TimeSpan elapsed = DateTimeOffset.Now - unixEpoch;
+             TimeSpan elapsed = DateTimeOffset.Now - DateTime.UnixEpoch;
              return elapsed.Ticks / 10;
          }
 

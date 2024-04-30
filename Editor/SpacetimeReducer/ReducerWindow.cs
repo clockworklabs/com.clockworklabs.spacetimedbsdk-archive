@@ -41,9 +41,9 @@ namespace SpacetimeDB.Editor
         private TreeView reducersTreeView;
         
         private Foldout actionsFoldout;
+        private DropdownField actionCallAsIdentityDropdown;
         private TextField actionArgsTxt;
         private Label actionsSyntaxHintLabel;
-        private TextField actionCallAsIdentityTxt;
         private Button actionsCallReducerBtn;
 
         private Foldout actionsResultFoldout;
@@ -131,9 +131,9 @@ namespace SpacetimeDB.Editor
             reducersTreeView = rootVisualElement.Q<TreeView>(nameof(reducersTreeView));
             
             actionsFoldout = rootVisualElement.Q<Foldout>(nameof(actionsFoldout));
+            actionCallAsIdentityDropdown = rootVisualElement.Q<DropdownField>(nameof(actionCallAsIdentityDropdown));
             actionArgsTxt = rootVisualElement.Q<TextField>(nameof(actionArgsTxt));
             actionsSyntaxHintLabel = rootVisualElement.Q<Label>(nameof(actionsSyntaxHintLabel));
-            actionCallAsIdentityTxt = rootVisualElement.Q<TextField>(nameof(actionCallAsIdentityTxt));
             actionsCallReducerBtn = rootVisualElement.Q<Button>(nameof(actionsCallReducerBtn));
             
             actionsResultFoldout = rootVisualElement.Q<Foldout>(nameof(actionsResultFoldout));
@@ -161,7 +161,7 @@ namespace SpacetimeDB.Editor
                 Assert.IsNotNull(actionsFoldout, $"Expected `#{nameof(actionsFoldout)}`");
                 Assert.IsNotNull(actionArgsTxt, $"Expected `#{nameof(actionArgsTxt)}`");
                 Assert.IsNotNull(actionsSyntaxHintLabel, $"Expected `#{nameof(actionsSyntaxHintLabel)}`");
-                Assert.IsNotNull(actionCallAsIdentityTxt, $"Expected `#{nameof(actionCallAsIdentityTxt)}`");
+                Assert.IsNotNull(actionCallAsIdentityDropdown, $"Expected `#{nameof(actionCallAsIdentityDropdown)}`");
                 Assert.IsNotNull(actionsCallReducerBtn, $"Expected `#{nameof(actionsCallReducerBtn)}`");
                 
                 Assert.IsNotNull(actionsResultFoldout, $"Expected `#{nameof(actionsResultFoldout)}`");

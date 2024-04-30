@@ -1628,8 +1628,8 @@ namespace SpacetimeDB.Editor
         {
             setGetServerLogsAsyncUi();
 
-            string serverName = publishModuleNameTxt.text;
-            SpacetimeCliResult cliResult = await SpacetimeDbCliActions.GetLogsAsync(serverName);
+            string moduleName = publishModuleNameTxt.text;
+            SpacetimeCliResult cliResult = await SpacetimeDbCliActions.GetLogsAsync(moduleName);
         
             resetGetServerLogsUi();
             if (cliResult.HasCliErr)

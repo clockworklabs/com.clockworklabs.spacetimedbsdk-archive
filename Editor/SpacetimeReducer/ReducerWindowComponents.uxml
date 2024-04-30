@@ -15,9 +15,7 @@
             <ui:VisualElement name="spacer10" style="height: 10px;" />
             <ui:Foldout text="&lt;b&gt;Reducers&lt;/b&gt;" name="reducersFoldout" value="true">
                 <ui:Button text="Refresh" parse-escape-sequences="true" display-tooltip-when-elided="true" name="refreshReducersBtn" style="height: 25px;" />
-                <ui:ScrollView name="reducersScrollView" style="max-height: 200px;">
-                    <ui:TreeView name="reducersTreeView" show-alternating-row-backgrounds="All" auto-expand="true" show-border="false" />
-                </ui:ScrollView>
+                <ui:TreeView name="reducersTreeView" show-alternating-row-backgrounds="All" auto-expand="true" show-border="false" fixed-item-height="20" virtualization-method="FixedHeight" style="max-height: 200px;" />
             </ui:Foldout>
             <ui:VisualElement name="spacer10" style="height: 10px;" />
             <ui:Foldout text="&lt;b&gt;Actions&lt;/b&gt;" name="actionsFoldout" value="true">

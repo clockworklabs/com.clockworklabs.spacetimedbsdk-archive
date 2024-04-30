@@ -1644,16 +1644,8 @@ namespace SpacetimeDB.Editor
         /// Output logs to console, with some basic style
         private void onGetServerLogsSuccess(SpacetimeCliResult cliResult)
         {
-            string infoColor = SpacetimeMeta.INPUT_TEXT_COLOR;
-            string warnColor = SpacetimeMeta.ACTION_COLOR_HEX;
-            string errColor = SpacetimeMeta.ERROR_COLOR_HEX;
-            
             // Just color the log types for easier reading
-            string styledLogs = cliResult.CliOutput
-                .Replace("INFO:", $"<color={infoColor}><b>INFO:</b></color>")
-                .Replace("WARNING:", SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Action, "<b>WARNING:</b>"))
-                .Replace("ERROR:", SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Action, "<b>ERROR:</b>"));
-
+            string styledLogs = SpacetimeDbCliActions.PrettifyServerLogs(cliResult.CliOutput);
             Debug.Log($"<color={SpacetimeMeta.ACTION_COLOR_HEX}><b>Formatted Server Logs:</b></color>\n" +
                 $"```bash\n{styledLogs}\n```");
         }

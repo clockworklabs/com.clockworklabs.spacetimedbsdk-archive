@@ -227,5 +227,11 @@ namespace SpacetimeDB.Editor
         private static void TestLaunchServer() =>
             startDetachedLocalServer();
         #endregion // Tests
+
+        public static string PrettifyServerLogs(string cliResultCliOutput) => cliResultCliOutput
+            .Replace("INFO:", $"<color={SpacetimeMeta.INPUT_TEXT_COLOR}><b>INFO:</b></color>")
+            .Replace("WARNING:", SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Action, "<b>WARNING:</b>"))
+            .Replace("ERROR:", SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Action, "<b>ERROR:</b>"));
+        }
     }
 }

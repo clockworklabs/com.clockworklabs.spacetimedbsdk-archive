@@ -3,17 +3,18 @@
     <Style src="project://database/Packages/com.clockworklabs.spacetimedbsdk/Editor/Common/CommonStyles.uss?fileID=7433441132597879392&amp;guid=570ec260e68b747499bb24f7d084aa3b&amp;type=3#CommonStyles" />
     <ui:VisualElement name="root" style="flex-grow: 1; background-color: rgba(12, 12, 12, 0.78);">
         <ui:VisualElement name="header" style="height: 66px; width: auto;">
-            <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="topBannerBtn" tooltip="Open Docs" style="background-image: url(&quot;project://database/Packages/com.clockworklabs.spacetimedbsdk/Editor/Common/Sprites/spacetime-logo-full.png?fileID=2800000&amp;guid=8e8298ff06b7be441bce715299b63855&amp;type=3#spacetime-logo-full&quot;); background-color: rgba(88, 88, 88, 0); flex-shrink: 1; flex-grow: 1; -unity-background-scale-mode: scale-to-fit;" />
+            <ui:Button parse-escape-sequences="true" display-tooltip-when-elided="true" name="topBannerBtn" tooltip="Open Docs" focusable="false" style="background-image: url(&quot;project://database/Packages/com.clockworklabs.spacetimedbsdk/Editor/Common/Sprites/spacetime-logo-full.png?fileID=2800000&amp;guid=8e8298ff06b7be441bce715299b63855&amp;type=3#spacetime-logo-full&quot;); background-color: rgba(88, 88, 88, 0); flex-shrink: 1; flex-grow: 1; -unity-background-scale-mode: scale-to-fit;" />
         </ui:VisualElement>
         <ui:VisualElement name="spacer15" style="height: 15px;" />
         <ui:ScrollView name="bodyScrollView">
             <ui:Foldout text="&lt;b&gt;Options&lt;/b&gt;" name="optionsFoldout" view-data-key="optionsFoldout" value="true" style="display: flex; -unity-font-style: normal;">
+                <ui:DropdownField label="Server" tooltip="Data pulled from Publisher (SHIFT+ALT+P)" name="selectedServerDropdown" view-data-key="selectedServerDropdown" />
                 <ui:VisualElement name="spacer10" style="height: 10px;" />
             </ui:Foldout>
-            <ui:Button text="Get Server Logs" parse-escape-sequences="true" display-tooltip-when-elided="true" name="getLogsBtn" style="height: 30px; -unity-font-style: bold; font-size: 16px; display: flex;" />
+            <ui:Button text="Get Server Logs" parse-escape-sequences="true" display-tooltip-when-elided="true" name="getServerLogsBtn" style="height: 30px; -unity-font-style: bold; font-size: 13px; display: flex;" />
             <ui:VisualElement name="spacer10" style="height: 10px;" />
             <ui:Foldout text="&lt;b&gt;Cached Server Logs&lt;/b&gt;" name="logsFoldout" view-data-key="logsFoldout" value="true" style="display: flex; -unity-font-style: normal;">
-                <ui:Label tabindex="-1" text="{getLogsResultTxt}" parse-escape-sequences="true" display-tooltip-when-elided="true" name="serverLogsTxt" style="color: rgb(182, 192, 207); font-size: 14px; -unity-text-align: upper-center; display: flex; white-space: normal; -unity-font-style: normal;" />
+                <ui:TextField picking-mode="Ignore" value="{serverLogsTxt}" name="serverLogsTxt" readonly="true" multiline="true" />
             </ui:Foldout>
             <ui:VisualElement name="spacer10" style="height: 10px;" />
         </ui:ScrollView>

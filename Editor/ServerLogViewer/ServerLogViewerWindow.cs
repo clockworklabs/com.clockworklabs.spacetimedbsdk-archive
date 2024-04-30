@@ -14,9 +14,9 @@ namespace SpacetimeDB.Editor
     public partial class ServerLogViewerWindow : EditorWindow
     {
         #region UI Visual Elements
+        private DropdownField selectedServerDropdown;
         private Button getServerLogsBtn;
-        private DropdownField serverLogsDropdown;
-        private TextField serverLogsTxt;
+        private TextField serverLogsTxt; // readonly (!) Don't use ViewDataKey since the data is too large
         private VisualElement errorCover;
         #endregion // UI Visual Elements
         
@@ -88,7 +88,7 @@ namespace SpacetimeDB.Editor
         private void setUiElements()
         {
             getServerLogsBtn = rootVisualElement.Q<Button>(nameof(getServerLogsBtn));
-            serverLogsDropdown = rootVisualElement.Q<DropdownField>(nameof(serverLogsDropdown));
+            selectedServerDropdown = rootVisualElement.Q<DropdownField>(nameof(selectedServerDropdown));
             serverLogsTxt = rootVisualElement.Q<TextField>(nameof(serverLogsTxt));
         }
 
@@ -99,7 +99,7 @@ namespace SpacetimeDB.Editor
             try
             {
                 Assert.IsNotNull(getServerLogsBtn, $"Expected `#{nameof(getServerLogsBtn)}`");
-                Assert.IsNotNull(serverLogsDropdown, $"Expected `#{nameof(serverLogsDropdown)}`");
+                Assert.IsNotNull(selectedServerDropdown, $"Expected `#{nameof(selectedServerDropdown)}`");
                 Assert.IsNotNull(serverLogsTxt, $"Expected `#{nameof(serverLogsTxt)}`");
             }
             catch (Exception e)

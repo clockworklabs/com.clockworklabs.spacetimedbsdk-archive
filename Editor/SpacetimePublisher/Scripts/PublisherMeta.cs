@@ -1,9 +1,8 @@
 using System.IO;
+using static SpacetimeMeta;
 
 namespace SpacetimeDB.Editor
 {
-    using static SpacetimeMeta;
-    
     /// Static metadata for PublisherWindow
     /// Looking for more? See SpacetimeMeta.cs
     public static class PublisherMeta

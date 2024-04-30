@@ -12,6 +12,13 @@ namespace SpacetimeDB.Editor
     /// - (!) Looking for more actions? See `SpacetimeDbPublisherCli.cs`
     public static class SpacetimeDbCliActions
     {
+        #region Tools
+        public static string PrettifyServerLogs(string cliResultCliOutput) => cliResultCliOutput
+            .Replace("INFO:", $"<color={SpacetimeMeta.INPUT_TEXT_COLOR}><b>INFO:</b></color>")
+            .Replace("WARNING:", SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Action, "<b>WARNING:</b>"))
+            .Replace("ERROR:", SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Action, "<b>ERROR:</b>"));
+        #endregion // Tools
+        
         #region High Level CLI Actions
         /// isInstalled = !cliResult.HasCliError 
         public static async Task<SpacetimeCliResult> GetIsSpacetimeCliInstalledAsync()
@@ -235,10 +242,5 @@ namespace SpacetimeDB.Editor
         private static void TestLaunchServer() =>
             startDetachedLocalServer();
         #endregion // Tests
-
-        public static string PrettifyServerLogs(string cliResultCliOutput) => cliResultCliOutput
-            .Replace("INFO:", $"<color={SpacetimeMeta.INPUT_TEXT_COLOR}><b>INFO:</b></color>")
-            .Replace("WARNING:", SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Action, "<b>WARNING:</b>"))
-            .Replace("ERROR:", SpacetimeMeta.GetStyledStr(SpacetimeMeta.StringStyle.Action, "<b>ERROR:</b>"));
     }
 }

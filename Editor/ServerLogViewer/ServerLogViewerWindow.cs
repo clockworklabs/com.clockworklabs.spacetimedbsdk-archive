@@ -15,8 +15,17 @@ namespace SpacetimeDB.Editor
     {
         #region UI Visual Elements
         private DropdownField selectedServerDropdown;
+        private DropdownField selectedIdentityDropdown;
+        private TextField moduleNameTxt;
+            
         private Button getServerLogsBtn;
-        private TextField serverLogsTxt; // readonly (!) Don't use ViewDataKey since the data is too large
+        
+        /// (!) Don't use ViewDataKey since the data is too large
+        /// TODO: Currently, readonly TextField (copyable text) !supports rich text.
+        /// ^ Since we already dump the copyable logs, lets show pretty ones here.
+        /// ^ When rich text feat arrives to TextField, swap the Label to readonly TextField
+        private Label serverLogsLabel;
+        
         private VisualElement errorCover;
         #endregion // UI Visual Elements
         
@@ -87,9 +96,12 @@ namespace SpacetimeDB.Editor
         /// All VisualElement field names should match their #newIdentity in camelCase
         private void setUiElements()
         {
-            getServerLogsBtn = rootVisualElement.Q<Button>(nameof(getServerLogsBtn));
             selectedServerDropdown = rootVisualElement.Q<DropdownField>(nameof(selectedServerDropdown));
-            serverLogsTxt = rootVisualElement.Q<TextField>(nameof(serverLogsTxt));
+            selectedIdentityDropdown = rootVisualElement.Q<DropdownField>(nameof(selectedIdentityDropdown));
+            moduleNameTxt = rootVisualElement.Q<TextField>(nameof(moduleNameTxt));
+
+            getServerLogsBtn = rootVisualElement.Q<Button>(nameof(getServerLogsBtn));
+            serverLogsLabel = rootVisualElement.Q<Label>(nameof(serverLogsLabel));
         }
 
         /// Changing implicit names can easily cause unexpected nulls
@@ -98,9 +110,12 @@ namespace SpacetimeDB.Editor
         {
             try
             {
-                Assert.IsNotNull(getServerLogsBtn, $"Expected `#{nameof(getServerLogsBtn)}`");
                 Assert.IsNotNull(selectedServerDropdown, $"Expected `#{nameof(selectedServerDropdown)}`");
-                Assert.IsNotNull(serverLogsTxt, $"Expected `#{nameof(serverLogsTxt)}`");
+                Assert.IsNotNull(selectedIdentityDropdown, $"Expected `#{nameof(selectedIdentityDropdown)}`");
+                Assert.IsNotNull(moduleNameTxt, $"Expected `#{nameof(moduleNameTxt)}`");
+
+                Assert.IsNotNull(getServerLogsBtn, $"Expected `#{nameof(getServerLogsBtn)}`");
+                Assert.IsNotNull(serverLogsLabel, $"Expected `#{nameof(serverLogsLabel)}`");
             }
             catch (Exception e)
             {

@@ -23,7 +23,7 @@ namespace SpacetimeDB.Editor
             
             await ensureCliInstalledAsync();
             await setSelectedServerTxtAsync();
-            await setSelectedIdentityTxtAsync();
+            await setSelectedIdentityFieldsAsync();
             
             //// TODO: If `spacetime list` ever returns db names (not just addresses),
             //// TODO: Auto list them in dropdown
@@ -219,8 +219,8 @@ namespace SpacetimeDB.Editor
             serverNameTxt.value = defaultServer.Nickname;
         }
 
-        /// Load selected identities => set readonly identity txt
-        private async Task setSelectedIdentityTxtAsync()
+        /// Load selected identities => set readonly identity txt + dropdown
+        private async Task setSelectedIdentityFieldsAsync()
         {
             GetIdentitiesResult getIdentitiesResult = await SpacetimeDbCliActions.GetIdentitiesAsync();
 
@@ -233,9 +233,38 @@ namespace SpacetimeDB.Editor
             }
 
             // Success
-            SpacetimeIdentity defaultIdentity = getIdentitiesResult.Identities
-                .First(id => id.IsDefault);
-            identityNameTxt.value = defaultIdentity.Nickname;
+            onSetSelectedIdentityFieldsSuccess(getIdentitiesResult);
+        }
+
+        private void onSetSelectedIdentityFieldsSuccess(GetIdentitiesResult getIdentitiesResult)
+        {
+            List<SpacetimeIdentity> identities = getIdentitiesResult.Identities;
+            
+            // Ensure the default identity is 1st -> Set name txt
+            SpacetimeIdentity defaultIdentity = identities.First(id => id.IsDefault);
+            string defaultIdNickname = defaultIdentity.Nickname;
+            
+            identityNameTxt.value = defaultIdNickname;
+            
+            // If no previous call "as" dropdown id selected, choose the default
+            if (actionCallAsIdentityDropdown.value == null)
+            {
+                actionCallAsIdentityDropdown.value = defaultIdNickname;
+            }
+            else
+            {
+                // This will auto-load via persistence (via ViewDataKey prop)
+                // However, we we need to ensure this identity still exists
+                // If not, we'll default to the first identity (above)
+                bool isIdentityValid = identities.Any(id => 
+                    id.Nickname == actionCallAsIdentityDropdown.value);
+
+                if (!isIdentityValid)
+                {
+                    // Invalid: Reset to default
+                    actionCallAsIdentityDropdown.value = defaultIdNickname;
+                }
+            }
         }
 
         private async Task ensureCliInstalledAsync()
@@ -373,7 +402,7 @@ namespace SpacetimeDB.Editor
             CallReducerRequest request = new CallReducerRequest(
                 moduleNameTxt.value,
                 reducerName,
-                actionCallAsIdentityTxt.value,
+                actionCallAsIdentityDropdown.value,
                 actionArgsTxt.value);
             
             SpacetimeCliResult cliResult = await SpacetimeDbReducerCliActions.CallReducerAsync(request);

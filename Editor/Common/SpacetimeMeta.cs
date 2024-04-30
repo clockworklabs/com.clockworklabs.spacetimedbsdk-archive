@@ -1,6 +1,8 @@
 using System.IO;
 
-/// Static metadata for SpacetimeDB editor scripts
+/// Static metadata for SpacetimeDB editor scripts. Also see:
+/// - PublisherMeta.cs
+/// - ReducerMeta.cs
 public static class SpacetimeMeta
 {
     #region Names & Paths

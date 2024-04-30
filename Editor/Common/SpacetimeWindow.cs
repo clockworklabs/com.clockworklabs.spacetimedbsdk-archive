@@ -128,7 +128,7 @@ namespace SpacetimeDB.Editor
         public static void CopyToClipboard(string str)
         {
             GUIUtility.systemCopyBuffer = str;
-            Debug.Log($"Copied to clipboard: {str}");
+            UnityEngine.Debug.Log($"Copied to clipboard: {str}");
         }
 
         public static string NormalizePath(string pathToProjFile) =>

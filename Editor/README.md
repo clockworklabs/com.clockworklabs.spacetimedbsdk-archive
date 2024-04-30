@@ -7,6 +7,7 @@
 - Publisher
 - Reducer
 - Module Initializer
+- Server Log Viewer
 
 ## Docs
 

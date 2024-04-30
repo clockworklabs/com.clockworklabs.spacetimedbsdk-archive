@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -17,6 +18,11 @@ namespace SpacetimeDB.Editor
     {
         #region Window State
         private EntityStructure _entityStructure; // For reducersTreeView, set @ setReducersTreeViewAsync()
+        
+        // /// TODO: Dictionary of reducerName, reducerArgs:
+        // /// Persist examples: On change, update EditorPrefs; on init, set this via EditorPrefs;
+        // /// On selected reducer change, preset the `Args`, if `_argSnippet[reducerName]` exists
+        // private Dictionary<string, string> _argSnippets;
         #endregion // Window State
         
         

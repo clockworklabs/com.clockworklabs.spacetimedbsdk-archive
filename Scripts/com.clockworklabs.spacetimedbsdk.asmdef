@@ -1,4 +1,15 @@
 {
     "name": "com.clockworklabs.spacetimedbsdk",
-    "allowUnsafeCode": true
+    "allowUnsafeCode": true,
+    "rootNamespace": "",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

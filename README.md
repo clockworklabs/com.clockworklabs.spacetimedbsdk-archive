@@ -1,5 +1,13 @@
 # SpacetimeDB SDK for Unity Engine
 
+## Forked
+This adds two editor tools:
+
+- STDB "Publisher" editor tool
+- STDB "Reducer" editor tool
+
+➡️ Find them via top menu `Window/SpacetimeDB/`
+
 ## Overview
 
 This repository contains the [Unity](https://unity.com/) SDK for SpacetimeDB. The SDK allows to interact with the database server and is prepared to work with code generated from a SpacetimeDB backend code.
@@ -130,3 +138,12 @@ using SpacetimeDB.Types;
 
 Reducer.MovePlayer(new StdbVector2(0.0f, 0.0f), new StdbVector2(1.0f, 1.0f));
 ```
+
+## Collaboration
+
+Be sure to follow Unity's [custom package](https://docs.unity3d.com/Manual/CustomPackages.html) and [package layout](https://docs.unity3d.com/Manual/cus-layout.html) standards.
+
+
+## Architecture Change Notice
+
+⚠️ TODO: Rename `/Scripts` to `/Runtime` to follow Unity package standards

@@ -8,6 +8,7 @@ namespace SpacetimeDB.Editor
         public string ReducerName { get; }
         
         /// Appends --as-identity {identity}
+        /// (!) `--as-identity` is deprecated for `identity`: Change this @ `ReducerMeta.AS_IDENTITY_CMD`
         /// (name || address)
         public string CallAsAltIdentity { get; }
         
@@ -19,7 +20,9 @@ namespace SpacetimeDB.Editor
         public override string ToString()
         {
             bool hasAltIdentity = !string.IsNullOrEmpty(CallAsAltIdentity);
-            string callAsAltIdentity = hasAltIdentity ? $" --as-identity {CallAsAltIdentity}" : "";
+            string callAsAltIdentity = hasAltIdentity 
+                ? $" {ReducerMeta.CALL_AS_IDENTITY_CMD} {CallAsAltIdentity}" 
+                : "";
             
             bool hasArgs = !string.IsNullOrEmpty(Args);
             string cliArgs = hasArgs ? $" {Args}" : "";

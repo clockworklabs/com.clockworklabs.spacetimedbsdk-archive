@@ -56,7 +56,7 @@ namespace SpacetimeDB.Editor
             string asIdentity = null)
         {
             // Append ` --as-identity {identity}`?
-            string asIdentitySuffix = string.IsNullOrEmpty(asIdentity) ? "" : $" --as-identity {asIdentity}";
+            string asIdentitySuffix = string.IsNullOrEmpty(asIdentity) ? "" : $" {ReducerMeta.CALL_AS_IDENTITY_CMD} {asIdentity}";
             string argSuffix = $"spacetime describe {moduleName}{asIdentitySuffix}";
             
             SpacetimeCliResult cliResult = await runCliCommandAsync(argSuffix);

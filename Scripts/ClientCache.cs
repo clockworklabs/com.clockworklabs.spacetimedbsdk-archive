@@ -14,25 +14,16 @@ namespace SpacetimeDB
         {
             public class ByteArrayComparer : IEqualityComparer<byte[]>
             {
-                public bool Equals(byte[] left, byte[] right)
+                public unsafe bool Equals(byte[] left, byte[] right)
                 {
                     if (ReferenceEquals(left, right))
                     {
                         return true;
                     }
-
                     if (left == null || right == null || left.Length != right.Length)
                     {
                         return false;
                     }
-
-                    return EqualsUnvectorized(left, right);
-
-                }
-
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                private unsafe bool EqualsUnvectorized(byte[] left, byte[] right)
-                {
                     fixed (byte* a = left)
                     fixed (byte* b = right)
                     {

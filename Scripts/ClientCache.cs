@@ -20,10 +20,12 @@ namespace SpacetimeDB
                     {
                         return true;
                     }
+
                     if (left == null || right == null || left.Length != right.Length)
                     {
                         return false;
                     }
+
                     fixed (byte* a = left)
                     fixed (byte* b = right)
                     {

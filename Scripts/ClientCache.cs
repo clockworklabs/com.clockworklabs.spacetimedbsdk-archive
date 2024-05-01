@@ -14,21 +14,18 @@ namespace SpacetimeDB
         {
             public class ByteArrayComparer : IEqualityComparer<byte[]>
             {
-                public bool Equals(byte[] left, byte[] right)
+                public unsafe bool Equals(byte[] left, byte[] right)
                 {
                     if (ReferenceEquals(left, right))
                     {
                         return true;
                     }
-
                     if (left == null || right == null || left.Length != right.Length)
                     {
                         return false;
                     }
-
                     fixed (byte* a = left)
                     fixed (byte* b = right)
-                    unsafe
                     {
                         return Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCmp(a, b, left.Length) == 0;
                     }

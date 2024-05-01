@@ -33,10 +33,6 @@ namespace SpacetimeDB
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 private unsafe bool EqualsUnvectorized(byte[] left, byte[] right)
                 {
-                    if (left.Length != right.Length)
-                    {
-                        return false;
-                    }
                     fixed (byte* a = left)
                     fixed (byte* b = right)
                     {

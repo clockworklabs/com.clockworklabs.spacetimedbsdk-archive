@@ -26,15 +26,9 @@ namespace SpacetimeDB
                         return false;
                     }
 
-                    return EqualsUnvectorized(left, right);
-
-                }
-
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                private unsafe bool EqualsUnvectorized(byte[] left, byte[] right)
-                {
                     fixed (byte* a = left)
                     fixed (byte* b = right)
+                    unsafe
                     {
                         return Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCmp(a, b, left.Length) == 0;
                     }

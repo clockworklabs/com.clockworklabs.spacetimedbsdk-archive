@@ -88,24 +88,22 @@ class OnSendErrorMessage : MainThreadDispatch
     {
         private WebSocketMessageEventHandler receiver;
         private byte[] message;
-        private DateTime timestamp;
 
-        public OnMessage(WebSocketMessageEventHandler receiver, byte[] message, DateTime timestamp)
+        public OnMessage(WebSocketMessageEventHandler receiver, byte[] message)
         {
             this.receiver = receiver;
             this.message = message;
-            this.timestamp = timestamp;
         }
 
         public override void Execute()
         {
-            receiver.Invoke(message, timestamp);
+            receiver.Invoke(message);
         }
     }
 
     public delegate void WebSocketOpenEventHandler();
 
-    public delegate void WebSocketMessageEventHandler(byte[] message, DateTime timestamp);
+    public delegate void WebSocketMessageEventHandler(byte[] message);
 
     public delegate void WebSocketCloseEventHandler(WebSocketCloseStatus? code, WebSocketError? error);
 
@@ -205,7 +203,6 @@ class OnSendErrorMessage : MainThreadDispatch
                         return;
                     }
 
-                    var startReceive = DateTime.UtcNow;
                     var count = receiveResult.Count;
                     while (receiveResult.EndOfMessage == false)
                     {
@@ -228,7 +225,7 @@ class OnSendErrorMessage : MainThreadDispatch
                     var buffCopy = new byte[count];
                     for (var x = 0; x < count; x++)
                         buffCopy[x] = _receiveBuffer[x];
-                    dispatchQueue.Enqueue(new OnMessage(OnMessage, buffCopy, startReceive));
+                    dispatchQueue.Enqueue(new OnMessage(OnMessage, buffCopy));
                 }
                 catch (WebSocketException ex)
                 {
@@ -240,10 +237,7 @@ class OnSendErrorMessage : MainThreadDispatch
 
         public Task Close(WebSocketCloseStatus code = WebSocketCloseStatus.NormalClosure, string reason = null)
         {
-            if (Ws?.State is WebSocketState.Open or WebSocketState.Connecting)
-            {
-                Ws?.CloseAsync(code, "Disconnecting normally.", CancellationToken.None);
-            }
+            Ws?.CloseAsync(code, "Disconnecting normally.", CancellationToken.None);
 
             return Task.CompletedTask;
         }

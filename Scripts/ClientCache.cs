@@ -14,7 +14,7 @@ namespace SpacetimeDB
         {
             public class ByteArrayComparer : IEqualityComparer<byte[]>
             {
-                public unsafe bool Equals(byte[] left, byte[] right)
+                public bool Equals(byte[] left, byte[] right)
                 {
                     if (ReferenceEquals(left, right))
                     {
@@ -26,11 +26,22 @@ namespace SpacetimeDB
                         return false;
                     }
 
-                    fixed (byte* a = left)
-                    fixed (byte* b = right)
+                    return EqualsUnvectorized(left, right);
+
+                }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                private bool EqualsUnvectorized(byte[] left, byte[] right)
+                {
+                    for (int i = 0; i < left.Length; i++)
                     {
-                        return Unity.Collections.LowLevel.Unsafe.UnsafeUtility.MemCmp(a, b, left.Length) == 0;
+                        if (left[i] != right[i])
+                        {
+                            return false;
+                        }
                     }
+
+                    return true;
                 }
 
                 public int GetHashCode(byte[] obj)

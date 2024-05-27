@@ -2,7 +2,7 @@
 
 cd "$(dirname "$0")"
 
-include fix-meta-files.bash
+source fix-meta-files.bash
 
 STDB_CSHARP="../../spacetimedb-csharp-sdk"
 
@@ -20,5 +20,5 @@ if ! which rsync > /dev/null ; then
     echo "or through your package manager in Linux."
 fi
 
-rsync -a $STDB_CSHARP/src/ ./Scripts/
+rsync -av $STDB_CSHARP/src/ ../Scripts
 fix_meta_files

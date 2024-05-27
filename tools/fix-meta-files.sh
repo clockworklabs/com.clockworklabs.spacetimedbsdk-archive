@@ -2,7 +2,7 @@
 
 function fix_meta_files {
     # Directory containing the .cs and .cs.meta files
-    DIR="${pwd}"
+    DIR="$(pwd)/.."
 
     # Find all .cs and .cs.meta files
     CS_FILES=$(find "$DIR" -name "*.cs")

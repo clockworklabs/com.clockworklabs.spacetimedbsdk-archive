@@ -61,5 +61,5 @@ if ! which rsync > /dev/null ; then
     echo "or through your package manager in Linux."
 fi
 
-rsync -av $STDB_CSHARP/src/ ../Scripts
+rsync -av $STDB_CSHARP/src/ ../Scripts --delete
 fix_meta_files

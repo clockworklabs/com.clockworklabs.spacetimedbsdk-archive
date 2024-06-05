@@ -11,7 +11,7 @@ namespace SpacetimeDB
 {
     public delegate void WebSocketOpenEventHandler();
 
-    public delegate void WebSocketMessageEventHandler(byte[] message);
+    public delegate void WebSocketMessageEventHandler(byte[] message, DateTime timestamp);
 
     public delegate void WebSocketCloseEventHandler(WebSocketCloseStatus? code, WebSocketError? error);
 
@@ -59,7 +59,7 @@ namespace SpacetimeDB
             {
                 var tokenBytes = Encoding.UTF8.GetBytes($"token:{auth}");
                 var base64 = Convert.ToBase64String(tokenBytes);
-                Ws.Options.SetRequestHeader("Authorization", "Basic " + base64);
+                Ws.Options.SetRequestHeader("Authorization", $"Basic {base64}");
             }
             else
             {
@@ -105,6 +105,7 @@ namespace SpacetimeDB
                         return;
                     }
 
+                    var startReceive = DateTime.UtcNow;
                     var count = receiveResult.Count;
                     while (receiveResult.EndOfMessage == false)
                     {
@@ -127,7 +128,7 @@ namespace SpacetimeDB
                     if (OnMessage != null)
                     {
                         var message = _receiveBuffer.Take(count).ToArray();
-                        dispatchQueue.Enqueue(() => OnMessage(message));
+                        dispatchQueue.Enqueue(() => OnMessage(message, startReceive));
                     }
                 }
                 catch (WebSocketException ex)

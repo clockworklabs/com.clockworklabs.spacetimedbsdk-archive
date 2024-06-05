@@ -5,7 +5,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.WebSockets;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using ClientApi;
@@ -84,6 +83,7 @@ namespace SpacetimeDB
         public event Action<ClientApi.Event>? onEvent;
 
         public readonly Address clientAddress = Address.Random();
+        public Identity clientIdentity { get; private set; }
 
         private SpacetimeDB.WebSocket webSocket;
         private bool connectionClosed;
@@ -95,7 +95,7 @@ namespace SpacetimeDB
 
         private bool isClosing;
         private readonly Thread networkMessageProcessThread;
-        private readonly Thread stateDiffProcessThread;
+        public readonly Stats stats = new();
 
         protected SpacetimeDBClientBase()
         {
@@ -114,15 +114,19 @@ namespace SpacetimeDB
 
             networkMessageProcessThread = new Thread(PreProcessMessages);
             networkMessageProcessThread.Start();
+        }
 
-            stateDiffProcessThread = new Thread(ExecuteStateDiff);
-            stateDiffProcessThread.Start();
+        struct UnprocessedMessage
+        {
+            public byte[] bytes;
+            public DateTime timestamp;
         }
 
         struct ProcessedMessage
         {
             public Message message;
             public List<DbOp> dbOps;
+            public DateTime timestamp;
         }
 
         struct PreProcessedMessage
@@ -131,8 +135,8 @@ namespace SpacetimeDB
             public Dictionary<System.Type, HashSet<byte[]>>? subscriptionInserts;
         }
 
-        private readonly BlockingCollection<byte[]> _messageQueue =
-            new(new ConcurrentQueue<byte[]>());
+        private readonly BlockingCollection<UnprocessedMessage> _messageQueue =
+            new(new ConcurrentQueue<UnprocessedMessage>());
 
         private readonly BlockingCollection<PreProcessedMessage> _preProcessedNetworkMessages =
             new(new ConcurrentQueue<PreProcessedMessage>());
@@ -146,8 +150,8 @@ namespace SpacetimeDB
             {
                 try
                 {
-                    var bytes = _messageQueue.Take(_preProcessCancellationToken);
-                    var preprocessedMessage = PreProcessMessage(bytes);
+                    var message = _messageQueue.Take(_preProcessCancellationToken);
+                    var preprocessedMessage = PreProcessMessage(message);
                     _preProcessedNetworkMessages.Add(preprocessedMessage, _preProcessCancellationToken);
                 }
                 catch (OperationCanceledException)
@@ -157,10 +161,10 @@ namespace SpacetimeDB
                 }
             }
 
-            PreProcessedMessage PreProcessMessage(byte[] bytes)
+            PreProcessedMessage PreProcessMessage(UnprocessedMessage unprocessed)
             {
                 var dbOps = new List<DbOp>();
-                using var compressedStream = new MemoryStream(bytes);
+                using var compressedStream = new MemoryStream(unprocessed.bytes);
                 using var decompressedStream = new BrotliStream(compressedStream, CompressionMode.Decompress);
                 var message = Message.Parser.ParseFrom(decompressedStream);
 
@@ -268,8 +272,7 @@ namespace SpacetimeDB
                                     {
                                         if ((op.insert is not null && oldOp.insert is not null) || (op.delete is not null && oldOp.delete is not null))
                                         {
-                                            Logger.LogWarning($"Update with the same primary key was " +
-                                                              $"applied multiple times! tableName={tableName}");
+                                            Logger.LogWarning($"Update with the same primary key was applied multiple times! tableName={tableName}");
                                             // TODO(jdetter): Is this a correctable error? This would be a major error on the
                                             // SpacetimeDB side.
                                             continue;
@@ -315,7 +318,7 @@ namespace SpacetimeDB
 
                         if (!waitingOneOffQueries.Remove(messageId, out var resultSource))
                         {
-                            Logger.LogError("Response to unknown one-off-query: " + messageId);
+                            Logger.LogError($"Response to unknown one-off-query: {messageId}");
                             break;
                         }
 
@@ -327,64 +330,41 @@ namespace SpacetimeDB
                 // Logger.LogWarning($"Total Updates preprocessed: {totalUpdateCount}");
                 return new PreProcessedMessage
                 {
-                    processed = new ProcessedMessage { message = message, dbOps = dbOps },
+                    processed = new ProcessedMessage { message = message, dbOps = dbOps, timestamp = unprocessed.timestamp },
                     subscriptionInserts = subscriptionInserts,
                 };
             }
         }
 
-        // The message that has been preprocessed and has had its state diff calculated
-
-        private readonly BlockingCollection<ProcessedMessage> _stateDiffMessages = new();
-        private readonly CancellationTokenSource _stateDiffCancellationTokenSource = new();
-        private CancellationToken _stateDiffCancellationToken => _stateDiffCancellationTokenSource.Token;
-
-        void ExecuteStateDiff()
+        ProcessedMessage CalculateStateDiff(PreProcessedMessage preProcessedMessage)
         {
-            while (!isClosing)
-            {
-                try
-                {
-                    var message = _preProcessedNetworkMessages.Take(_stateDiffCancellationToken);
-                    _stateDiffMessages.Add(CalculateStateDiff(message));
-                }
-                catch (OperationCanceledException)
-                {
-                    // Normal shutdown
-                    return;
-                }
-            }
+            var processed = preProcessedMessage.processed;
 
-            ProcessedMessage CalculateStateDiff(PreProcessedMessage preProcessedMessage)
+            // Perform the state diff, this has to be done on the main thread because we have to touch
+            // the client cache.
+            if (preProcessedMessage.subscriptionInserts is { } subscriptionInserts)
             {
-                var processed = preProcessedMessage.processed;
-
-                // Perform the state diff, this has to be done on the main thread because we have to touch
-                // the client cache.
-                if (preProcessedMessage.subscriptionInserts is { } subscriptionInserts)
+                foreach (var table in clientDB.GetTables())
                 {
-                    foreach (var table in clientDB.GetTables())
+                    if (!subscriptionInserts.TryGetValue(table.ClientTableType, out var hashSet))
                     {
-                        if (!subscriptionInserts.TryGetValue(table.ClientTableType, out var hashSet))
-                        {
-                            continue;
-                        }
+                        continue;
+                    }
 
-                        foreach (var (rowBytes, oldValue) in table.Where(kv => !hashSet.Contains(kv.Key)))
+                    foreach (var (rowBytes, oldValue) in table.Where(kv => !hashSet.Contains(kv.Key)))
+                    {
+                        processed.dbOps.Add(new DbOp
                         {
-                            processed.dbOps.Add(new DbOp
-                            {
-                                table = table,
-                                // This is a row that we had before, but we do not have it now.
-                                // This must have been a delete.
-                                delete = new(oldValue, rowBytes),
-                            });
-                        }
+                            table = table,
+                            // This is a row that we had before, but we do not have it now.
+                            // This must have been a delete.
+                            delete = new(oldValue, rowBytes),
+                        });
                     }
                 }
-
-                return processed;
             }
+
+            return processed;
         }
 
         public void Close()
@@ -393,7 +373,6 @@ namespace SpacetimeDB
             connectionClosed = true;
             webSocket.Close();
             _preProcessCancellationTokenSource.Cancel();
-            _stateDiffCancellationTokenSource.Cancel();
         }
 
         /// <summary>
@@ -516,12 +495,19 @@ namespace SpacetimeDB
             }
         }
 
-        private void OnMessageProcessComplete(Message message, List<DbOp> dbOps)
+        private void OnMessageProcessComplete(PreProcessedMessage preProcessed)
         {
+            var processed = CalculateStateDiff(preProcessed);
+            var message = processed.message;
+            var dbOps = processed.dbOps;
+            var timestamp = processed.timestamp;
+
             switch (message)
             {
-                case { TypeCase: Message.TypeOneofCase.SubscriptionUpdate }:
+                case { TypeCase: Message.TypeOneofCase.SubscriptionUpdate, SubscriptionUpdate: var subscriptionUpdate }:
                     onBeforeSubscriptionApplied?.Invoke();
+                    stats.ParseMessageTracker.InsertRequest(timestamp, $"type={message.TypeCase}");
+                    stats.SubscriptionRequestTracker.FinishTrackingRequest(subscriptionUpdate.RequestId);
                     OnMessageProcessCompleteUpdate(null, dbOps);
                     try
                     {
@@ -532,7 +518,22 @@ namespace SpacetimeDB
                         Logger.LogException(e);
                     }
                     break;
-                case { TypeCase: Message.TypeOneofCase.TransactionUpdate, TransactionUpdate: { Event: var transactionEvent } }:
+                case { TypeCase: Message.TypeOneofCase.TransactionUpdate, TransactionUpdate: var transactionUpdate }:
+                    var transactionEvent = transactionUpdate.Event;
+                    var reducer = transactionEvent.FunctionCall.Reducer;
+                    stats.ParseMessageTracker.InsertRequest(timestamp, $"type={message.TypeCase},reducer={reducer}");
+                    var hostDuration = TimeSpan.FromMilliseconds(transactionEvent.HostExecutionDurationMicros / 1000.0d);
+                    stats.AllReducersTracker.InsertRequest(hostDuration, $"reducer={reducer}");
+                    var callerIdentity = Identity.From(transactionEvent.CallerIdentity.ToByteArray());
+                    if (callerIdentity == clientIdentity)
+                    {
+                        // This was a request that we initiated
+                        var requestId = transactionUpdate.SubscriptionUpdate.RequestId;
+                        if (!stats.ReducerRequestTracker.FinishTrackingRequest(requestId))
+                        {
+                            Logger.LogWarning($"Failed to finish tracking reducer request: {requestId}");
+                        }
+                    }
                     OnMessageProcessCompleteUpdate(transactionEvent, dbOps);
                     try
                     {
@@ -574,9 +575,9 @@ namespace SpacetimeDB
                 case { TypeCase: Message.TypeOneofCase.IdentityToken, IdentityToken: var identityToken }:
                     try
                     {
-                        var identity = Identity.From(identityToken.Identity.ToByteArray());
+                        clientIdentity = Identity.From(identityToken.Identity.ToByteArray());
                         var address = Address.From(identityToken.Address.ToByteArray()) ?? throw new Exception("Received zero address");
-                        onIdentityReceived?.Invoke(identityToken.Token, identity, address);
+                        onIdentityReceived?.Invoke(identityToken.Token, clientIdentity, address);
                     }
                     catch (Exception e)
                     {
@@ -597,7 +598,8 @@ namespace SpacetimeDB
             }
         }
 
-        private void OnMessageReceived(byte[] bytes) => _messageQueue.Add(bytes);
+        private void OnMessageReceived(byte[] bytes, DateTime timestamp) =>
+            _messageQueue.Add(new UnprocessedMessage { bytes = bytes, timestamp = timestamp });
 
         public void InternalCallReducer<T>(T args)
             where T : IReducerArgsBase, new()
@@ -612,9 +614,10 @@ namespace SpacetimeDB
             {
                 FunctionCall = new FunctionCall
                 {
+                    RequestId = stats.ReducerRequestTracker.StartTrackingRequest(args.ReducerName),
                     Reducer = args.ReducerName,
                     ArgBytes = args.ToProtoBytes(),
-                }
+                },
             });
         }
 
@@ -626,7 +629,10 @@ namespace SpacetimeDB
                 return;
             }
 
-            var request = new ClientApi.Subscribe();
+            var request = new ClientApi.Subscribe
+            {
+                RequestId = stats.SubscriptionRequestTracker.StartTrackingRequest(),
+            };
             request.QueryStrings.AddRange(queries);
             webSocket.Send(new Message { Subscribe = request });
         }
@@ -642,21 +648,29 @@ namespace SpacetimeDB
 
             // unsanitized here, but writes will be prevented serverside.
             // the best they can do is send multiple selects, which will just result in them getting no data back.
-            string queryString = "SELECT * FROM " + type.Name + " " + query;
+            string queryString = $"SELECT * FROM {type.Name} ${query}";
 
-            var serializedQuery = new ClientApi.OneOffQuery
+            var requestId = stats.OneOffRequestTracker.StartTrackingRequest();
+            webSocket.Send(new Message
             {
-                MessageId = UnsafeByteOperations.UnsafeWrap(messageId.ToByteArray()),
-                QueryString = queryString,
-            };
-            webSocket.Send(new Message { OneOffQuery = serializedQuery });
+                OneOffQuery = new ClientApi.OneOffQuery
+                {
+                    MessageId = UnsafeByteOperations.UnsafeWrap(messageId.ToByteArray()),
+                    QueryString = queryString,
+                }
+            });
 
             // Suspend for an arbitrary amount of time
             var result = await resultSource.Task;
 
+            if (!stats.OneOffRequestTracker.FinishTrackingRequest(requestId))
+            {
+                Logger.LogWarning($"Failed to finish tracking one off request: {requestId}");
+            }
+
             T[] LogAndThrow(string error)
             {
-                error = "While processing one-off-query `" + queryString + "`, ID " + messageId + ": " + error;
+                error = $"While processing one-off-query `{queryString}`, ID {messageId}: {error}";
                 Logger.LogError(error);
                 throw new Exception(error);
             }
@@ -664,12 +678,12 @@ namespace SpacetimeDB
             // The server got back to us
             if (result.Error != null && result.Error != "")
             {
-                return LogAndThrow("Server error: " + result.Error);
+                return LogAndThrow($"Server error: {result.Error}");
             }
 
             if (result.Tables.Count != 1)
             {
-                return LogAndThrow("Expected a single table, but got " + result.Tables.Count);
+                return LogAndThrow($"Expected a single table, but got {result.Tables.Count}");
             }
 
             var resultTable = result.Tables[0];
@@ -677,7 +691,7 @@ namespace SpacetimeDB
 
             if (cacheTable?.ClientTableType != type)
             {
-                return LogAndThrow("Mismatched result type, expected " + type + " but got " + resultTable.TableName);
+                return LogAndThrow($"Mismatched result type, expected {type} but got {resultTable.TableName}");
             }
 
             return resultTable.Row.Select(row => BSATNHelpers.FromProtoBytes<T>(row)).ToArray();
@@ -688,9 +702,9 @@ namespace SpacetimeDB
         public void Update()
         {
             webSocket.Update();
-            while (_stateDiffMessages.TryTake(out var stateDiffMessage))
+            while (_preProcessedNetworkMessages.TryTake(out var preProcessedMessage))
             {
-                OnMessageProcessComplete(stateDiffMessage.message, stateDiffMessage.dbOps);
+                OnMessageProcessComplete(preProcessedMessage);
             }
         }
     }

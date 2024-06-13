@@ -1,89 +1,61 @@
-
 using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using SpacetimeDB.SATS;
+using SpacetimeDB.BSATN;
 
 namespace SpacetimeDB
 {
-    public struct Address : IEquatable<Address>
+    public readonly struct Address : IEquatable<Address>
     {
-        private byte[] bytes;
+        public const int SIZE = 16;
 
-        public static int SIZE = 16;
+        public readonly byte[] Bytes;
 
-        public byte[] Bytes => bytes;
+        private Address(byte[] bytes) => Bytes = bytes;
 
-        public static AlgebraicType GetAlgebraicType()
+        public readonly struct BSATN : IReadWrite<Address>
         {
-            return new AlgebraicType
-            {
-                type = AlgebraicType.Type.Builtin,
-                builtin = new BuiltinType
-                {
-                    type = BuiltinType.Type.Array,
-                    arrayType = new AlgebraicType
+            public Address Read(BinaryReader reader) =>
+                new(ByteArray.Instance.Read(reader));
+
+            public void Write(BinaryWriter writer, Address value) =>
+                ByteArray.Instance.Write(writer, value.Bytes);
+
+            public AlgebraicType GetAlgebraicType(ITypeRegistrar registrar) =>
+                new AlgebraicType.Product(
+                    new AggregateElement[]
                     {
-                        type = AlgebraicType.Type.Builtin,
-                        builtin = new BuiltinType
-                        {
-                            type = BuiltinType.Type.U8
-                        }
+                        new("__address_bytes", ByteArray.Instance.GetAlgebraicType(registrar))
                     }
-                }
-            };
+                );
         }
-
-        public static explicit operator Address(AlgebraicValue v) => new Address
-        {
-            bytes = v.AsBytes(),
-        };
 
         public static Address? From(byte[] bytes)
         {
-            if (bytes.All(b => b == 0)) {
-              return null; 
-            }
-            return new Address
+            if (bytes.All(b => b == 0))
             {
-                bytes = bytes,
-            };
+                return null;
+            }
+            return new(bytes);
         }
 
-        public bool Equals(Address other)
-        {
-            return bytes.SequenceEqual(other.bytes);
-        }
+        public bool Equals(Address other) => ByteArrayComparer.Instance.Equals(Bytes, other.Bytes);
 
-        public override bool Equals(object o)
-        {
-            return o is Address other && Equals(other);
-        }
+        public override bool Equals(object? o) => o is Address other && Equals(other);
 
         public static bool operator ==(Address a, Address b) => a.Equals(b);
         public static bool operator !=(Address a, Address b) => !a.Equals(b);
 
-        public static Address Random() {
-            Random rnd = new Random();
+        public static Address Random()
+        {
+            var random = new Random();
             var bytes = new byte[16];
-            rnd.NextBytes(bytes);
-            return new Address{ bytes = bytes, };
+            random.NextBytes(bytes);
+            return new(bytes);
         }
 
-        public override int GetHashCode()
-        {
-            if (bytes == null)
-            {
-                throw new InvalidOperationException("Cannot hash on null bytes.");
-            }
+        public override int GetHashCode() => ByteArrayComparer.Instance.GetHashCode(Bytes);
 
-            return BitConverter.ToInt32(bytes, 0);
-        }
-
-        public override string ToString()
-        {
-            return string.Concat(bytes.Select(b => b.ToString("x2")));
-        }
+        public override string ToString() => ByteArrayComparer.ToHexString(Bytes);
     }
 }

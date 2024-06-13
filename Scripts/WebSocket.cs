@@ -1,115 +1,21 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
+using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Google.Protobuf;
 
 namespace SpacetimeDB
 {
-    internal abstract class MainThreadDispatch
-    {
-        public abstract void Execute();
-    }
-
-    class OnConnectMessage : MainThreadDispatch
-    {
-        private WebSocketOpenEventHandler receiver;
-
-        public OnConnectMessage(WebSocketOpenEventHandler receiver)
-        {
-            this.receiver = receiver;
-        }
-
-        public override void Execute()
-        {
-            receiver.Invoke();
-        }
-    }
-
-    class OnDisconnectMessage : MainThreadDispatch
-    {
-        private WebSocketCloseEventHandler receiver;
-        private WebSocketError? error;
-        private WebSocketCloseStatus? status;
-
-        public OnDisconnectMessage(WebSocketCloseEventHandler receiver, WebSocketCloseStatus? status,
-            WebSocketError? error)
-        {
-            this.receiver = receiver;
-            this.error = error;
-            this.status = status;
-        }
-
-        public override void Execute()
-        {
-            receiver.Invoke(status, error);
-        }
-    }
-
-    class OnConnectErrorMessage : MainThreadDispatch
-    {
-        private WebSocketConnectErrorEventHandler receiver;
-        private WebSocketError? error;
-        private string? errorMsg;
-
-        public OnConnectErrorMessage(WebSocketConnectErrorEventHandler receiver, WebSocketError? error, string? errorMsg)
-        {
-            this.receiver = receiver;
-            this.error = error;
-            this.errorMsg = errorMsg;
-        }
-
-        public override void Execute()
-        {
-            receiver.Invoke(error, errorMsg);
-        }
-    }
-    
-class OnSendErrorMessage : MainThreadDispatch
-    {
-        private WebSocketSendErrorEventHandler receiver;
-        private Exception e;
-
-        public OnSendErrorMessage(WebSocketSendErrorEventHandler receiver, Exception e)
-        {
-            this.receiver = receiver;
-            this.e = e;
-        }
-
-        public override void Execute()
-        {
-            receiver.Invoke(e);
-        }
-    }
-
-    class OnMessage : MainThreadDispatch
-    {
-        private WebSocketMessageEventHandler receiver;
-        private byte[] message;
-        private DateTime timestamp;
-
-        public OnMessage(WebSocketMessageEventHandler receiver, byte[] message, DateTime timestamp)
-        {
-            this.receiver = receiver;
-            this.message = message;
-            this.timestamp = timestamp;
-        }
-
-        public override void Execute()
-        {
-            receiver.Invoke(message, timestamp);
-        }
-    }
-
     public delegate void WebSocketOpenEventHandler();
 
     public delegate void WebSocketMessageEventHandler(byte[] message, DateTime timestamp);
 
     public delegate void WebSocketCloseEventHandler(WebSocketCloseStatus? code, WebSocketError? error);
 
-    public delegate void WebSocketConnectErrorEventHandler(WebSocketError? error, string? message);
+    public delegate void WebSocketConnectErrorEventHandler(WebSocketError? error, string message);
     public delegate void WebSocketSendErrorEventHandler(Exception e);
 
     public struct ConnectOptions
@@ -126,28 +32,24 @@ class OnSendErrorMessage : MainThreadDispatch
         // Connection parameters
         private readonly ConnectOptions _options;
         private readonly byte[] _receiveBuffer = new byte[MAXMessageSize];
-        private readonly ConcurrentQueue<MainThreadDispatch> dispatchQueue = new ConcurrentQueue<MainThreadDispatch>();
+        private readonly ConcurrentQueue<Action> dispatchQueue = new();
 
-        protected ClientWebSocket Ws;
+        protected ClientWebSocket Ws = new();
 
-        private ISpacetimeDBLogger _logger;
-
-        public WebSocket(ISpacetimeDBLogger logger, ConnectOptions options)
+        public WebSocket(ConnectOptions options)
         {
-            Ws = new ClientWebSocket();
-            _logger = logger;
             _options = options;
         }
 
-        public event WebSocketOpenEventHandler OnConnect;
-        public event WebSocketConnectErrorEventHandler OnConnectError;
-        public event WebSocketSendErrorEventHandler OnSendError;
-        public event WebSocketMessageEventHandler OnMessage;
-        public event WebSocketCloseEventHandler OnClose;
+        public event WebSocketOpenEventHandler? OnConnect;
+        public event WebSocketConnectErrorEventHandler? OnConnectError;
+        public event WebSocketSendErrorEventHandler? OnSendError;
+        public event WebSocketMessageEventHandler? OnMessage;
+        public event WebSocketCloseEventHandler? OnClose;
 
         public bool IsConnected { get { return Ws != null && Ws.State == WebSocketState.Open; } }
 
-        public async Task Connect(string auth, string host, string nameOrAddress, Address clientAddress)
+        public async Task Connect(string? auth, string host, string nameOrAddress, Address clientAddress)
         {
             var url = new Uri($"{host}/database/subscribe/{nameOrAddress}?client_address={clientAddress}");
             Ws.Options.AddSubProtocol(_options.Protocol);
@@ -157,7 +59,7 @@ class OnSendErrorMessage : MainThreadDispatch
             {
                 var tokenBytes = Encoding.UTF8.GetBytes($"token:{auth}");
                 var base64 = Convert.ToBase64String(tokenBytes);
-                Ws.Options.SetRequestHeader("Authorization", "Basic " + base64);
+                Ws.Options.SetRequestHeader("Authorization", $"Basic {base64}");
             }
             else
             {
@@ -167,24 +69,22 @@ class OnSendErrorMessage : MainThreadDispatch
             try
             {
                 await Ws.ConnectAsync(url, source.Token);
-                dispatchQueue.Enqueue(new OnConnectMessage(OnConnect));
+                if (OnConnect != null) dispatchQueue.Enqueue(() => OnConnect());
             }
-            catch (WebSocketException ex)
+            catch (Exception ex)
             {
-                string message = ex.Message;
-                if(ex.WebSocketErrorCode == WebSocketError.NotAWebSocket)
+                Logger.LogException(ex);
+                if (OnConnectError != null)
                 {
-                    // not a websocket happens when there is no module published under the address specified
-                    message = $"{message} Did you forget to publish your module?";
+                    var message = ex.Message;
+                    var code = (ex as WebSocketException)?.WebSocketErrorCode;
+                    if (code == WebSocketError.NotAWebSocket)
+                    {
+                        // not a websocket happens when there is no module published under the address specified
+                        message += " Did you forget to publish your module?";
+                    }
+                    dispatchQueue.Enqueue(() => OnConnectError(code, message));
                 }
-                _logger.LogException(ex);
-                dispatchQueue.Enqueue(new OnConnectErrorMessage(OnConnectError, ex.WebSocketErrorCode, message));
-                return;
-            }
-            catch (Exception e)
-            {
-                _logger.LogException(e);
-                dispatchQueue.Enqueue(new OnConnectErrorMessage(OnConnectError, null, e.Message));
                 return;
             }
 
@@ -201,7 +101,7 @@ class OnSendErrorMessage : MainThreadDispatch
                             await Ws.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty,
                             CancellationToken.None);
                         }
-                        dispatchQueue.Enqueue(new OnDisconnectMessage(OnClose, receiveResult.CloseStatus, null));
+                        if (OnClose != null) dispatchQueue.Enqueue(() => OnClose(receiveResult.CloseStatus, null));
                         return;
                     }
 
@@ -215,7 +115,7 @@ class OnSendErrorMessage : MainThreadDispatch
                             var closeMessage = $"Maximum message size: {MAXMessageSize} bytes.";
                             await Ws.CloseAsync(WebSocketCloseStatus.MessageTooBig, closeMessage,
                                 CancellationToken.None);
-                            dispatchQueue.Enqueue(new OnDisconnectMessage(OnClose, WebSocketCloseStatus.MessageTooBig, null));
+                            if (OnClose != null) dispatchQueue.Enqueue(() => OnClose(WebSocketCloseStatus.MessageTooBig, null));
                             return;
                         }
 
@@ -225,32 +125,29 @@ class OnSendErrorMessage : MainThreadDispatch
                         count += receiveResult.Count;
                     }
 
-                    var buffCopy = new byte[count];
-                    for (var x = 0; x < count; x++)
-                        buffCopy[x] = _receiveBuffer[x];
-                    dispatchQueue.Enqueue(new OnMessage(OnMessage, buffCopy, startReceive));
+                    if (OnMessage != null)
+                    {
+                        var message = _receiveBuffer.Take(count).ToArray();
+                        dispatchQueue.Enqueue(() => OnMessage(message, startReceive));
+                    }
                 }
                 catch (WebSocketException ex)
                 {
-                    dispatchQueue.Enqueue(new OnDisconnectMessage(OnClose, null, ex.WebSocketErrorCode));
+                    if (OnClose != null) dispatchQueue.Enqueue(() => OnClose(null, ex.WebSocketErrorCode));
                     return;
                 }
             }
         }
 
-        public Task Close(WebSocketCloseStatus code = WebSocketCloseStatus.NormalClosure, string reason = null)
+        public Task Close(WebSocketCloseStatus code = WebSocketCloseStatus.NormalClosure)
         {
-            if (Ws?.State is WebSocketState.Open or WebSocketState.Connecting)
-            {
-                Ws?.CloseAsync(code, "Disconnecting normally.", CancellationToken.None);
-            }
+            Ws?.CloseAsync(code, "Disconnecting normally.", CancellationToken.None);
 
             return Task.CompletedTask;
         }
 
-        private readonly object sendingLock = new object();
-        private Task senderTask = null;
-        private readonly ConcurrentQueue<byte[]> messageSendQueue = new ConcurrentQueue<byte[]>();
+        private Task? senderTask;
+        private readonly ConcurrentQueue<byte[]> messageSendQueue = new();
 
         /// <summary>
         /// This sender guarantees that that messages are sent out in the order they are received. Our websocket
@@ -258,15 +155,12 @@ class OnSendErrorMessage : MainThreadDispatch
         /// before we start another one. This function is also thread safe, just in case.
         /// </summary>
         /// <param name="message">The message to send</param>
-        public void Send(byte[] message)
+        public void Send(ClientApi.Message message)
         {
             lock (messageSendQueue)
             {
-                messageSendQueue.Enqueue(message);
-                if (senderTask == null)
-                {
-                    senderTask = Task.Run(async () => { await ProcessSendQueue(); });
-                }
+                messageSendQueue.Enqueue(message.ToByteArray());
+                senderTask ??= Task.Run(ProcessSendQueue);
             }
         }
 
@@ -277,7 +171,8 @@ class OnSendErrorMessage : MainThreadDispatch
             {
                 while (true)
                 {
-                    byte[] message;
+                    byte[]? message;
+
                     lock (messageSendQueue)
                     {
                         if (!messageSendQueue.TryDequeue(out message))
@@ -288,14 +183,13 @@ class OnSendErrorMessage : MainThreadDispatch
                         }
                     }
 
-                    await Ws!.SendAsync(new ArraySegment<byte>(message), WebSocketMessageType.Text, true,
-                        CancellationToken.None);
+                    await Ws!.SendAsync(message, WebSocketMessageType.Binary, true, CancellationToken.None);
                 }
             }
-            catch(Exception e)
-            { 
+            catch (Exception e)
+            {
                 senderTask = null;
-                dispatchQueue.Enqueue(new OnSendErrorMessage(OnSendError, e));
+                if (OnSendError != null) dispatchQueue.Enqueue(() => OnSendError(e));
             }
         }
 
@@ -308,7 +202,7 @@ class OnSendErrorMessage : MainThreadDispatch
         {
             while (dispatchQueue.TryDequeue(out var result))
             {
-                result.Execute();
+                result();
             }
         }
     }

@@ -8,7 +8,7 @@ permissions: read-all
 
 jobs:
   check_base_ref:
-    name: Based on `master`
+    name: Only `staging` may merge into `master`
     runs-on: ubuntu-latest
     steps:
       - id: not_based_on_master

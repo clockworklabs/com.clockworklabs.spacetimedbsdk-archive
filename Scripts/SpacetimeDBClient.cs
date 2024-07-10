@@ -78,8 +78,7 @@ namespace SpacetimeDB
         /// <summary>
         /// Invoked when an event message is received or at the end of a transaction update.
         /// </summary>
-        public event Action<TransactionUpdate>? onEvent;
-        public event Action<OneOffQueryResponse>? onResult;
+        public event Action<ServerMessage>? onEvent;
 
         public readonly Address clientAddress = Address.Random();
         public Identity clientIdentity { get; private set; }
@@ -126,6 +125,7 @@ namespace SpacetimeDB
             public ServerMessage message;
             public List<DbOp> dbOps;
             public DateTime timestamp;
+            public ReducerEvent? reducerEvent;
         }
 
         struct PreProcessedMessage
@@ -147,7 +147,7 @@ namespace SpacetimeDB
 
         static DbValue Decode(ClientCache.ITableCache table, EncodedValue value) => value switch {
             EncodedValue.Binary(var bin) => new DbValue(table.DecodeValue(bin), bin),
-            EncodedValue.Text(var text) => throw new InvalidOperationException("TODO?"),
+            EncodedValue.Text(var text) => throw new InvalidOperationException("JavaScript messages aren't supported."),
             _ => throw new InvalidOperationException(),
         };
 
@@ -171,6 +171,8 @@ namespace SpacetimeDB
                 using var decompressedStream = new BrotliStream(compressedStream, CompressionMode.Decompress);
                 using var binaryReader = new BinaryReader(decompressedStream);
                 var message = new ServerMessage.BSATN().Read(binaryReader);
+
+                ReducerEvent? reducerEvent = null;
 
                 // This is all of the inserts
                 Dictionary<System.Type, HashSet<byte[]>>? subscriptionInserts = null;
@@ -230,7 +232,8 @@ namespace SpacetimeDB
                                         break;
 
                                     case EncodedValue.Text(var txt):
-                                        throw new InvalidOperationException("TODO?");
+                                        Logger.LogWarning("JavaScript messages are unsupported.");
+                                        break;
                                 }
                             }
                         }
@@ -254,7 +257,7 @@ namespace SpacetimeDB
                                     foreach (var row in update.Inserts) {
                                         var op = new DbOp { table = table, insert = Decode(table, row) };
 
-                                        if (op.insert.Value is IDatabaseTableWithPrimaryKey objWithPk) {
+                                        if (op.insert.Value.value is IDatabaseTableWithPrimaryKey objWithPk) {
                                             // Compound key that we use for lookup.
                                             // Consists of type of the table (for faster comparison that string names) + actual primary key of the row.
                                             var key = (table.ClientTableType, objWithPk.GetPrimaryKeyValue());
@@ -268,12 +271,13 @@ namespace SpacetimeDB
                                                 }
 
                                                 var (insertOp, deleteOp) = op.insert is not null ? (op, oldOp) : (oldOp, op);
-                                                primaryKeyChanges[key] = new DbOp {
+                                                op = new DbOp {
                                                     table = insertOp.table,
                                                     delete = deleteOp.delete,
                                                     insert = insertOp.insert,
                                                 };
                                             }
+                                            primaryKeyChanges[key] = op;
                                         }
                                         else {
                                             dbOps.Add(op);
@@ -283,7 +287,7 @@ namespace SpacetimeDB
                                     foreach (var row in update.Deletes) {
                                         var op = new DbOp { table = table, delete = Decode(table, row) };
 
-                                        if (op.delete.Value is IDatabaseTableWithPrimaryKey objWithPk) {
+                                        if (op.delete.Value.value is IDatabaseTableWithPrimaryKey objWithPk) {
                                             // Compound key that we use for lookup.
                                             // Consists of type of the table (for faster comparison that string names) + actual primary key of the row.
                                             var key = (table.ClientTableType, objWithPk.GetPrimaryKeyValue());
@@ -297,12 +301,13 @@ namespace SpacetimeDB
                                                 }
 
                                                 var (insertOp, deleteOp) = op.insert is not null ? (op, oldOp) : (oldOp, op);
-                                                primaryKeyChanges[key] = new DbOp {
+                                                op = new DbOp {
                                                     table = insertOp.table,
                                                     delete = deleteOp.delete,
                                                     insert = insertOp.insert,
                                                 };
                                             }
+                                            primaryKeyChanges[key] = op;
                                         }
                                         else {
                                             dbOps.Add(op);
@@ -315,7 +320,7 @@ namespace SpacetimeDB
 
                                 // Convert the generic event arguments in to a domain specific event object
                                 try {
-                                    transactionUpdate.ReducerCall.ReducerEvent = ReducerEventFromDbEvent(transactionUpdate);
+                                    reducerEvent = ReducerEventFromDbEvent(transactionUpdate);
                                 }
                                 catch (Exception e) {
                                     Logger.LogException(e);
@@ -324,6 +329,7 @@ namespace SpacetimeDB
                             case UpdateStatus.Failed(var failed):
                                 break;
                             case UpdateStatus.OutOfEnergy(var outOfEnergy):
+                                Logger.LogWarning("Failed to execute reducer: out of energy.");
                                 break;
                             default:
                                 throw new InvalidOperationException();
@@ -350,7 +356,7 @@ namespace SpacetimeDB
                 // Logger.LogWarning($"Total Updates preprocessed: {totalUpdateCount}");
                 return new PreProcessedMessage
                 {
-                    processed = new ProcessedMessage { message = message, dbOps = dbOps, timestamp = unprocessed.timestamp },
+                    processed = new ProcessedMessage { message = message, dbOps = dbOps, timestamp = unprocessed.timestamp, reducerEvent = reducerEvent },
                     subscriptionInserts = subscriptionInserts,
                 };
             }
@@ -432,7 +438,7 @@ namespace SpacetimeDB
         }
 
 
-        private void OnMessageProcessCompleteUpdate(TransactionUpdate? transactionEvent, List<DbOp> dbOps)
+        private void OnMessageProcessCompleteUpdate(ReducerEvent? dbEvent, List<DbOp> dbOps)
         {
             // First trigger OnBeforeDelete
             foreach (var update in dbOps)
@@ -441,7 +447,7 @@ namespace SpacetimeDB
                 {
                     try
                     {
-                        oldValue.OnBeforeDeleteEvent(transactionEvent);
+                        oldValue.OnBeforeDeleteEvent(dbEvent!);
                     }
                     catch (Exception e)
                     {
@@ -495,16 +501,16 @@ namespace SpacetimeDB
                                 // If we matched an update, these values must have primary keys.
                                 var newValue_ = (IDatabaseTableWithPrimaryKey)newValue;
                                 var oldValue_ = (IDatabaseTableWithPrimaryKey)oldValue;
-                                oldValue_.OnUpdateEvent(newValue_, transactionEvent);
+                                oldValue_.OnUpdateEvent(newValue_, dbEvent);
                                 break;
                             }
 
                         case { insert: { value: var newValue } }:
-                            newValue.OnInsertEvent(transactionEvent);
+                            newValue.OnInsertEvent(dbEvent);
                             break;
 
                         case { delete: { value: var oldValue } }:
-                            oldValue.OnDeleteEvent(transactionEvent);
+                            oldValue.OnDeleteEvent(dbEvent);
                             break;
                     }
                 }
@@ -553,17 +559,17 @@ namespace SpacetimeDB
                             Logger.LogWarning($"Failed to finish tracking reducer request: {requestId}");
                         }
                     }
-                    OnMessageProcessCompleteUpdate(transactionUpdate, dbOps);
+                    OnMessageProcessCompleteUpdate(processed.reducerEvent, dbOps);
                     try
                     {
-                        onEvent?.Invoke(transactionUpdate);
+                        onEvent?.Invoke(message);
                     }
                     catch (Exception e)
                     {
                         Logger.LogException(e);
                     }
 
-                    if (transactionUpdate.ReducerCall.ReducerEvent is not { } reducerEvent)
+                    if (processed.reducerEvent is not { } reducerEvent)
                     {
                         // If we are here, an error about unknown reducer should have already been logged, so nothing to do.
                         break;
@@ -583,7 +589,7 @@ namespace SpacetimeDB
                     {
                         try
                         {
-                            onUnhandledReducerError?.Invoke((ReducerEvent)reducerEvent);
+                            onUnhandledReducerError?.Invoke(reducerEvent);
                         }
                         catch (Exception e)
                         {
@@ -603,10 +609,10 @@ namespace SpacetimeDB
                         Logger.LogException(e);
                     }
                     break;
-                case ServerMessage.OneOffQueryResponse(var event_):
+                case ServerMessage.OneOffQueryResponse(var _):
                     try
                     {
-                        onResult?.Invoke(event_);
+                        onEvent?.Invoke(message);
                     }
                     catch (Exception e)
                     {

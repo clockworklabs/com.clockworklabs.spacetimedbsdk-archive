@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+<<<<<<<< HEAD:Scripts/Primitives.cs.meta
+guid: 565602d5968368295b6cf26721a8890a
+|||||||| 6ed0186:Scripts/ClientApi.cs.meta
+guid: 79ec29f868b864d468fe40da8fb200df
+========
+guid: 2865b227195f343edbbd1a5e541bef0d
+>>>>>>>> origin/staging:Scripts/SpacetimeDB/Types/CallReducer.cs.meta
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

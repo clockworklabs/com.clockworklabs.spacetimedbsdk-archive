@@ -2,7 +2,7 @@ name: Git tree checks
 
 on:
   pull_request:
-    types: [opened, edited]
+    types: [opened, edited, reopened, synchronize]
   merge_group:
 permissions: read-all
 
